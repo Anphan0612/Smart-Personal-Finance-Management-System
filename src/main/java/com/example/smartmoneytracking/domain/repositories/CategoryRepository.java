@@ -1,4 +1,8 @@
 package com.example.smartmoneytracking.domain.repositories;
 
-public interface CategoryRepository {
+import com.example.smartmoneytracking.domain.entities.category.Category;
+
+public interface CategoryRepository
+{
+    Category save(Category category);
 }
