@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Light Mode (Swiss Style / Default) */
+    --color-brand-primary: #059669;
+    /* Emerald 600 */
+    --color-brand-accent: #F97316;
+    /* Orange 500 */
+    --color-brand-surface: #FFFFFF;
+    /* White Cards */
+    --color-brand-bg: #F8FAFC;
+    /* Slate 50 Background */
+    --color-brand-border: #E2E8F0;
+    /* Slate 200 */
+    --color-brand-text: #0F172A;
+    /* Slate 900 */
+    --color-brand-text-muted: #64748B;
+    /* Slate 500 */
+
+    --radius-lg: 0.5rem;
+    --radius-md: 0.375rem;
+    --radius-sm: 0.25rem;
+  }
+
+  .dark {
+    /* Dark Mode (Zinc/Blue) */
+    --color-brand-primary: #2563EB;
+    /* Blue 600 */
+    --color-brand-accent: #F97316;
+    /* Orange 500 */
+    --color-brand-surface: #18181B;
+    /* Zinc 900 */
+    --color-brand-bg: #09090B;
+    /* Zinc 950 */
+    --color-brand-border: #27272A;
+    /* Zinc 800 */
+    --color-brand-text: #FAFAFA;
+    /* Zinc 50 */
+    --color-brand-text-muted: #A1A1AA;
+    /* Zinc 400 */
+  }
+}
+
+@theme {
+  /* Dynamic Palette using Variables */
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-accent: var(--color-brand-accent);
+  --color-brand-surface: var(--color-brand-surface);
+  --color-brand-bg: var(--color-brand-bg);
+  --color-brand-border: var(--color-brand-border);
+  --color-brand-text: var(--color-brand-text);
+  --color-brand-text-muted: var(--color-brand-text-muted);
+
+  /* Typography */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-brand-bg);
+    color: var(--color-brand-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
