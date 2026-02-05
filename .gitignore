@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Internal / Local ###
+.agent/
+docs/
+design-system/smartfinance/
+
+Smart-Personal-Finance-Management-System/
