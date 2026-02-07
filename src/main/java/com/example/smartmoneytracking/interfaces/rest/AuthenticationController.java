@@ -24,13 +24,15 @@ public class AuthenticationController {
      * Register a new user
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<?>
+    register(@Valid @RequestBody RegisterRequest request) {
         try {
             User user = registerUserUseCase.execute(
                     request.getName(),
                     request.getEmail(),
                     request.getPassword(),
-                    request.getPhone());
+                    request.getPhone(),
+                    request.getCccd());
 
             return ResponseEntity
                     .status(HttpStatus.CREATED)
@@ -61,7 +63,7 @@ public class AuthenticationController {
     }
 
     // Response DTOs
-    record RegisterResponse(Long userId, String message) {
+    record RegisterResponse(String userId, String message) {
     }
 
     record ErrorResponse(String error) {

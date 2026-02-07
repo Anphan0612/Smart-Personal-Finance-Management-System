@@ -16,7 +16,7 @@ public class RegisterUserUseCase {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User execute(String name, String email, String rawPassword, String phone) {
+    public User execute(String name, String email, String rawPassword, String phone, String cccd) {
 
         // Check if email already exists
         if (userRepository.existsByEmail(email)) {
@@ -27,7 +27,7 @@ public class RegisterUserUseCase {
         String encodedPassword = passwordEncoder.encode(rawPassword);
 
         // Create user using factory method
-        User user = User.create(name, email, encodedPassword, phone);
+        User user = User.create(name, email, encodedPassword, phone, cccd);
 
         // Validate email format
         if (!user.isValidEmail()) {

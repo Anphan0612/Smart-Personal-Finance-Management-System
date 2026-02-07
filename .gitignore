@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+Smart-Personal-Finance-Management-System
+mobile/.expo
+mobile/content
+mobile/node_modules
+frontend/node_modules
+frontend/dist
+
+docs

@@ -58,14 +58,14 @@ public class JwtTokenProvider {
     /**
      * Get user ID from token
      */
-    public Long getUserIdFromToken(String token) {
+    public String getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return Long.parseLong(claims.getSubject());
+        return claims.getSubject();
     }
 
     /**
