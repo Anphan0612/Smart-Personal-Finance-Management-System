@@ -1,6 +1,8 @@
 package com.example.smartmoneytracking.domain.entities.category;
 
 import com.example.smartmoneytracking.domain.entities.category.valueobject.Type;
+import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,13 +10,51 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "categories")
 public class Category {
-    private Long id;
+    @Id
+    @Setter(AccessLevel.PRIVATE)
+    private String id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Type type;
+
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (id == null)
+            id = java.util.UUID.randomUUID().toString();
+        if (createdAt == null)
+            createdAt = LocalDateTime.now();
+    }
+
+    // Business Methods
+    public void updateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category name cannot be empty");
+        }
+        this.name = name;
+    }
+
+    public void updateType(Type type) {
+        if (type == null)
+            throw new IllegalArgumentException("Type cannot be null");
+        this.type = type;
+    }
+
+    public static Category create(String name, Type type) {
+        Category category = new Category();
+        category.updateName(name);
+        category.updateType(type);
+        return category;
+    }
 }

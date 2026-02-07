@@ -10,11 +10,11 @@ public class AuthenticationResponse {
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
-    private Long userId;
+    private String userId;
     private String email;
     private String name;
 
-    public AuthenticationResponse(String accessToken, String refreshToken, Long userId, String email, String name) {
+    public AuthenticationResponse(String accessToken, String refreshToken, String userId, String email, String name) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.userId = userId;
