@@ -1,34 +1,129 @@
-HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# ==============================================================================
+# Global & OS Files
+# ==============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
 
-### IntelliJ IDEA ###
-.idea
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==============================================================================
+# IDE & Editors
+# ==============================================================================
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# VS Code
+.vscode/
+*.code-workspace
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Eclipse / STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# ==============================================================================
+# Backend (Java / Spring Boot / Maven)
+# ==============================================================================
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
 
+# Compiled class files
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven Wrapper (Uncomment next line to IGNORE wrapper jar if desired)
+# .mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot
+hs_err_pid*
+
+# ==============================================================================
+# Frontend (Web & Mobile Shared)
+# ==============================================================================
+node_modules/
+.npm/
+jspm_packages/
+
+# Environment Variables (SECURITY CRITICAL)
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==============================================================================
+# Web (React / Vite)
+# ==============================================================================
+dist/
+dist-ssr/
+coverage/
+*.local
+
+# ==============================================================================
+# Mobile (Expo / React Native)
+# ==============================================================================
+.expo/
+web-build/
+metro-bundler.log
+
+# React Native
+*.jks
+*.keystore
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Android
+android/app/build/
+android/app/build/generated/
+
+# iOS
+ios/Pods/
+ios/build/
