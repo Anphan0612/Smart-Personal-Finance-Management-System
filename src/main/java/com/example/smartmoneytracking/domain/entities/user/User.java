@@ -20,7 +20,9 @@ public class User {
     private String id;
 
     @Column(nullable = false)
-    private String name;
+    private String username;
+
+    private UserRole role;
 
     private String avatar;
 
@@ -40,6 +42,10 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    public enum UserRole {
+        USER,
+        ADMIN
+    }
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
@@ -94,7 +100,7 @@ public class User {
     public static User create(String name, String email, String encodedPassword, String phone, String cccd) {
         User user = new User();
         user.setId(UUID.randomUUID().toString());
-        user.setName(name);
+        user.setUsername(name);
         user.setEmail(email);
         user.setPassword(encodedPassword);
         user.setPhone(phone);

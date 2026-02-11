@@ -28,7 +28,7 @@ public class AuthenticationController {
     register(@Valid @RequestBody RegisterRequest request) {
         try {
             User user = registerUserUseCase.execute(
-                    request.getName(),
+                    request.getUsername(),
                     request.getEmail(),
                     request.getPassword(),
                     request.getPhone(),
@@ -51,7 +51,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
             AuthenticationResponse response = loginUseCase.execute(
-                    request.getPhone(),
+                    request.getUsername(),
                     request.getPassword());
 
             return ResponseEntity.ok(response);
