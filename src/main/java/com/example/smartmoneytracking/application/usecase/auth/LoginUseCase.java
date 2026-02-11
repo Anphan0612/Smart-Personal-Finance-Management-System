@@ -17,11 +17,11 @@ public class LoginUseCase {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthenticationResponse execute(String phone, String password) {
+    public AuthenticationResponse execute(String username, String password) {
 
         // Find user by phone
-        User user = userRepository.findByPhone(phone)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid phone or password"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         // Check if user is enabled
         if (!user.isActive()) {
@@ -42,6 +42,6 @@ public class LoginUseCase {
                 refreshToken,
                 user.getId(),
                 user.getEmail(),
-                user.getName());
+                user.getUsername());
     }
 }

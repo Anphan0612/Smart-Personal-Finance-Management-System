@@ -15,8 +15,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
+// với mỗi request nó lấy jwt -> verify jwt -> nếu hợp le -> set authentication vao SecurityContext
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -41,10 +41,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
                 // Create authentication
+                UserPrincipal principal = new UserPrincipal(user);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        user,
+                        principal,
                         null,
-                        new ArrayList<>());
+                        principal.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 // Set authentication in context
