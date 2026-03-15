@@ -1,6 +1,10 @@
 package com.example.smartmoneytracking.application.dto;
 
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,12 +18,22 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TransactionRequest {
+
+    @NotBlank(message = "Wallet ID is required")
     private String walletId;
+
     private String categoryId;
+
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be positive")
     private BigDecimal amount;
+
     private String description;
+
+    @NotNull(message = "Transaction type is required")
     private TransactionType type;
 
-    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @NotNull(message = "Transaction date is required")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime transactionDate;
 }
