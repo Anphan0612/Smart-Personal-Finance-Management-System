@@ -5,6 +5,8 @@ import com.example.smartmoneytracking.application.dto.WalletUpdateRequest;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import com.example.smartmoneytracking.domain.entities.wallet.valueobject.Currency;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
+import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
+import com.example.smartmoneytracking.infrastructure.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +20,10 @@ public class UpdateWalletUseCase {
     @Transactional
     public WalletResponse execute(String walletId, WalletUpdateRequest request, String userId) {
         Wallet wallet = walletRepository.findById(walletId)
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
         if (!wallet.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized update of wallet");
+            throw new UnauthorizedException("Unauthorized update of wallet");
         }
 
         if (request.getName() != null) {

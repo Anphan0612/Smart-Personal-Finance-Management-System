@@ -3,11 +3,11 @@ package com.example.smartmoneytracking.application.usecase;
 import com.example.smartmoneytracking.application.dto.WalletResponse;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
+import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
+import com.example.smartmoneytracking.infrastructure.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class GetWalletByIdUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
         if (!wallet.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized access to wallet");
+            throw new UnauthorizedException("Unauthorized access to wallet");
         }
 
         return WalletResponse.builder()

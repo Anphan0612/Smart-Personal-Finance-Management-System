@@ -7,6 +7,8 @@ import com.example.smartmoneytracking.domain.entities.transaction.valueobject.Tr
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
+import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
+import com.example.smartmoneytracking.infrastructure.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,10 +24,10 @@ public class CreateTransactionUseCase {
     public TransactionResponse execute(TransactionRequest request, String userId) {
         // 1. Fetch Wallet
         Wallet wallet = walletRepository.findById(request.getWalletId())
-                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
         if (!wallet.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized transaction creation");
+            throw new UnauthorizedException("Unauthorized transaction creation");
         }
 
         // 2. Validate Balance for Expense

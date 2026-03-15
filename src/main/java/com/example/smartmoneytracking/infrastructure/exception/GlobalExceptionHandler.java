@@ -25,14 +25,16 @@ public class GlobalExceptionHandler {
                 CommonApiResponse.error(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
     }
 
-    // You can add more specific exception handlers here (e.g.,
-    // EntityNotFoundException)
-    // For now, let's add a generic one
-
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<CommonApiResponse<Void>> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(CommonApiResponse.error(HttpStatus.NOT_FOUND.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<CommonApiResponse<Void>> handleUnauthorizedException(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(CommonApiResponse.error(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
@@ -42,7 +44,6 @@ public class GlobalExceptionHandler {
                         "An unexpected error occurred: " + ex.getMessage()));
     }
 
-    // Add EntityNotFoundException handler if you have a custom exception for it
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
     public ResponseEntity<CommonApiResponse<Void>> handleEntityNotFoundException(
             jakarta.persistence.EntityNotFoundException ex) {
