@@ -1,5 +1,6 @@
 package com.example.smartmoneytracking.infrastructure.security;
 
+import com.example.smartmoneytracking.infrastructure.exception.UnauthorizedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -12,15 +13,15 @@ public class SecurityUtils {
 
     /**
      * Get the current authenticated user's ID from the security context
-     * 
+     *
      * @return User ID of the currently authenticated user
-     * @throws RuntimeException if no user is authenticated
+     * @throws UnauthorizedException if no user is authenticated or principal is invalid
      */
     public String getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("No authenticated user found");
+            throw new UnauthorizedException("No authenticated user found");
         }
 
         Object principal = authentication.getPrincipal();
@@ -29,19 +30,20 @@ public class SecurityUtils {
             return ((UserPrincipal) principal).getUserId();
         }
 
-        throw new RuntimeException("Unable to get user ID from authentication");
+        throw new UnauthorizedException("Unable to get user ID from authentication");
     }
 
     /**
      * Get the current authenticated user's principal
-     * 
+     *
      * @return UserPrincipal of the currently authenticated user
+     * @throws UnauthorizedException if no user is authenticated or principal is invalid
      */
     public UserPrincipal getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new RuntimeException("No authenticated user found");
+            throw new UnauthorizedException("No authenticated user found");
         }
 
         Object principal = authentication.getPrincipal();
@@ -50,6 +52,6 @@ public class SecurityUtils {
             return (UserPrincipal) principal;
         }
 
-        throw new RuntimeException("Unable to get user principal from authentication");
+        throw new UnauthorizedException("Unable to get user principal from authentication");
     }
 }

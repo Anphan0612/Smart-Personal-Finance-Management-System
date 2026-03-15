@@ -2,6 +2,8 @@ package com.example.smartmoneytracking.application.usecase;
 
 import com.example.smartmoneytracking.domain.entities.bankaccount.BankAccount;
 import com.example.smartmoneytracking.domain.repositories.BankAccountRepository;
+import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
+import com.example.smartmoneytracking.infrastructure.exception.UnauthorizedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +17,10 @@ public class DeleteBankAccountUseCase {
     @Transactional
     public void execute(String id, String userId) {
         BankAccount bankAccount = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bank Account not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Bank Account not found"));
 
         if (!bankAccount.getUserId().equals(userId)) {
-            throw new RuntimeException("Unauthorized deletion of bank account");
+            throw new UnauthorizedException("Unauthorized deletion of bank account");
         }
 
         bankAccountRepository.deleteById(id);
