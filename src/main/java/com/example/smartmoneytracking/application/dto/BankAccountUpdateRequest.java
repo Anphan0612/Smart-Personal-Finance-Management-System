@@ -1,6 +1,7 @@
 package com.example.smartmoneytracking.application.dto;
 
 import com.example.smartmoneytracking.domain.entities.bankaccount.valueobject.BankAccountType;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,10 @@ import java.math.BigDecimal;
 public class BankAccountUpdateRequest {
     private String accountNumber;
     private String bankName;
+
+    @PositiveOrZero(message = "Balance must be zero or positive")
     private BigDecimal balance;
+
     private String currencyCode;
     private BankAccountType type;
 }

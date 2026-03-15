@@ -5,6 +5,7 @@ import com.example.smartmoneytracking.application.dto.WalletRequest;
 import com.example.smartmoneytracking.application.dto.WalletResponse;
 import com.example.smartmoneytracking.application.dto.WalletUpdateRequest;
 import com.example.smartmoneytracking.application.usecase.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class WalletController {
     private final com.example.smartmoneytracking.infrastructure.security.SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<CommonApiResponse<WalletResponse>> createWallet(@RequestBody WalletRequest request) {
+    public ResponseEntity<CommonApiResponse<WalletResponse>> createWallet(@Valid @RequestBody WalletRequest request) {
         String userId = securityUtils.getCurrentUserId();
         WalletResponse response = createWalletUseCase.execute(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(CommonApiResponse.created(response));
@@ -45,7 +46,7 @@ public class WalletController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<WalletResponse>> updateWallet(@PathVariable String id,
-            @RequestBody WalletUpdateRequest request) {
+            @Valid @RequestBody WalletUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateWalletUseCase.execute(id, request, userId)));
     }
