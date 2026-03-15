@@ -5,6 +5,7 @@ import com.example.smartmoneytracking.application.dto.TransactionRequest;
 import com.example.smartmoneytracking.application.dto.TransactionResponse;
 import com.example.smartmoneytracking.application.dto.TransactionUpdateRequest;
 import com.example.smartmoneytracking.application.usecase.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity<CommonApiResponse<TransactionResponse>> createTransaction(
-            @RequestBody TransactionRequest request) {
+            @Valid @RequestBody TransactionRequest request) {
         String userId = securityUtils.getCurrentUserId();
         TransactionResponse response = createTransactionUseCase.execute(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(CommonApiResponse.created(response));
@@ -46,7 +47,7 @@ public class TransactionController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<TransactionResponse>> updateTransaction(@PathVariable String id,
-            @RequestBody TransactionUpdateRequest request) {
+            @Valid @RequestBody TransactionUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
     }

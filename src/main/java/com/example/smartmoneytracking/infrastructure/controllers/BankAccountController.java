@@ -5,6 +5,7 @@ import com.example.smartmoneytracking.application.dto.BankAccountRequest;
 import com.example.smartmoneytracking.application.dto.BankAccountResponse;
 import com.example.smartmoneytracking.application.dto.BankAccountUpdateRequest;
 import com.example.smartmoneytracking.application.usecase.*;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +27,7 @@ public class BankAccountController {
 
     @PostMapping
     public ResponseEntity<CommonApiResponse<BankAccountResponse>> createBankAccount(
-            @RequestBody BankAccountRequest request) {
+            @Valid @RequestBody BankAccountRequest request) {
         String userId = securityUtils.getCurrentUserId();
         BankAccountResponse response = createBankAccountUseCase.execute(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(CommonApiResponse.created(response));
@@ -46,7 +47,7 @@ public class BankAccountController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<BankAccountResponse>> updateBankAccount(@PathVariable String id,
-            @RequestBody BankAccountUpdateRequest request) {
+            @Valid @RequestBody BankAccountUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateBankAccountUseCase.execute(id, request, userId)));
     }
