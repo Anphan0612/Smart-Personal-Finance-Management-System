@@ -5,6 +5,9 @@ import com.example.smartmoneytracking.application.dto.TransactionResponse;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
+import com.example.smartmoneytracking.domain.exception.BusinessException;
+import com.example.smartmoneytracking.domain.exception.ErrorCode;
+import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
 import com.example.smartmoneytracking.infrastructure.exception.ResourceNotFoundException;
@@ -19,10 +22,18 @@ public class CreateTransactionUseCase {
 
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
+    private final CategoryRepository categoryRepository;
 
     @Transactional
     public TransactionResponse execute(TransactionRequest request, String userId) {
-        // 1. Fetch Wallet
+        // 1. Validate category exists (only if provided)
+        if (request.getCategoryId() != null && !request.getCategoryId().isBlank()) {
+            categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND,
+                            "Category not found: " + request.getCategoryId()));
+        }
+
+        // 2. Fetch Wallet
         Wallet wallet = walletRepository.findById(request.getWalletId())
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found"));
 
@@ -30,19 +41,17 @@ public class CreateTransactionUseCase {
             throw new UnauthorizedException("Unauthorized transaction creation");
         }
 
-        // 2. Validate Balance for Expense
+        // 3. Validate Balance for Expense
         if (request.getType() == TransactionType.EXPENSE) {
-            // withdraw method handles validation
             wallet.withdraw(request.getAmount());
         } else if (request.getType() == TransactionType.INCOME) {
             wallet.deposit(request.getAmount());
         }
 
-        // 3. Save Wallet update
-        // wallet.setUpdatedAt(LocalDateTime.now()); handled by @PreUpdate
+        // 4. Save Wallet update
         walletRepository.save(wallet);
 
-        // 4. Create Transaction
+        // 5. Create Transaction
         Transaction transaction = Transaction.create(
                 wallet.getId(),
                 request.getCategoryId(),
@@ -50,7 +59,6 @@ public class CreateTransactionUseCase {
                 request.getType(),
                 request.getDescription(),
                 request.getTransactionDate());
-        // transaction.setCreatedAt(LocalDateTime.now()); handled by @PrePersist
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
