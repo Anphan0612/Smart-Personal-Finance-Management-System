@@ -15,4 +15,6 @@ public interface TransactionRepository {
     List<Transaction> findByCategoryId(String categoryId);
 
     void deleteById(String id);
+
+    List<Transaction> findByWalletIdAndTransactionDateBetween(String walletId, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

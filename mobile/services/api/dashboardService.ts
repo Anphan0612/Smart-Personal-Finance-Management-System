@@ -1,4 +1,3 @@
-
 export interface DashboardSummary {
   income: number;
   expenses: number;
@@ -21,82 +20,39 @@ export interface CategoryBreakdown {
 export interface Transaction {
   id: string;
   amount: number;
-  category: string;
+  categoryId: string;
   description: string;
-  date: string;
-  type: 'income' | 'expense';
+  transactionDate: string;
+  type: string;
 }
 
-export type TimeRange = 'current_month' | '3_months';
+export type Period = 'current_month' | '3_months'; // "month" | "week" as logically discussed in our MVP
 
-// Mock data - replace with actual API calls
-const mockSummary: DashboardSummary = {
-  income: 15000000,
-  expenses: 8500000,
-  balance: 6500000,
-  savingsRate: 43.3,
-};
-
-const mockMonthlyTrend: MonthlyTrend[] = [
-  { month: 'Jan', income: 12000000, expenses: 8000000 },
-  { month: 'Feb', income: 14000000, expenses: 9000000 },
-  { month: 'Mar', income: 15000000, expenses: 8500000 },
-];
-
-const mockCategoryBreakdown: CategoryBreakdown[] = [
-  { category: 'Food', amount: 2500000, color: '#ef4444' },
-  { category: 'Transport', amount: 1800000, color: '#3b82f6' },
-  { category: 'Shopping', amount: 1500000, color: '#8b5cf6' },
-  { category: 'Entertainment', amount: 1200000, color: '#f59e0b' },
-  { category: 'Bills', amount: 1500000, color: '#10b981' },
-];
-
-const mockTransactions: Transaction[] = [
-  { id: '1', amount: -500000, category: 'Food', description: 'Lunch at restaurant', date: '2024-01-15', type: 'expense' },
-  { id: '2', amount: 5000000, category: 'Salary', description: 'Monthly salary', date: '2024-01-01', type: 'income' },
-  { id: '3', amount: -200000, category: 'Transport', description: 'Taxi fare', date: '2024-01-14', type: 'expense' },
-  { id: '4', amount: -1500000, category: 'Shopping', description: 'New clothes', date: '2024-01-13', type: 'expense' },
-  { id: '5', amount: -300000, category: 'Entertainment', description: 'Movie tickets', date: '2024-01-12', type: 'expense' },
-];
-
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Use loopback ip for Android Emulator (10.0.2.2) to reach localhost:8080 of the host machine
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:8080/api/v1';
 
 export const dashboardService = {
-  async getSummary(timeRange: TimeRange): Promise<DashboardSummary> {
-    await delay(500); // Simulate network delay
-    return mockSummary;
-  },
-
-  async getMonthlyTrend(timeRange: TimeRange): Promise<MonthlyTrend[]> {
-    await delay(300);
-    return mockMonthlyTrend;
-  },
-
-  async getCategoryBreakdown(timeRange: TimeRange): Promise<CategoryBreakdown[]> {
-    await delay(400);
-    return mockCategoryBreakdown;
-  },
-
-  async getRecentTransactions(limit: number = 10): Promise<Transaction[]> {
-    await delay(200);
-    return mockTransactions.slice(0, limit);
-  },
-
-  // Combined method for parallel fetching
-  async getDashboardData(timeRange: TimeRange) {
-    const [summary, monthlyTrend, categoryBreakdown, transactions] = await Promise.all([
-      this.getSummary(timeRange),
-      this.getMonthlyTrend(timeRange),
-      this.getCategoryBreakdown(timeRange),
-      this.getRecentTransactions(5),
-    ]);
-
-    return {
-      summary,
-      monthlyTrend,
-      categoryBreakdown,
-      transactions,
-    };
+  async getDashboardData(period: Period) {
+    try {
+      // Dùng default wallet id tạm thời cho MVP, lý tưởng là từ user context
+      const defaultWalletId = 'w1';
+      
+      const response = await fetch(`${API_URL}/dashboard/summary?walletId=${defaultWalletId}&timeRange=${period}`);
+      
+      if (!response.ok) {
+        throw new Error('Không thể kết nối Backend để lấy số liệu thống kê.');
+      }
+      
+      const data = await response.json();
+      return {
+        summary: data.summary,
+        monthlyTrend: data.monthlyTrend,
+        categoryBreakdown: data.categoryBreakdown,
+        transactions: data.transactions, // recent transactions
+      };
+    } catch (error) {
+      console.warn('Lỗi fetch dữ liệu thực:', error);
+      throw error;
+    }
   },
 };
