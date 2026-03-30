@@ -34,26 +34,26 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<CommonApiResponse<List<TransactionResponse>>> getTransactions(@RequestParam String walletId) {
+    public ResponseEntity<CommonApiResponse<List<TransactionResponse>>> getTransactions(@RequestParam("walletId") String walletId) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(getTransactionsByWalletIdUseCase.execute(walletId, userId)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<TransactionResponse>> getTransactionById(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<TransactionResponse>> getTransactionById(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(getTransactionByIdUseCase.execute(id, userId)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<TransactionResponse>> updateTransaction(@PathVariable String id,
+    public ResponseEntity<CommonApiResponse<TransactionResponse>> updateTransaction(@PathVariable("id") String id,
             @Valid @RequestBody TransactionUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<Void>> deleteTransaction(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<Void>> deleteTransaction(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         deleteTransactionUseCase.execute(id, userId);
         return ResponseEntity.ok(CommonApiResponse.success(null));

@@ -40,20 +40,20 @@ public class BankAccountController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<BankAccountResponse>> getBankAccountById(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<BankAccountResponse>> getBankAccountById(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(getBankAccountByIdUseCase.execute(id, userId)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<BankAccountResponse>> updateBankAccount(@PathVariable String id,
+    public ResponseEntity<CommonApiResponse<BankAccountResponse>> updateBankAccount(@PathVariable("id") String id,
             @Valid @RequestBody BankAccountUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateBankAccountUseCase.execute(id, request, userId)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<Void>> deleteBankAccount(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<Void>> deleteBankAccount(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         deleteBankAccountUseCase.execute(id, userId);
         return ResponseEntity.ok(CommonApiResponse.success(null));

@@ -19,7 +19,7 @@ public class User {
     @Id
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
     private UserRole role;
@@ -103,6 +103,7 @@ public class User {
         user.setUsername(name);
         user.setEmail(email);
         user.setPassword(encodedPassword);
+        user.setRole(UserRole.USER);
         user.setPhone(phone);
         user.setCccd(cccd);
         user.setEnabled(true); // Active by default

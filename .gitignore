@@ -1,10 +1,21 @@
+# ==========================================
+# 📂 Project-Wide (Structure & Docs)
+# ==========================================
+docs/
+figmaUI/
+phobert-finance-ner-final/
+SmartMoneyTracking_Environment.json
+SmartMoneyTracking_API_Collection.json
+Smart_Money_Tracking_Auth.postman_collection.json
+
+# ==========================================
+# ☕ Java / Maven (Backend Core)
+# ==========================================
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
-### STS ###
 .apt_generated
 .classpath
 .factorypath
@@ -13,29 +24,38 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-Smart-Personal-Finance-Management-System
+# ==========================================
+# 🐍 Python / AI (NLP Backend)
+# ==========================================
+**/__pycache__/
+.venv/
+.pytest_cache/
+api/models/*.bin
+api/models/*.pt
+api/models/*.h5
+api/benchmark
+# ==========================================
+# ⚛️ React / Mobile (Frontend)
+# ==========================================
+node_modules/
+dist/
 mobile/.expo
-mobile/content
 mobile/node_modules
 frontend/node_modules
 frontend/dist
 
-docs
+# ==========================================
+# 🔑 Security & Environment
+# ==========================================
+.env
+.env.*
+.venvc
+
+# ==========================================
+# 💻 IDE Settings
+# ==========================================
+.idea/
+.vscode/
+*.iws
+*.iml
+*.ipr
