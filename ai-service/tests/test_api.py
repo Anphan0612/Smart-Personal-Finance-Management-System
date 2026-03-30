@@ -14,12 +14,12 @@ from fastapi.testclient import TestClient
 # ---------------------------------------------------------------------------
 # Unit Tests: money_parser (no AI model needed)
 # ---------------------------------------------------------------------------
-from api.utils.money_parser import parse_amount
+from utils.money_parser import parse_amount
 
 # ---------------------------------------------------------------------------
 # Unit Tests: rule-based helpers (no AI model needed)
 # ---------------------------------------------------------------------------
-from api.services.ner_service import _infer_type, _map_category
+from services.ner_service import _infer_type, _map_category
 
 
 class TestMoneyParser:
@@ -119,8 +119,8 @@ def client():
 
     mock_ner.extract.side_effect = _fake_extract
 
-    with patch("api.main._ner_service", mock_ner):
-        from api.main import app
+    with patch("main._ner_service", mock_ner):
+        from main import app
         with TestClient(app) as c:
             yield c
 
@@ -133,7 +133,7 @@ def client_llm_repair_path():
 
     Goal: verify gated LLM repair doesn't break the endpoint contract.
     """
-    from api.services.ner_service import NERService
+    from services.ner_service import NERService
 
     # Ensure __init__ uses our mocked pipeline.
     NERService._pipeline = None
@@ -150,11 +150,11 @@ def client_llm_repair_path():
 
     # LLM must be considered "available" for gating; we patch the imported
     # symbol in ner_service to avoid relying on real GROQ env/network.
-    with patch("api.services.ner_service.pipeline", return_value=mock_pipeline), patch(
-        "api.services.ner_service.is_llm_configured", return_value=True
-    ), patch("api.services.ner_service.repair_transaction_with_llm_sync", return_value=llm_fix):
+    with patch("services.ner_service.pipeline", return_value=mock_pipeline), patch(
+        "services.ner_service.is_llm_configured", return_value=True
+    ), patch("services.ner_service.repair_transaction_with_llm_sync", return_value=llm_fix):
         # Import inside the fixture so lifespan runs under mocks.
-        from api.main import app
+        from main import app
 
         with TestClient(app) as c:
             yield c
