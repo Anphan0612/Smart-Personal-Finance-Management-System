@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface JpaTransactionRepository extends JpaRepository<Transaction, String>, TransactionRepository {
+    java.util.List<Transaction> findByWalletIdAndTransactionDateBetween(String walletId, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

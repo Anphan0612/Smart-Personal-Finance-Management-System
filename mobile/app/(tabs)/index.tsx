@@ -3,9 +3,12 @@ import {useRouter} from "expo-router";
 import {useState} from "react";
 import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {NaturalLanguageInput, ParsedTransaction} from "../../components/nlp/NaturalLanguageInput";
-import {useDashboard} from "../../hooks/useDashboard";
+import {useDashboardSummary} from "../../hooks/useDashboard";
 import {transactionService} from "../../services/api/transactionService";
 import {ChatBubble} from "../../components/ui/ChatBubble";
+import { TimeFilter } from '../../components/dashboard/TimeFilter';
+import { SummaryCard } from '../../components/dashboard/SummaryCard';
+import { GrowthChart } from '../../components/dashboard/GrowthChart';
 
 const transactions = [
   { id: "1", title: "Dribbble", sub: "Subscription fee", amount: "-$15.00", icon: "laptop-outline" },
@@ -44,7 +47,7 @@ function NLPModal({ visible, onClose, onSave }: {
 export default function HomeScreen() {
   const router = useRouter();
   const [showNLPModal, setShowNLPModal] = useState(false);
-  const { summary, transactions, loading, error, refetch } = useDashboard();
+  const { summary, monthlyTrend, transactions, loading, error, refetch, period, setPeriod } = useDashboardSummary();
 
   const handleSaveTransaction = async (transaction: ParsedTransaction) => {
     try {
@@ -77,22 +80,19 @@ export default function HomeScreen() {
             </View>
 
             {/* Card */}
-            <View style={styles.card}>
-              <Text style={styles.balanceLabel}>Tổng số dư</Text>
-              <Text style={styles.balance}>
-                {summary ? `${summary.balance.toLocaleString('vi-VN')} VND` : 'Loading...'}
-              </Text>
-
-              <View style={styles.cardRow}>
-                <Text style={styles.cardNumber}>0110 ••• 8207</Text>
-                <Ionicons name="card-outline" size={20} color="#fff" />
-              </View>
-
-              <View style={styles.cardBottom}>
-                <Text style={styles.cardName}>Nguyễn Ngọc Quỳnh Anh</Text>
-                <Text style={styles.exp}>09/29</Text>
-              </View>
+            <View style={{ marginTop: 10 }}>
+              <TimeFilter 
+                options={['Tháng này', '3 Tháng']} 
+                selected={period === 'current_month' ? 'Tháng này' : '3 Tháng'}
+                onSelect={(opt) => setPeriod(opt === 'Tháng này' ? 'current_month' : '3_months')}
+              />
             </View>
+
+            <SummaryCard summary={summary} isLoading={loading} />
+
+            <GrowthChart data={
+              monthlyTrend?.map((t: any) => ({ value: t.income }))
+            } />
 
             {/* Quick Actions */}
             <View style={styles.sectionRow}>
@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
 
   content: {
     padding: 20,
+    backgroundColor: '#f6fafe', // Đổi nền theo chuẩn Stitch "surface"
   },
 
   header: {
