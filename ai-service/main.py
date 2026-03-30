@@ -10,8 +10,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.models.schemas import EntityResponse, ErrorResponse, TransactionRequest
-from api.services.ner_service import NERService
+from models.schemas import EntityResponse, ErrorResponse, TransactionRequest
+from services.ner_service import NERService
 
 # ---------------------------------------------------------------------------
 # Singleton NER service (loaded once at startup to avoid per-request latency)
