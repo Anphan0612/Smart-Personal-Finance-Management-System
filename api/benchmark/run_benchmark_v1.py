@@ -411,7 +411,7 @@ def main() -> None:
             "all_fields_accuracy",
             "parse_success_rate",
         ]
-        print(f"{'Metric':<28} {'Current':>8} {'Baseline':>9} {'Δ':>8}")
+        print(f"{'Metric':<28} {'Current':>8} {'Baseline':>9} {'Delta':>8}")
         for k in keys:
             cur = metrics_now.get(k, 0.0)
             base = baseline_before.get(k, 0.0)

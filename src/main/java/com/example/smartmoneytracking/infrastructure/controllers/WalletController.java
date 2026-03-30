@@ -39,20 +39,20 @@ public class WalletController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<WalletResponse>> getWalletById(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<WalletResponse>> getWalletById(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(getWalletByIdUseCase.execute(id, userId)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<WalletResponse>> updateWallet(@PathVariable String id,
+    public ResponseEntity<CommonApiResponse<WalletResponse>> updateWallet(@PathVariable("id") String id,
             @Valid @RequestBody WalletUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateWalletUseCase.execute(id, request, userId)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<Void>> deleteWallet(@PathVariable String id) {
+    public ResponseEntity<CommonApiResponse<Void>> deleteWallet(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         deleteWalletUseCase.execute(id, userId);
         return ResponseEntity.ok(CommonApiResponse.success(null));
