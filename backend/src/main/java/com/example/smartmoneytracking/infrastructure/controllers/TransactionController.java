@@ -47,7 +47,7 @@ public class TransactionController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<TransactionResponse>> updateTransaction(@PathVariable("id") String id,
-            @Valid @RequestBody TransactionUpdateRequest request) {
+                                                                                    @Valid @RequestBody TransactionUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
     }

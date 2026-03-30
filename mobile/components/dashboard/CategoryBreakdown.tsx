@@ -1,10 +1,10 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { VictoryLabel, VictoryPie } from 'victory-native';
-import { CHART_CONFIG } from '../../constants/dashboard';
-import { CategoryBreakdown as CategoryBreakdownType } from '../../services/api/dashboardService';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
+import {StyleSheet, View} from 'react-native';
+import {VictoryLabel, VictoryPie} from 'victory-native';
+import {CHART_CONFIG} from '../../constants/dashboard';
+import {CategoryBreakdown as CategoryBreakdownType} from '../../services/api/dashboardService';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
 
 interface CategoryBreakdownProps {
   data: CategoryBreakdownType[] | null;

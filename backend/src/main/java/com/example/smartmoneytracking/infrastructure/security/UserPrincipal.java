@@ -56,7 +56,7 @@ public class UserPrincipal implements UserDetails {
 
     /**
      * Get the user ID from the underlying User entity
-     * 
+     *
      * @return User ID
      */
     public String getUserId() {

@@ -46,7 +46,7 @@ public class WalletController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<WalletResponse>> updateWallet(@PathVariable("id") String id,
-            @Valid @RequestBody WalletUpdateRequest request) {
+                                                                          @Valid @RequestBody WalletUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateWalletUseCase.execute(id, request, userId)));
     }

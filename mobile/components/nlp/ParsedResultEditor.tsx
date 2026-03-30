@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { IconSymbol } from '../ui/icon-symbol';
-import { ParsedTransaction } from './NaturalLanguageInput';
-import { TransactionParser } from './TransactionParser';
+import React, {useEffect, useState} from 'react';
+import {Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {IconSymbol} from '../ui/icon-symbol';
+import {ParsedTransaction} from './NaturalLanguageInput';
+import {TransactionParser} from './TransactionParser';
 
 interface ParsedResultEditorProps {
   transaction: ParsedTransaction;

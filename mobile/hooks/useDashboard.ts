@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
-import { CategoryBreakdown, dashboardService, DashboardSummary, MonthlyTrend, TimeRange, Transaction } from '../services/api/dashboardService';
-import { dashboardCache } from '../services/cache/dashboardCache';
+import {useCallback, useEffect, useState} from 'react';
+import {
+    CategoryBreakdown,
+    dashboardService,
+    DashboardSummary,
+    MonthlyTrend,
+    TimeRange,
+    Transaction
+} from '../services/api/dashboardService';
+import {dashboardCache} from '../services/cache/dashboardCache';
 
 interface DashboardData {
   summary: DashboardSummary | null;

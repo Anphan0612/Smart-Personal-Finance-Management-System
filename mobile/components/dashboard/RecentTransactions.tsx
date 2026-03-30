@@ -1,9 +1,9 @@
 import React from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
-import { Transaction } from '../../services/api/dashboardService';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { IconSymbol } from '../ui/icon-symbol';
+import {FlatList, StyleSheet, View} from 'react-native';
+import {Transaction} from '../../services/api/dashboardService';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {IconSymbol} from '../ui/icon-symbol';
 
 interface RecentTransactionsProps {
   transactions: Transaction[] | null;

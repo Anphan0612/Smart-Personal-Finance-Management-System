@@ -1,4 +1,4 @@
-package com.example.smartmoneytracking.interfaces.rest;
+package com.example.smartmoneytracking.infrastructure.controllers;
 
 import com.example.smartmoneytracking.application.dto.AuthenticationResponse;
 import com.example.smartmoneytracking.application.dto.LoginRequest;

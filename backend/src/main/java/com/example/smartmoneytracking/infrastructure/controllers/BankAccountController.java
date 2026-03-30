@@ -47,7 +47,7 @@ public class BankAccountController {
 
     @PutMapping("/{id}")
     public ResponseEntity<CommonApiResponse<BankAccountResponse>> updateBankAccount(@PathVariable("id") String id,
-            @Valid @RequestBody BankAccountUpdateRequest request) {
+                                                                                    @Valid @RequestBody BankAccountUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(CommonApiResponse.success(updateBankAccountUseCase.execute(id, request, userId)));
     }

@@ -34,7 +34,7 @@ public class Transaction {
 
     @Column(nullable = false)
     @Setter(AccessLevel.PRIVATE) // Amount shouldn't change easily without affecting wallet balance. Better to
-                                 // reverse and recreate, or strict update logic.
+    // reverse and recreate, or strict update logic.
     private BigDecimal amount;
 
     @Setter(AccessLevel.PUBLIC)
@@ -57,7 +57,7 @@ public class Transaction {
     }
 
     public static Transaction create(String walletId, String categoryId, BigDecimal amount, TransactionType type,
-            String description, LocalDateTime date) {
+                                     String description, LocalDateTime date) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Transaction amount must be positive");
         }

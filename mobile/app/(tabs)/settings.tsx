@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from "expo-router";
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import {useRouter} from "expo-router";
+import {Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View} from "react-native";
 
 export default function SettingsScreen() {
   const router = useRouter();

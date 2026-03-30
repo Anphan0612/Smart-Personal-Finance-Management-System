@@ -1,4 +1,4 @@
-import type { ParsedTransaction } from './NaturalLanguageInput';
+import type {ParsedTransaction} from './NaturalLanguageInput';
 
 export class TransactionParser {
   // Keywords cho các danh mục

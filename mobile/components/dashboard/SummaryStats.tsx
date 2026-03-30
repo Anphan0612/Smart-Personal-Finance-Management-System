@@ -1,9 +1,9 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { DashboardSummary } from '../../services/api/dashboardService';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { IconSymbol } from '../ui/icon-symbol';
+import {StyleSheet, View} from 'react-native';
+import {DashboardSummary} from '../../services/api/dashboardService';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {IconSymbol} from '../ui/icon-symbol';
 
 interface SummaryStatsProps {
   summary: DashboardSummary | null;
