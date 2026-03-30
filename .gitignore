@@ -3,13 +3,15 @@
 # ==========================================
 docs/
 figmaUI/
-phobert-finance-ner-final/
-SmartMoneyTracking_Environment.json
-SmartMoneyTracking_API_Collection.json
-Smart_Money_Tracking_Auth.postman_collection.json
+
+# ML Models (large binary files — download separately)
+ml-models/
+
+# Postman collections (tracked manually in tools/)
+tools/postman/
 
 # ==========================================
-# ☕ Java / Maven (Backend Core)
+# ☕ Java / Maven (backend/)
 # ==========================================
 HELP.md
 target/
@@ -25,31 +27,29 @@ target/
 .sts4-cache
 
 # ==========================================
-# 🐍 Python / AI (NLP Backend)
+# 🐍 Python / AI (ai-service/)
 # ==========================================
 **/__pycache__/
 .venv/
 .pytest_cache/
-api/models/*.bin
-api/models/*.pt
-api/models/*.h5
-api/benchmark
+ai-service/models/*.bin
+ai-service/models/*.pt
+ai-service/models/*.h5
+ai-service/benchmark/
+
 # ==========================================
-# ⚛️ React / Mobile (Frontend)
+# ⚛️ React Native / Mobile (mobile/)
 # ==========================================
 node_modules/
 dist/
 mobile/.expo
-mobile/node_modules
-frontend/node_modules
-frontend/dist
 
 # ==========================================
 # 🔑 Security & Environment
 # ==========================================
 .env
 .env.*
-.venvc
+!.env.example
 
 # ==========================================
 # 💻 IDE Settings

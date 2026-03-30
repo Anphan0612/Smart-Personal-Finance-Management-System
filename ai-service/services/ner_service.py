@@ -13,10 +13,10 @@ from typing import Optional
 
 from transformers import pipeline, TokenClassificationPipeline
 
-from api.utils.money_parser import parse_amount
-from api.utils.text_normalizer import normalize_for_rules
+from utils.money_parser import parse_amount
+from utils.text_normalizer import normalize_for_rules
 
-from api.services.llm_service import is_llm_configured, repair_transaction_with_llm_sync
+from services.llm_service import is_llm_configured, repair_transaction_with_llm_sync
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +167,7 @@ class NERService:
     """
 
     _pipeline: Optional[TokenClassificationPipeline] = None
-    MODEL_PATH = "./phobert-finance-ner-final"
+    MODEL_PATH = "../ml-models/phobert-finance-ner-final"
 
     def __init__(self) -> None:
         # Load model weights lazily/defensively:
