@@ -15,12 +15,12 @@
 ## 🏗️ Cấu trúc Dự án
 
 ```
-├── backend/          # ☕ Spring Boot API (Java 17+)
-├── ai-service/       # 🐍 FastAPI NLP/ML Service (Python)
-├── mobile/           # 📱 React Native Mobile App (Expo)
-├── ml-models/        # 🤖 PhoBERT trained models (not in Git)
-├── docs/             # 📖 Documentation Hub
-└── tools/            # 🛠️ Postman collections, scripts
+├── backend/          #  Spring Boot API (Java 17+)
+├── ai-service/       #  FastAPI NLP/ML Service (Python)
+├── mobile/           #  React Native Mobile App (Expo)
+├── ml-models/        #  PhoBERT trained models (not in Git)
+├── docs/             #  Documentation Hub
+└── tools/            #  Postman collections, scripts
 ```
 
 | Thư mục | Mô tả | Công nghệ |

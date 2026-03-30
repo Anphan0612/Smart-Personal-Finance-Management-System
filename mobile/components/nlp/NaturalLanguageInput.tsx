@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { IconSymbol } from '../ui/icon-symbol';
-import { ParsedResultEditor } from './ParsedResultEditor';
-import { TransactionParser } from './TransactionParser';
+import React, {useState} from 'react';
+import {StyleSheet, TextInput, TouchableOpacity, View} from 'react-native';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {IconSymbol} from '../ui/icon-symbol';
+import {ParsedResultEditor} from './ParsedResultEditor';
+import {TransactionParser} from './TransactionParser';
 
 export interface ParsedTransaction {
   amount: number;

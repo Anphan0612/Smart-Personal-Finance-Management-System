@@ -2,6 +2,7 @@ package com.example.smartmoneytracking.domain.entities.transaction;
 
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

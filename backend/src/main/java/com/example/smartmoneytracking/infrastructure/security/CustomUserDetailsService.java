@@ -20,6 +20,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
         return userRepository.findByUsername(username)
                 .map(UserPrincipal::new) // = .map(user -> new UserPrincipal(user))
-                .orElseThrow(()->new UsernameNotFoundException("User not found " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found " + username));
     }
 }

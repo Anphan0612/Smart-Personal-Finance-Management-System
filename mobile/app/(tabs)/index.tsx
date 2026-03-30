@@ -1,11 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { NaturalLanguageInput, ParsedTransaction } from "../../components/nlp/NaturalLanguageInput";
-import { useDashboard } from "../../hooks/useDashboard";
-import { transactionService } from "../../services/api/transactionService";
-import { ChatBubble } from "../../components/ui/ChatBubble";
+import {Ionicons} from "@expo/vector-icons";
+import {useRouter} from "expo-router";
+import {useState} from "react";
+import {FlatList, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {NaturalLanguageInput, ParsedTransaction} from "../../components/nlp/NaturalLanguageInput";
+import {useDashboard} from "../../hooks/useDashboard";
+import {transactionService} from "../../services/api/transactionService";
+import {ChatBubble} from "../../components/ui/ChatBubble";
 
 const transactions = [
   { id: "1", title: "Dribbble", sub: "Subscription fee", amount: "-$15.00", icon: "laptop-outline" },

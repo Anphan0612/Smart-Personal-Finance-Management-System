@@ -34,7 +34,7 @@ public class Wallet {
 
     @Embedded
     @Setter(AccessLevel.PUBLIC) // Currency might be changeable? Or should be final? Let's allow setting for now
-                                // but ideally it's part of creation
+    // but ideally it's part of creation
     private Currency currency;
 
     @Enumerated(EnumType.STRING)

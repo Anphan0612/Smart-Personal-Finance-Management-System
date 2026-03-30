@@ -1,10 +1,10 @@
 import React from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import { VictoryAxis, VictoryBar, VictoryChart, VictoryGroup, VictoryLegend } from 'victory-native';
-import { CHART_CONFIG } from '../../constants/dashboard';
-import { MonthlyTrend } from '../../services/api/dashboardService';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
+import {Dimensions, StyleSheet, View} from 'react-native';
+import {VictoryAxis, VictoryBar, VictoryChart, VictoryGroup, VictoryLegend} from 'victory-native';
+import {CHART_CONFIG} from '../../constants/dashboard';
+import {MonthlyTrend} from '../../services/api/dashboardService';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
 
 const { width } = Dimensions.get('window');
 

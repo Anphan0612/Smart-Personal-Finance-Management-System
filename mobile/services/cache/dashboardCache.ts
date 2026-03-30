@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LRUCache } from 'lru-cache';
+import {LRUCache} from 'lru-cache';
 
 interface CacheEntry<T> {
   data: T;

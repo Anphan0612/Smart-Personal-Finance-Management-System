@@ -1,5 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { KeyboardAvoidingView, Platform, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
+import React, {useState} from 'react';
+import {
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 
 interface Message {
   id: string;

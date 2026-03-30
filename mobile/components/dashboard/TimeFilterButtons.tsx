@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { TIME_RANGE_OPTIONS, TimeRange } from '../../constants/dashboard';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {TIME_RANGE_OPTIONS, TimeRange} from '../../constants/dashboard';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
 
 interface TimeFilterButtonsProps {
   selectedRange: TimeRange;

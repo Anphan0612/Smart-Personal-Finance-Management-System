@@ -39,12 +39,18 @@ class TransactionControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
-    @Mock private CreateTransactionUseCase createTransactionUseCase;
-    @Mock private GetTransactionsByWalletIdUseCase getTransactionsByWalletIdUseCase;
-    @Mock private GetTransactionByIdUseCase getTransactionByIdUseCase;
-    @Mock private UpdateTransactionUseCase updateTransactionUseCase;
-    @Mock private DeleteTransactionUseCase deleteTransactionUseCase;
-    @Mock private SecurityUtils securityUtils;
+    @Mock
+    private CreateTransactionUseCase createTransactionUseCase;
+    @Mock
+    private GetTransactionsByWalletIdUseCase getTransactionsByWalletIdUseCase;
+    @Mock
+    private GetTransactionByIdUseCase getTransactionByIdUseCase;
+    @Mock
+    private UpdateTransactionUseCase updateTransactionUseCase;
+    @Mock
+    private DeleteTransactionUseCase deleteTransactionUseCase;
+    @Mock
+    private SecurityUtils securityUtils;
 
     @InjectMocks
     private TransactionController transactionController;

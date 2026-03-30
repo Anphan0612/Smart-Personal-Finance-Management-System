@@ -1,4 +1,4 @@
-import { ParsedTransaction } from '../../components/nlp/NaturalLanguageInput';
+import {ParsedTransaction} from '../../components/nlp/NaturalLanguageInput';
 
 export interface TransactionRequest {
   amount: number;

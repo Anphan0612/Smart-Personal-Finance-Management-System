@@ -1,8 +1,8 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { IconSymbol } from '../ui/icon-symbol';
+import {StyleSheet, View} from 'react-native';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {IconSymbol} from '../ui/icon-symbol';
 
 interface SummaryCardProps {
   balance: number;

@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {Ionicons} from "@expo/vector-icons";
+import {useRouter} from "expo-router";
+import {FlatList, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 
 const transactionHistory = [
   { id: "1", title: "Dribbble", sub: "Subscription fee", amount: "-$15.00", date: "2024-03-14", type: "expense", icon: "laptop-outline" },

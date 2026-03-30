@@ -60,7 +60,7 @@ public class BankAccount {
     }
 
     public static BankAccount create(String userId, String accountNumber, String bankName, BigDecimal balance,
-            Currency currency, BankAccountType type) {
+                                     Currency currency, BankAccountType type) {
         BankAccount account = new BankAccount();
         account.userId = userId;
         account.updateDetails(accountNumber, bankName, type);

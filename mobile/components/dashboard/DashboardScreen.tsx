@@ -1,16 +1,16 @@
-import React, { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDashboard } from '../../hooks/useDashboard';
-import { TimeRange } from '../../services/api/dashboardService';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
-import { CategoryBreakdown } from './CategoryBreakdown';
-import { MonthlySeries } from './MonthlySeries';
-import { RecentTransactions } from './RecentTransactions';
-import { SummaryCard } from './SummaryCard';
-import { SummaryStats } from './SummaryStats';
-import { TimeFilterButtons } from './TimeFilterButtons';
+import React, {useMemo} from 'react';
+import {RefreshControl, ScrollView, StyleSheet, View} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useDashboard} from '../../hooks/useDashboard';
+import {TimeRange} from '../../services/api/dashboardService';
+import {ThemedText} from '../themed-text';
+import {ThemedView} from '../themed-view';
+import {CategoryBreakdown} from './CategoryBreakdown';
+import {MonthlySeries} from './MonthlySeries';
+import {RecentTransactions} from './RecentTransactions';
+import {SummaryCard} from './SummaryCard';
+import {SummaryStats} from './SummaryStats';
+import {TimeFilterButtons} from './TimeFilterButtons';
 
 export const DashboardScreen: React.FC = () => {
   const {

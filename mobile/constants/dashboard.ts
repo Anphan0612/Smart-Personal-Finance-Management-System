@@ -1,4 +1,10 @@
-import { CategoryBreakdown, DashboardSummary, MonthlyTrend, TimeRange, Transaction } from '../services/api/dashboardService';
+import {
+    CategoryBreakdown,
+    DashboardSummary,
+    MonthlyTrend,
+    TimeRange,
+    Transaction
+} from '../services/api/dashboardService';
 
 // Re-export types for convenience
 export type { CategoryBreakdown, DashboardSummary, MonthlyTrend, TimeRange, Transaction };
