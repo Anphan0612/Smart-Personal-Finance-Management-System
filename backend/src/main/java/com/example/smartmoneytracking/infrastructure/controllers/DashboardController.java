@@ -1,5 +1,6 @@
 package com.example.smartmoneytracking.infrastructure.controllers;
 
+import com.example.smartmoneytracking.application.dto.common.ApiResponse;
 import com.example.smartmoneytracking.application.dto.dashboard.response.DashboardResponseDTO;
 import com.example.smartmoneytracking.application.usecase.DashboardUseCase;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,11 @@ public class DashboardController {
     private final DashboardUseCase dashboardUseCase;
 
     @GetMapping("/summary")
-    public ResponseEntity<DashboardResponseDTO> getDashboardSummary(
+    public ResponseEntity<ApiResponse<DashboardResponseDTO>> getDashboardSummary(
             @RequestParam String walletId,
             @RequestParam(defaultValue = "current_month") String timeRange) {
-        
+
         DashboardResponseDTO response = dashboardUseCase.getDashboardSummary(walletId, timeRange);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

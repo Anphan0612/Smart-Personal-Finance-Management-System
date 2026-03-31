@@ -1,6 +1,6 @@
 package com.example.smartmoneytracking.infrastructure.controllers;
 
-import com.example.smartmoneytracking.application.dto.common.CommonApiResponse;
+import com.example.smartmoneytracking.application.dto.common.ApiResponse;
 import com.example.smartmoneytracking.application.dto.TransactionRequest;
 import com.example.smartmoneytracking.application.dto.TransactionResponse;
 import com.example.smartmoneytracking.application.dto.TransactionUpdateRequest;
@@ -26,36 +26,36 @@ public class TransactionController {
     private final com.example.smartmoneytracking.infrastructure.security.SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<CommonApiResponse<TransactionResponse>> createTransaction(
+    public ResponseEntity<ApiResponse<TransactionResponse>> createTransaction(
             @Valid @RequestBody TransactionRequest request) {
         String userId = securityUtils.getCurrentUserId();
         TransactionResponse response = createTransactionUseCase.execute(request, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CommonApiResponse.created(response));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
     }
 
     @GetMapping
-    public ResponseEntity<CommonApiResponse<List<TransactionResponse>>> getTransactions(@RequestParam("walletId") String walletId) {
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactions(@RequestParam("walletId") String walletId) {
         String userId = securityUtils.getCurrentUserId();
-        return ResponseEntity.ok(CommonApiResponse.success(getTransactionsByWalletIdUseCase.execute(walletId, userId)));
+        return ResponseEntity.ok(ApiResponse.success(getTransactionsByWalletIdUseCase.execute(walletId, userId)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<TransactionResponse>> getTransactionById(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<TransactionResponse>> getTransactionById(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
-        return ResponseEntity.ok(CommonApiResponse.success(getTransactionByIdUseCase.execute(id, userId)));
+        return ResponseEntity.ok(ApiResponse.success(getTransactionByIdUseCase.execute(id, userId)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<TransactionResponse>> updateTransaction(@PathVariable("id") String id,
+    public ResponseEntity<ApiResponse<TransactionResponse>> updateTransaction(@PathVariable("id") String id,
                                                                                     @Valid @RequestBody TransactionUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
-        return ResponseEntity.ok(CommonApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
+        return ResponseEntity.ok(ApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<CommonApiResponse<Void>> deleteTransaction(@PathVariable("id") String id) {
+    public ResponseEntity<ApiResponse<Void>> deleteTransaction(@PathVariable("id") String id) {
         String userId = securityUtils.getCurrentUserId();
         deleteTransactionUseCase.execute(id, userId);
-        return ResponseEntity.ok(CommonApiResponse.success(null));
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
