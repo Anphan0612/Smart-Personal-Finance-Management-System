@@ -1,19 +1,18 @@
 package com.example.smartmoneytracking.infrastructure.exception;
 
-import com.example.smartmoneytracking.application.dto.common.ErrorResponse;
+import com.example.smartmoneytracking.application.dto.common.ApiResponse;
 import com.example.smartmoneytracking.domain.exception.BusinessException;
 import com.example.smartmoneytracking.domain.exception.ErrorCode;
 import com.example.smartmoneytracking.infrastructure.ai.NlpExtractionException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,17 +21,17 @@ import java.util.UUID;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
         String path = request.getRequestURI();
         ErrorCode errorCode = ErrorCode.VALIDATION_ERROR;
 
-        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+        List<ApiResponse.FieldError> fieldErrors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(error -> ErrorResponse.FieldError.builder()
+                .map(error -> ApiResponse.FieldError.builder()
                         .field(error.getField())
                         .message(error.getDefaultMessage())
                         .build())
@@ -45,7 +44,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(
             BusinessException ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
@@ -59,21 +58,26 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleJsonParseException(
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
         String path = request.getRequestURI();
         ErrorCode errorCode = ErrorCode.JSON_PARSE_ERROR;
 
-        log.warn("[traceId={}, path={}, errorCode={}] JSON parse error: {}",
-                traceId, path, errorCode, ex.getMessage());
+        // Custom message for empty body vs malformed JSON
+        String message = errorCode.getDefaultMessage();
+        if (ex.getMessage() != null && ex.getMessage().contains("Required request body is missing")) {
+            message = "Required request body is missing";
+        }
 
-        return buildResponse(errorCode, errorCode.getDefaultMessage(), path, traceId, null);
+        log.warn("[traceId={}, path={}, errorCode={}] JSON parse error: {}", traceId, path, errorCode, ex.getMessage());
+
+        return buildResponse(errorCode, message, path, traceId, null);
     }
 
     @ExceptionHandler(NlpExtractionException.class)
-    public ResponseEntity<ErrorResponse> handleNlpExtractionException(
+    public ResponseEntity<ApiResponse<Void>> handleNlpExtractionException(
             NlpExtractionException ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
@@ -83,11 +87,22 @@ public class GlobalExceptionHandler {
         log.warn("[traceId={}, path={}, errorCode={}] NLP error: {}",
                 traceId, path, errorCode, ex.getMessage());
 
-        return buildResponse(errorCode, ex.getMessage(), path, traceId, null);
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .success(false)
+                .code(errorCode.getHttpStatus())
+                .errorCode(errorCode.name())
+                .message(ex.getMessage())
+                .path(path)
+                .traceId(traceId)
+                .suggestion(ex.getSuggestion())
+                .timestamp(Instant.now())
+                .build();
+
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
     }
 
     @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(
+    public ResponseEntity<ApiResponse<Void>> handleEntityNotFoundException(
             jakarta.persistence.EntityNotFoundException ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
@@ -101,7 +116,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(
             Exception ex, HttpServletRequest request) {
 
         String traceId = generateTraceId();
@@ -114,19 +129,12 @@ public class GlobalExceptionHandler {
         return buildResponse(errorCode, errorCode.getDefaultMessage(), path, traceId, null);
     }
 
-    private ResponseEntity<ErrorResponse> buildResponse(
+    private ResponseEntity<ApiResponse<Void>> buildResponse(
             ErrorCode errorCode, String message, String path,
-            String traceId, List<ErrorResponse.FieldError> fieldErrors) {
+            String traceId, List<ApiResponse.FieldError> fieldErrors) {
 
-        ErrorResponse response = ErrorResponse.builder()
-                .status(errorCode.getHttpStatus())
-                .errorCode(errorCode.name())
-                .message(message)
-                .path(path)
-                .timestamp(LocalDateTime.now())
-                .traceId(traceId)
-                .errors(fieldErrors)
-                .build();
+        ApiResponse<Void> response = ApiResponse.error(
+                errorCode, message, path, traceId, fieldErrors);
 
         return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
     }

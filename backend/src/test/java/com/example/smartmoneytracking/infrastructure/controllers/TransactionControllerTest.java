@@ -85,11 +85,13 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.code").value(400))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
                     .andExpect(jsonPath("$.path").value("/api/v1/transactions"))
-                    .andExpect(jsonPath("$.errors", hasSize(greaterThanOrEqualTo(1))))
-                    .andExpect(jsonPath("$.errors[?(@.field == 'amount')]").exists());
+                    .andExpect(jsonPath("$.fieldErrors", hasSize(greaterThanOrEqualTo(1))))
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'amount')]").exists());
         }
 
         @Test
@@ -107,9 +109,10 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonBody))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
-                    .andExpect(jsonPath("$.errors[?(@.field == 'amount')]").exists());
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'amount')]").exists());
         }
 
         @Test
@@ -126,9 +129,10 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
-                    .andExpect(jsonPath("$.errors[?(@.field == 'walletId')]").exists());
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'walletId')]").exists());
         }
 
         @Test
@@ -145,9 +149,10 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
-                    .andExpect(jsonPath("$.errors[?(@.field == 'transactionDate')]").exists());
+                    .andExpect(jsonPath("$.fieldErrors[?(@.field == 'transactionDate')]").exists());
         }
 
         @Test
@@ -165,9 +170,10 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonBody))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
-                    .andExpect(jsonPath("$.errors", hasSize(greaterThanOrEqualTo(3))));
+                    .andExpect(jsonPath("$.fieldErrors", hasSize(greaterThanOrEqualTo(3))));
         }
     }
 
@@ -182,6 +188,7 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{invalid json}"))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("JSON_PARSE_ERROR"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
                     .andExpect(jsonPath("$.message").value("Invalid JSON format"));
@@ -211,6 +218,7 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("CATEGORY_NOT_FOUND"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
                     .andExpect(jsonPath("$.message").value("Category not found: invalid-cat-id"));
@@ -234,6 +242,7 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("WALLET_NOT_FOUND"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty());
         }
@@ -256,18 +265,19 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.errorCode").value("INSUFFICIENT_BALANCE"))
                     .andExpect(jsonPath("$.traceId").isNotEmpty());
         }
     }
 
     @Nested
-    @DisplayName("Error Response Structure Tests")
-    class ErrorResponseStructureTests {
+    @DisplayName("Unified Response Structure Tests")
+    class UnifiedResponseStructureTests {
 
         @Test
         @DisplayName("Should include all required fields in error response")
-        void shouldIncludeAllRequiredFields() throws Exception {
+        void shouldIncludeAllRequiredFields_inErrorResponse() throws Exception {
             String jsonBody = """
                     {
                         "walletId": "",
@@ -279,13 +289,25 @@ class TransactionControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(jsonBody))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.code").value(400))
                     .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
                     .andExpect(jsonPath("$.message").value("Validation failed"))
                     .andExpect(jsonPath("$.path").value("/api/v1/transactions"))
                     .andExpect(jsonPath("$.timestamp").isNotEmpty())
                     .andExpect(jsonPath("$.traceId").isNotEmpty())
-                    .andExpect(jsonPath("$.errors").isArray());
+                    .andExpect(jsonPath("$.fieldErrors").isArray());
+        }
+
+        @Test
+        @DisplayName("Error response should NOT contain data field")
+        void errorResponse_shouldNotContainDataField() throws Exception {
+            mockMvc.perform(post("/api/v1/transactions")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{invalid json}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
 }
