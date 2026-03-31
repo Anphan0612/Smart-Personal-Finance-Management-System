@@ -3,6 +3,7 @@ package com.example.smartmoneytracking.infrastructure.controllers;
 import com.example.smartmoneytracking.application.dto.AuthenticationResponse;
 import com.example.smartmoneytracking.application.dto.LoginRequest;
 import com.example.smartmoneytracking.application.dto.RegisterRequest;
+import com.example.smartmoneytracking.application.dto.common.ApiResponse;
 import com.example.smartmoneytracking.application.usecase.auth.LoginUseCase;
 import com.example.smartmoneytracking.application.usecase.auth.RegisterUserUseCase;
 import com.example.smartmoneytracking.domain.entities.user.User;
@@ -20,52 +21,32 @@ public class AuthenticationController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
 
-    /**
-     * Register a new user
-     */
     @PostMapping("/register")
-    public ResponseEntity<?>
-    register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            User user = registerUserUseCase.execute(
-                    request.getUsername(),
-                    request.getEmail(),
-                    request.getPassword(),
-                    request.getPhone(),
-                    request.getCccd());
+    public ResponseEntity<ApiResponse<RegisterResult>> register(
+            @Valid @RequestBody RegisterRequest request) {
 
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(new RegisterResponse(user.getId(), "User registered successfully"));
-        } catch (Exception e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new ErrorResponse(e.getMessage()));
-        }
+        User user = registerUserUseCase.execute(
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getPhone(),
+                request.getCccd());
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.created(new RegisterResult(user.getId())));
     }
 
-    /**
-     * Login user and get JWT tokens
-     */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            AuthenticationResponse response = loginUseCase.execute(
-                    request.getUsername(),
-                    request.getPassword());
+    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
 
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse(e.getMessage()));
-        }
+        AuthenticationResponse response = loginUseCase.execute(
+                request.getUsername(),
+                request.getPassword());
+
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    // Response DTOs
-    record RegisterResponse(String userId, String message) {
-    }
-
-    record ErrorResponse(String error) {
-    }
+    public record RegisterResult(String userId) {}
 }
