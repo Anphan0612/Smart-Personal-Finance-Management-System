@@ -1,301 +1,146 @@
-import {Ionicons} from "@expo/vector-icons";
-import {useRouter} from "expo-router";
-import {Platform, ProgressBarAndroid, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import React, { useState } from "react";
+import { View, ScrollView, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MotiView } from "moti";
+import { Target, Sparkles, Plus, Home, Utensils, PartyPopper } from "lucide-react-native";
+import Slider from "@react-native-community/slider";
+import { AtelierTypography, AtelierCard } from "../../components/ui";
 
 export default function BudgetScreen() {
-  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("Management");
 
-  const budgets = [
-    {
-      id: '1',
-      category: 'Ăn uống',
-      spent: 450000,
-      limit: 600000,
-      color: '#ef4444',
-      icon: 'restaurant'
-    },
-    {
-      id: '2',
-      category: 'Di chuyển',
-      spent: 280000,
-      limit: 400000,
-      color: '#3b82f6',
-      icon: 'car'
-    },
-    {
-      id: '3',
-      category: 'Mua sắm',
-      spent: 150000,
-      limit: 300000,
-      color: '#f59e0b',
-      icon: 'bag'
-    },
-    {
-      id: '4',
-      category: 'Giải trí',
-      spent: 80000,
-      limit: 200000,
-      color: '#8b5cf6',
-      icon: 'game-controller'
-    },
-    {
-      id: '5',
-      category: 'Sức khỏe',
-      spent: 120000,
-      limit: 150000,
-      color: '#10b981',
-      icon: 'medical'
-    },
+  const budgetItems = [
+    { icon: Utensils, label: "Food", spent: 1250, limit: 2000, bgColor: "bg-primary-container/10", color: "#005ab4" },
+    { icon: Home, label: "Rent", spent: 2200, limit: 2200, bgColor: "bg-secondary-container/10", color: "#465f89" },
+    { icon: PartyPopper, label: "Leisure", spent: 450, limit: 1500, bgColor: "bg-tertiary-container/10", color: "#964400" },
   ];
 
-  const getProgress = (spent: number, limit: number) => {
-    return Math.min(spent / limit, 1);
-  };
-
-  const getProgressColor = (spent: number, limit: number) => {
-    const ratio = spent / limit;
-    if (ratio >= 0.9) return '#ef4444';
-    if (ratio >= 0.7) return '#f59e0b';
-    return '#10b981';
-  };
-
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Ngân sách</Text>
-        <TouchableOpacity>
-          <Ionicons name="add" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView className="flex-1 bg-surface">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          className="mb-8"
+        >
+          <AtelierTypography variant="label" className="text-surface-on-variant mb-1">
+            Financial Planning
+          </AtelierTypography>
+          <AtelierTypography variant="h2" className="text-surface-on">Budget Atelier</AtelierTypography>
+        </MotiView>
 
-      <View style={styles.content}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Tổng quan ngân sách</Text>
-          <View style={styles.summaryStats}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Đã chi</Text>
-              <Text style={styles.summaryValue}>1,080,000 VND</Text>
+        {/* Tab Selector */}
+        <View className="bg-surface-container rounded-2xl p-1 flex-row mb-8">
+           {["Management", "Goals", "Rules"].map((tab) => (
+             <TouchableOpacity
+               key={tab}
+               onPress={() => setActiveTab(tab)}
+               className={`flex-1 py-3 rounded-xl ${activeTab === tab ? "bg-white shadow-sm" : ""}`}
+             >
+               <AtelierTypography 
+                variant="label" 
+                className={`text-center normal-case ${activeTab === tab ? "text-primary font-bold" : "text-surface-on-variant"}`}
+               >
+                {tab}
+               </AtelierTypography>
+             </TouchableOpacity>
+           ))}
+        </View>
+
+        {/* Total Budget Card */}
+        <AtelierCard variant="gradient" elevation="high" padding="lg" className="mb-8">
+          <View className="flex-row justify-between items-start mb-6">
+            <View>
+              <AtelierTypography variant="caption" color="rgba(255,255,255,0.8)">Monthly Spendable</AtelierTypography>
+              <AtelierTypography variant="h1" color="white" className="mt-1 text-3xl">$4,280.50</AtelierTypography>
             </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Giới hạn</Text>
-              <Text style={styles.summaryValue}>1,650,000 VND</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Còn lại</Text>
-              <Text style={[styles.summaryValue, { color: '#10b981' }]}>570,000 VND</Text>
-            </View>
+            <TouchableOpacity className="w-10 h-10 rounded-full bg-white/20 items-center justify-center">
+              <Plus size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+            <View className="w-[42%] h-full bg-white rounded-full" />
+          </View>
+          <View className="flex-row justify-between mt-3">
+            <AtelierTypography variant="label" color="rgba(255,255,255,0.7)" className="text-[10px]">
+              42% Consumed
+            </AtelierTypography>
+            <AtelierTypography variant="label" color="rgba(255,255,255,0.7)" className="text-[10px]">
+              $5,719.50 Left
+            </AtelierTypography>
+          </View>
+        </AtelierCard>
+
+        {/* AI Auto-Budgeting */}
+        <AtelierCard elevation="lowest" padding="md" className="bg-surface-container/30 border border-primary/10 mb-8">
+          <View className="flex-row items-center gap-3">
+             <View className="w-10 h-10 rounded-full bg-primary items-center justify-center">
+                <Sparkles size={18} color="white" fill="white" />
+             </View>
+             <View className="flex-1">
+                <AtelierTypography variant="h3" className="text-sm">Smart Auto-Budgeting</AtelierTypography>
+                <AtelierTypography variant="caption" className="text-xs">Based on last 3 months of activity</AtelierTypography>
+             </View>
+             <TouchableOpacity className="bg-primary px-4 py-2 rounded-full">
+                <AtelierTypography variant="label" color="white" className="text-[10px]">Enabled</AtelierTypography>
+             </TouchableOpacity>
+          </View>
+        </AtelierCard>
+
+        {/* Category Breakdown */}
+        <View className="mb-8">
+          <AtelierTypography variant="h3" className="mb-4">Allocated Budgets</AtelierTypography>
+          <View className="gap-4">
+            {budgetItems.map((item, idx) => (
+              <AtelierCard key={idx} elevation="lowest" padding="md">
+                <View className="flex-row justify-between items-center mb-3">
+                   <View className="flex-row items-center gap-3">
+                      <View className={`w-10 h-10 rounded-full ${item.bgColor} items-center justify-center`}>
+                         <item.icon size={20} color={item.color} />
+                      </View>
+                      <AtelierTypography variant="h3" className="text-sm">{item.label}</AtelierTypography>
+                   </View>
+                   <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant">
+                     ${item.spent} / ${item.limit}
+                   </AtelierTypography>
+                </View>
+                <View className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+                   <View 
+                    style={{ width: `${(item.spent / item.limit) * 100}%` }} 
+                    className={`h-full rounded-full ${item.spent >= item.limit ? "bg-error" : "bg-primary"}`} 
+                   />
+                </View>
+              </AtelierCard>
+            ))}
           </View>
         </View>
 
-        <Text style={styles.sectionTitle}>Ngân sách theo danh mục</Text>
-
-        {budgets.map((budget) => (
-          <View key={budget.id} style={styles.budgetCard}>
-            <View style={styles.budgetHeader}>
-              <View style={styles.budgetLeft}>
-                <View style={[styles.budgetIcon, { backgroundColor: budget.color + '20' }]}>
-                  <Ionicons name={budget.icon as any} size={20} color={budget.color} />
-                </View>
-                <View>
-                  <Text style={styles.budgetCategory}>{budget.category}</Text>
-                  <Text style={styles.budgetProgress}>
-                    {budget.spent.toLocaleString()} / {budget.limit.toLocaleString()} VND
-                  </Text>
-                </View>
-              </View>
-              <Text style={[styles.budgetPercentage, { color: getProgressColor(budget.spent, budget.limit) }]}>
-                {Math.round((budget.spent / budget.limit) * 100)}%
-              </Text>
-            </View>
-
-            <View style={styles.progressContainer}>
-              {Platform.OS === 'android' ? (
-                <ProgressBarAndroid
-                  styleAttr="Horizontal"
-                  indeterminate={false}
-                  progress={getProgress(budget.spent, budget.limit)}
-                  color={getProgressColor(budget.spent, budget.limit)}
-                  style={styles.progressBar}
-                />
-              ) : (
-                <View style={styles.progressBarIOS}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      {
-                        width: `${getProgress(budget.spent, budget.limit) * 100}%`,
-                        backgroundColor: getProgressColor(budget.spent, budget.limit)
-                      }
-                    ]}
-                  />
-                </View>
-              )}
-            </View>
-
-            <Text style={styles.budgetRemaining}>
-              Còn lại: {(budget.limit - budget.spent).toLocaleString()} VND
-            </Text>
+        {/* Savings Goals */}
+        <View>
+          <View className="flex-row justify-between items-center mb-4">
+            <AtelierTypography variant="h3">Savings Goals</AtelierTypography>
+            <TouchableOpacity><Plus size={20} color="#005ab4" /></TouchableOpacity>
           </View>
-        ))}
+          <AtelierCard elevation="lowest" padding="md">
+            <View className="flex-row items-center gap-4">
+               <View className="w-12 h-12 rounded-full bg-secondary-container/20 items-center justify-center">
+                  <Target size={24} color="#465f89" />
+               </View>
+               <View className="flex-1">
+                  <AtelierTypography variant="h3" className="text-sm">New Tesla Model S</AtelierTypography>
+                  <AtelierTypography variant="caption" className="text-xs">$12,450 / $80,000 Saved</AtelierTypography>
+               </View>
+               <AtelierTypography variant="h3" className="text-primary text-sm">15%</AtelierTypography>
+            </View>
+          </AtelierCard>
+        </View>
 
-        <TouchableOpacity style={styles.addBudgetButton}>
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={styles.addBudgetButtonText}>Thêm ngân sách mới</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  content: {
-    padding: 20,
-  },
-  summaryCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-  },
-  summaryStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  summaryItem: {
-    alignItems: "center",
-    flex: 1,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 5,
-  },
-  summaryValue: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-  },
-  budgetCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  budgetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  budgetLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  budgetIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  budgetCategory: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 2,
-  },
-  budgetProgress: {
-    fontSize: 12,
-    color: "#666",
-  },
-  budgetPercentage: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  progressContainer: {
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 6,
-  },
-  progressBarIOS: {
-    height: 6,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  budgetRemaining: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "right",
-  },
-  addBudgetButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#3b82f6",
-    borderRadius: 12,
-    height: 50,
-    marginTop: 10,
-  },
-  addBudgetButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-});
