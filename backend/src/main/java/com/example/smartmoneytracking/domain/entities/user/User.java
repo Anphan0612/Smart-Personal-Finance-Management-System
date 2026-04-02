@@ -18,11 +18,14 @@ import java.util.UUID;
 public class User {
 
     @Id
+    @Column(name = "id", nullable = false, length = 36)
     private String id;
 
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(name = "user_role")
+    @Enumerated(EnumType.ORDINAL)
     private UserRole role;
 
     private String avatar;
