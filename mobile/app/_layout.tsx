@@ -1,69 +1,140 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {DarkTheme, DefaultTheme, ThemeProvider} from '@react-navigation/native';
-import {Stack} from 'expo-router';
-import {StatusBar} from 'expo-status-bar';
-import {useEffect, useState} from 'react';
-import 'react-native-reanimated';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
+import {
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+} from "@expo-google-fonts/manrope";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect, useState } from "react";
+import { useColorScheme } from "react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "react-native-reanimated";
+import "../global.css";
+import { useAppStore } from "../store/useAppStore";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes cache
-      gcTime: 1000 * 60 * 10, // 10 mins GC 
-    },
-  },
-});
-
-import {useColorScheme} from '@/hooks/use-color-scheme';
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  initialRouteName: "(tabs)",
+};
+
+SplashScreen.preventAutoHideAsync();
+
+const AtelierLightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: "#005ab4",
+    background: "#f9f9ff",
+    card: "#ffffff",
+    text: "#181c22",
+    border: "#c1c6d5",
+    notification: "#ba1a1a",
+  },
+};
+
+const AtelierDarkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: "#4da1f2",
+    background: "#121212",
+    card: "#1e1e1e",
+    text: "#f3f3f4",
+    border: "#32343a",
+    notification: "#ff8f1a",
+  },
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const token = useAppStore((state) => state.token);
+  const segments = useSegments();
+  const router = useRouter();
+  
+  // Khởi tạo QueryClient với các cấu hình an toàn cho Finance
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: (failureCount, error: any) => {
+          if (error?.response?.status === 403 || error?.response?.status === 401) return false;
+          return failureCount < 1;
+        },
+        refetchOnWindowFocus: true,
+        staleTime: 1000 * 30, // Dữ liệu cũ sau 30 giây
+      },
+    },
+  }));
+
+  const [loaded, error] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+    Manrope_800ExtraBold,
+  });
 
   useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem('userToken');
-        setIsLoggedIn(!!token);
-      } catch (error) {
-        console.error('Lỗi kiểm tra đăng nhập:', error);
-        setIsLoggedIn(false);
-      }
-    };
-    checkLoginStatus();
-  }, []);
+    if (error) throw error;
+  }, [error]);
 
-  if (isLoggedIn === null) {
-    // Loading screen hoặc null
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  // Auth Guard Logic
+  useEffect(() => {
+    if (!loaded) return;
+
+    // Ép kiểu any để tránh lỗi TypeScript gán literal 'never'
+    const currentSegments = segments as any[];
+    const inAuthGroup = currentSegments.includes("(auth)");
+    const inTabsGroup = currentSegments.includes("(tabs)");
+
+    console.log("[ROUTING] Segments:", currentSegments, "| Token exists:", !!token);
+
+    if (!token && !inAuthGroup) {
+      console.log("[ROUTING] Redirecting to Login...");
+      router.replace("/(auth)/login");
+    } else if (token && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
+      console.log("[ROUTING] Redirecting to Dashboard...");
+      router.replace("/(tabs)");
+    }
+  }, [token, segments, loaded]);
+
+  if (!loaded) {
     return null;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack 
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          {isLoggedIn ? (
-            <>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-            </>
-          ) : (
-            <>
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="register" options={{ headerShown: false }} />
-            </>
-          )}
+      <ThemeProvider
+        value={colorScheme === "dark" ? AtelierDarkTheme : AtelierLightTheme}
+      >
+        <Stack>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="+not-found"
+            options={{ title: "Not Found" }}
+          />
         </Stack>
-        <StatusBar style="auto" />
       </ThemeProvider>
     </QueryClientProvider>
   );
