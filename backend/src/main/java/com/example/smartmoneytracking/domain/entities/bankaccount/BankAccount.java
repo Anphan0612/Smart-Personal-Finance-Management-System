@@ -22,17 +22,20 @@ public class BankAccount {
 
     @Id
     @Setter(AccessLevel.PRIVATE)
+    @Column(name = "id", nullable = false, length = 36)
     private String id;
 
     @Setter(AccessLevel.PRIVATE)
+    @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
-    @Column(nullable = false)
+    @Column(name = "account_number", nullable = false, length = 50)
     private String accountNumber;
 
-    @Column(nullable = false)
+    @Column(name = "bank_name", nullable = false, length = 100)
     private String bankName;
 
+    @Column(precision = 19, scale = 2)
     private BigDecimal balance;
 
     @Embedded
@@ -40,9 +43,13 @@ public class BankAccount {
     private Currency currency;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", length = 32, columnDefinition = "VARCHAR(32)")
     private BankAccountType type;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist

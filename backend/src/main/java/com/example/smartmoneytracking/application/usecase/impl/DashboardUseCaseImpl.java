@@ -8,6 +8,7 @@ import com.example.smartmoneytracking.application.dto.dashboard.response.Monthly
 import com.example.smartmoneytracking.application.usecase.DashboardUseCase;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
+import com.example.smartmoneytracking.domain.repositories.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class DashboardUseCaseImpl implements DashboardUseCase {
 
     private final TransactionRepository transactionRepository;
+    private final WalletRepository walletRepository;
 
     @Override
     public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange) {
@@ -42,7 +44,12 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal balance = income.subtract(expenses);
+        // Lấy số dư thực tế từ Wallet thay vì chỉ tính Thu nhập - Chi tiêu của tháng
+        BigDecimal walletBalance = walletRepository.findById(walletId)
+                .map(com.example.smartmoneytracking.domain.entities.wallet.Wallet::getBalance)
+                .orElse(BigDecimal.ZERO);
+        
+        BigDecimal balance = walletBalance;
         
         double savingsRate = 0.0;
         if (income.compareTo(BigDecimal.ZERO) > 0) {
@@ -97,8 +104,8 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
                 .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))
                 .collect(Collectors.toList());
 
-        // 4. Recent Transactions
-        List<TransactionResponse> recentTransactions = transactions.stream()
+        // 4. Recent Transactions (Fetch separately to include most recent even if outside current month or slightly in future due to timezone)
+        List<TransactionResponse> recentTransactions = transactionRepository.findByWalletId(walletId).stream()
                 .sorted((t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()))
                 .limit(5)
                 .map(t -> TransactionResponse.builder()

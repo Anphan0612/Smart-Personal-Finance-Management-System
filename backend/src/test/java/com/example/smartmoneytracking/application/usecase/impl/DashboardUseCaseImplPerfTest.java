@@ -21,7 +21,7 @@ public class DashboardUseCaseImplPerfTest {
     @Test
     public void benchmarkStreamAPI() {
         TransactionRepository repository = mock(TransactionRepository.class);
-        DashboardUseCaseImpl useCase = new DashboardUseCaseImpl(repository);
+        DashboardUseCaseImpl useCase = anew DashboardUseCaseImpl(repository);
 
         int[] transactionCounts = {1000, 10000, 100000, 500000};
         
