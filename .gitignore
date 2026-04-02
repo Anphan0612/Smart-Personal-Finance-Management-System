@@ -2,8 +2,8 @@
 # 📂 Project-Wide (Structure & Docs)
 # ==========================================
 docs/
-figmaUI/
 
+tmp/
 # ML Models (large binary files — download separately)
 ml-models/
 
