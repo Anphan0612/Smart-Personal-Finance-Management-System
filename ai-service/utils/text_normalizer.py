@@ -17,11 +17,17 @@ _WHITESPACE_RE = re.compile(r"\s+")
 
 def remove_diacritics(text: str) -> str:
     """
-    Remove Vietnamese diacritics by stripping combining marks.
+    Remove Vietnamese diacritics by stripping combining marks and mapping đ/Đ -> d/D.
 
     Example:
       "điện" -> "dien"
     """
+
+    if not text:
+        return ""
+
+    # Explicit mapping for đ/Đ as they are not base + combining mark in NFD for most encodings
+    text = text.replace("đ", "d").replace("Đ", "D")
 
     normalized = unicodedata.normalize("NFD", text)
     without = "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn")

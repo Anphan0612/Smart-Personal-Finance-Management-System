@@ -11,6 +11,7 @@ import re
 from datetime import date
 from typing import Optional
 
+import torch
 from transformers import pipeline, TokenClassificationPipeline
 
 from utils.money_parser import parse_amount
@@ -167,7 +168,14 @@ class NERService:
     """
 
     _pipeline: Optional[TokenClassificationPipeline] = None
-    MODEL_PATH = "../ml-models/phobert-finance-ner-final"
+    # Resolve model path relative to this file's directory
+    MODEL_PATH = str(
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "ml-models",
+            "phobert-finance-ner-final",
+        )
+    )
 
     def __init__(self) -> None:
         # Load model weights lazily/defensively:
@@ -186,10 +194,16 @@ class NERService:
             NERService._pipeline = None
             return
 
+        # Use GPU (0) if available, else CPU (-1)
+        device = 0 if torch.cuda.is_available() else -1
+        device_label = "gpu" if device == 0 else "cpu"
+        print(f"Device set to use {device_label}")
+
         NERService._pipeline = pipeline(
             task="token-classification",
             model=model_path,
             aggregation_strategy="simple",
+            device=device,
         )
 
     # ------------------------------------------------------------------
@@ -353,6 +367,7 @@ class NERService:
             overall_confidence < threshold
             or amount_confidence < threshold
             or category_confidence < threshold
+            or amount_confidence < 0.6  # Explicit trigger for missing amounts
         )
         return enabled and is_llm_configured() and low_enough
 
