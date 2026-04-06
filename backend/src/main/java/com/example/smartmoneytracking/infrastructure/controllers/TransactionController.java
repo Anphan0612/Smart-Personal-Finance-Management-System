@@ -1,6 +1,7 @@
 package com.example.smartmoneytracking.infrastructure.controllers;
 
 import com.example.smartmoneytracking.application.dto.common.ApiResponse;
+import com.example.smartmoneytracking.application.dto.TransactionComparisonResponse;
 import com.example.smartmoneytracking.application.dto.TransactionRequest;
 import com.example.smartmoneytracking.application.dto.TransactionResponse;
 import com.example.smartmoneytracking.application.dto.TransactionUpdateRequest;
@@ -23,6 +24,7 @@ public class TransactionController {
     private final GetTransactionByIdUseCase getTransactionByIdUseCase;
     private final UpdateTransactionUseCase updateTransactionUseCase;
     private final DeleteTransactionUseCase deleteTransactionUseCase;
+    private final GetTransactionComparisonUseCase getTransactionComparisonUseCase;
     private final com.example.smartmoneytracking.infrastructure.security.SecurityUtils securityUtils;
 
     @PostMapping
@@ -31,6 +33,12 @@ public class TransactionController {
         String userId = securityUtils.getCurrentUserId();
         TransactionResponse response = createTransactionUseCase.execute(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
+    }
+
+    @GetMapping("/comparison")
+    public ResponseEntity<ApiResponse<TransactionComparisonResponse>> getComparison(@RequestParam("walletId") String walletId) {
+        String userId = securityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.success(getTransactionComparisonUseCase.execute(walletId, userId)));
     }
 
     @GetMapping
@@ -47,7 +55,7 @@ public class TransactionController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TransactionResponse>> updateTransaction(@PathVariable("id") String id,
-                                                                                    @Valid @RequestBody TransactionUpdateRequest request) {
+                                                                                     @Valid @RequestBody TransactionUpdateRequest request) {
         String userId = securityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.success(updateTransactionUseCase.execute(id, request, userId)));
     }

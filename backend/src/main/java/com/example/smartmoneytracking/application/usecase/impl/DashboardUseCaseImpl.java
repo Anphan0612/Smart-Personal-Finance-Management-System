@@ -5,8 +5,10 @@ import com.example.smartmoneytracking.application.dto.dashboard.response.Categor
 import com.example.smartmoneytracking.application.dto.dashboard.response.DashboardResponseDTO;
 import com.example.smartmoneytracking.application.dto.dashboard.response.DashboardSummaryDTO;
 import com.example.smartmoneytracking.application.dto.dashboard.response.MonthlyTrendDTO;
+import com.example.smartmoneytracking.application.mapper.TransactionMapper;
 import com.example.smartmoneytracking.application.usecase.DashboardUseCase;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
+import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,8 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
 
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
+    private final CategoryRepository categoryRepository;
+    private final TransactionMapper transactionMapper;
 
     @Override
     public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange) {
@@ -44,30 +48,30 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Lấy số dư thực tế từ Wallet thay vì chỉ tính Thu nhập - Chi tiêu của tháng
         BigDecimal walletBalance = walletRepository.findById(walletId)
                 .map(com.example.smartmoneytracking.domain.entities.wallet.Wallet::getBalance)
                 .orElse(BigDecimal.ZERO);
         
-        BigDecimal balance = walletBalance;
-        
         double savingsRate = 0.0;
         if (income.compareTo(BigDecimal.ZERO) > 0) {
-            savingsRate = balance.divide(income, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
+            BigDecimal savings = income.subtract(expenses);
+            savingsRate = savings.divide(income, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue();
         }
+
+        BigDecimal netFlow = income.subtract(expenses);
 
         DashboardSummaryDTO summary = DashboardSummaryDTO.builder()
                 .income(income)
                 .expenses(expenses)
-                .balance(balance)
+                .balance(walletBalance)
+                .netFlow(netFlow)
                 .savingsRate(savingsRate)
                 .build();
 
         // 2. Calculate Monthly Trend
         DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM");
-        Map<String, MonthlyTrendDTO> trendMap = new LinkedHashMap<>(); // To preserve order
+        Map<String, MonthlyTrendDTO> trendMap = new LinkedHashMap<>();
         
-        // Initialize map with required months
         LocalDateTime tempDate = startDate;
         while (!tempDate.isAfter(now)) {
             trendMap.put(tempDate.format(monthFormatter), new MonthlyTrendDTO(tempDate.format(monthFormatter), BigDecimal.ZERO, BigDecimal.ZERO));
@@ -77,7 +81,6 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
         for (Transaction t : transactions) {
             String month = t.getTransactionDate().format(monthFormatter);
             MonthlyTrendDTO trend = trendMap.getOrDefault(month, new MonthlyTrendDTO(month, BigDecimal.ZERO, BigDecimal.ZERO));
-            
             if (t.isIncome()) {
                 trend.setIncome(trend.getIncome().add(t.getAmount()));
             } else {
@@ -86,39 +89,40 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
             trendMap.put(month, trend);
         }
 
-        // 3. Category Breakdown (Expenses only for simplicity, or both if needed)
-        // Group by Category -> Total Amount
+        // 3. Category Breakdown (Optimized Batch Fetching)
         Map<String, BigDecimal> categorySums = transactions.stream()
                 .filter(Transaction::isExpense)
                 .collect(Collectors.groupingBy(
-                        Transaction::getCategoryId,
+                        t -> t.getCategoryId() == null ? "null" : t.getCategoryId(),
                         Collectors.mapping(Transaction::getAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))
                 ));
 
-        List<CategoryBreakdownDTO> categoryBreakdown = categorySums.entrySet().stream()
-                .map(entry -> CategoryBreakdownDTO.builder()
-                        .category(entry.getKey()) // Need to map to Category Name ideally, but using ID for now
-                        .amount(entry.getValue())
-                        .color(getColorForCategory(entry.getKey()))
-                        .build())
-                .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))
-                .collect(Collectors.toList());
+        Set<String> catIds = categorySums.keySet().stream()
+                .filter(id -> !"null".equals(id))
+                .collect(Collectors.toSet());
+        
+        Map<String, String> catIdToNameMap = new HashMap<>();
+        if (!catIds.isEmpty()) {
+            categoryRepository.findAllById(catIds).forEach(cat -> catIdToNameMap.put(cat.getId(), cat.getName()));
+        }
 
-        // 4. Recent Transactions (Fetch separately to include most recent even if outside current month or slightly in future due to timezone)
-        List<TransactionResponse> recentTransactions = transactionRepository.findByWalletId(walletId).stream()
-                .sorted((t1, t2) -> t2.getTransactionDate().compareTo(t1.getTransactionDate()))
-                .limit(5)
-                .map(t -> TransactionResponse.builder()
-                        .id(t.getId())
-                        .walletId(t.getWalletId())
-                        .amount(t.getAmount())
-                        .categoryId(t.getCategoryId())
-                        .description(t.getDescription())
-                        .transactionDate(t.getTransactionDate())
-                        .createdAt(t.getCreatedAt())
-                        .type(t.getType())
-                        .build())
-                .collect(Collectors.toList());
+        List<CategoryBreakdownDTO> categoryBreakdown = categorySums.entrySet().stream()
+            .map(entry -> {
+                String catId = entry.getKey();
+                String catName = "null".equals(catId) ? "Other" : catIdToNameMap.getOrDefault(catId, "Other");
+                return CategoryBreakdownDTO.builder()
+                        .category(catName)
+                        .amount(entry.getValue())
+                        .color(getColorForCategory("null".equals(catId) ? null : catId))
+                        .build();
+            })
+            .sorted((a, b) -> b.getAmount().compareTo(a.getAmount()))
+            .collect(Collectors.toList());
+
+        // 4. Recent Transactions (Using Optimized Limited Fetching)
+        List<Transaction> recentTransactionsEntities = transactionRepository.findTop5ByWalletIdOrderByTransactionDateDesc(walletId);
+
+        List<TransactionResponse> recentTransactions = transactionMapper.toResponseList(recentTransactionsEntities);
 
         return DashboardResponseDTO.builder()
                 .summary(summary)
@@ -132,12 +136,11 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
         if ("3_months".equals(timeRange)) {
             return now.minusMonths(3).withDayOfMonth(1).withHour(0).withMinute(0);
         }
-        // Default to current_month
         return now.withDayOfMonth(1).withHour(0).withMinute(0);
     }
 
     private String getColorForCategory(String categoryId) {
-        // Mock color mapping, could be improved by fetching Category entities
+        if (categoryId == null) return "#9ca3af";
         String[] colors = {"#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981"};
         return colors[Math.abs(categoryId.hashCode()) % colors.length];
     }

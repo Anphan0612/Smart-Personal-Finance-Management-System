@@ -2,14 +2,16 @@ package com.example.smartmoneytracking.application.usecase.impl;
 
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
+import com.example.smartmoneytracking.application.mapper.TransactionMapper;
+import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
+import com.example.smartmoneytracking.domain.repositories.WalletRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -21,7 +23,10 @@ public class DashboardUseCaseImplPerfTest {
     @Test
     public void benchmarkStreamAPI() {
         TransactionRepository repository = mock(TransactionRepository.class);
-        DashboardUseCaseImpl useCase = anew DashboardUseCaseImpl(repository);
+        WalletRepository walletRepository = mock(WalletRepository.class);
+        CategoryRepository categoryRepository = mock(CategoryRepository.class);
+        TransactionMapper transactionMapper = mock(TransactionMapper.class);
+        DashboardUseCaseImpl useCase = new DashboardUseCaseImpl(repository, walletRepository, categoryRepository, transactionMapper);
 
         int[] transactionCounts = {1000, 10000, 100000, 500000};
         

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tabs } from "expo-router";
 import { useColorScheme, Platform, View, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Home,
   BarChart3,
@@ -8,48 +9,57 @@ import {
   Receipt,
   User,
 } from "lucide-react-native";
-import { Colors } from "../../constants/tokens";
-import { AIChatButton } from "../../components/common/AIChatButton";
-import { AtelierAI } from "../../components/ui";
+import { AtelierAI } from "../../components/ui/AtelierAI";
+import { TopBar } from "../../components/atelier/TopBar";
+import { useAppStore } from "../../store/useAppStore";
+import { Sparkles } from "lucide-react-native";
+import { MotiView } from "moti";
+import { TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
-  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isAIOpen, setIsAIOpen] = useState(false);
+  const { user } = useAppStore();
+  const insets = useSafeAreaInsets();
 
-  const activeColor = isDark ? "#4da1f2" : Colors.primary.DEFAULT;
-  const inactiveColor = isDark ? "#5e6068" : Colors.neutral[400];
+  // Dynamic values
+  const bottomPadding = insets.bottom > 0 ? insets.bottom : 12;
+  const tabBarHeight = 64 + bottomPadding;
 
   return (
     <View style={styles.root}>
-      {/* 1. Main Navigation */}
+      {/* 1. Atelier TopBar */}
+      <TopBar title={user?.name || "Atelier Finance"} />
+
+      {/* 2. Main Navigation */}
       <View style={styles.content}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: activeColor,
-            tabBarInactiveTintColor: inactiveColor,
+            tabBarActiveTintColor: "#005ab4", // primary
+            tabBarInactiveTintColor: "#717785", // neutral
             headerShown: false,
             tabBarStyle: {
-              backgroundColor: isDark ? "#1e1e1e" : "#ffffff",
-              borderTopWidth: 0,
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              borderTopWidth: 1,
+              borderTopColor: "rgba(113, 119, 133, 0.08)",
               elevation: 0,
-              height: Platform.OS === "ios" ? 88 : 64,
-              paddingBottom: Platform.OS === "ios" ? 28 : 8,
-              paddingTop: 8,
-              borderRadius: 24,
-              marginHorizontal: 16,
-              marginBottom: Platform.OS === "ios" ? 0 : 12,
+              height: tabBarHeight,
+              paddingBottom: bottomPadding,
+              paddingTop: 12,
               position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.08,
-              shadowRadius: 12,
-              zIndex: 0,
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
             },
             tabBarLabelStyle: {
-              fontFamily: "Inter_500Medium",
-              fontSize: 11,
-              marginTop: 2,
+              fontFamily: "Inter_600SemiBold",
+              fontSize: 10,
+              marginTop: 4,
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
             },
           }}
         >
@@ -57,10 +67,8 @@ export default function TabLayout() {
             name="index"
             options={{
               title: "Home",
-              tabBarIcon: ({ color, size }) => (
-                <View className="items-center justify-center">
-                   <Home size={size} color={color} strokeWidth={2} />
-                </View>
+              tabBarIcon: ({ color, focused }) => (
+                <Home size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
               ),
             }}
           />
@@ -68,21 +76,17 @@ export default function TabLayout() {
             name="analytics"
             options={{
               title: "Analytics",
-              tabBarIcon: ({ color, size }) => (
-                <View className="items-center justify-center">
-                   <BarChart3 size={size} color={color} strokeWidth={2} />
-                </View>
+              tabBarIcon: ({ color, focused }) => (
+                <BarChart3 size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
               ),
             }}
           />
           <Tabs.Screen
             name="budget"
             options={{
-              title: "Budget",
-              tabBarIcon: ({ color, size }) => (
-                <View className="items-center justify-center">
-                   <PiggyBank size={size} color={color} strokeWidth={2} />
-                </View>
+              title: "Saving",
+              tabBarIcon: ({ color, focused }) => (
+                <PiggyBank size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
               ),
             }}
           />
@@ -90,10 +94,8 @@ export default function TabLayout() {
             name="transactions"
             options={{
               title: "History",
-              tabBarIcon: ({ color, size }) => (
-                <View className="items-center justify-center">
-                   <Receipt size={size} color={color} strokeWidth={2} />
-                </View>
+              tabBarIcon: ({ color, focused }) => (
+                <Receipt size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
               ),
             }}
           />
@@ -101,41 +103,77 @@ export default function TabLayout() {
             name="profile"
             options={{
               title: "Profile",
-              tabBarIcon: ({ color, size }) => (
-                <View className="items-center justify-center">
-                   <User size={size} color={color} strokeWidth={2} />
-                </View>
+              tabBarIcon: ({ color, focused }) => (
+                <User size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
               ),
             }}
           />
         </Tabs>
       </View>
 
-      {/* 2. Global Floating Button Layer */}
-      <View style={styles.floatingLayer} pointerEvents="box-none">
-        <AIChatButton onPress={() => setIsAIModalOpen(true)} />
-      </View>
+      {/* 3. Global Floating AI Button */}
+      {!isAIOpen && (
+        <AIAssistantFAB offset={tabBarHeight + 20} onPress={() => setIsAIOpen(true)} />
+      )}
 
-      {/* 3. Global AI Modal Layer */}
+      {/* 4. Global AI Assistant Drawer */}
       <AtelierAI 
-        isOpen={isAIModalOpen} 
-        onClose={() => setIsAIModalOpen(false)} 
+        isOpen={isAIOpen} 
+        onClose={() => setIsAIOpen(false)} 
       />
     </View>
   );
 }
 
+const AIAssistantFAB = ({ onPress, offset }: { onPress: () => void, offset: number }) => {
+  return (
+    <MotiView
+      from={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", delay: 1000 }}
+      style={[styles.fabContainer, { bottom: offset }]}
+    >
+      <MotiView
+        from={{ scale: 1 }}
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ loop: true, duration: 3000, type: "timing" }}
+      >
+        <TouchableOpacity
+          onPress={onPress}
+          activeOpacity={0.9}
+          style={styles.fabButton}
+        >
+          <Sparkles color="white" size={26} fill="white" />
+        </TouchableOpacity>
+      </MotiView>
+    </MotiView>
+  );
+};
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#f9f9ff", // bg-surface
   },
   content: {
     flex: 1,
   },
-  floatingLayer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 9999,
-    elevation: 20,
+  fabContainer: {
+    position: "absolute",
+    right: 24,
+    zIndex: 90,
+  },
+  fabButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#005ab4", // primary
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#005ab4",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
   },
 });

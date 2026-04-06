@@ -5,6 +5,7 @@
 ---
 
 ## 🌟 Tính năng Nổi bật
+
 - **AI-Powered Extraction**: Parsing văn bản tự nhiên (Natural Language Parsing) để tự động ghi lại giao dịch.
 - **Clean Architecture**: Backend Java Spring Boot tuân thủ nguyên tắc Clean Architecture.
 - **Modern Mobile UI**: React Native (Expo) với trải nghiệm người dùng tối ưu.
@@ -14,7 +15,7 @@
 
 ## 🏗️ Cấu trúc Dự án
 
-```
+```text
 ├── backend/          #  Spring Boot API (Java 17+)
 ├── ai-service/       #  FastAPI NLP/ML Service (Python)
 ├── mobile/           #  React Native Mobile App (Expo)
@@ -48,12 +49,14 @@
 ## 🚀 Bắt đầu
 
 ### Prerequisites
+
 - Java 17+, Maven
 - Python 3.11+
 - Node.js 18+, Expo CLI
 - MySQL 8+
 
 ### 1. Backend (Spring Boot)
+
 ```bash
 cd backend
 ./mvnw spring-boot:run
@@ -61,13 +64,31 @@ cd backend
 ```
 
 ### 2. AI Service (FastAPI)
+
+#### Setup Virtual Environment (One-time)
 ```bash
-cd ai-service
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-# API: http://localhost:8000
-# Docs: http://localhost:8000/docs
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# MacOS/Linux:
+source .venv/bin/activate
+pip install -r ai-service/requirements.txt
 ```
+
+#### Run Service
+- **Windows (Recommended)**:
+  ```powershell
+  cd ai-service
+  .\start-ai.ps1
+  ```
+- **Manual (Any OS)**:
+  ```bash
+  # Ensure venv is activated first!
+  cd ai-service
+  uvicorn main:app --reload --port 8000
+  ```
+- **API Check**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Interactive Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ### 3. Mobile App (Expo)
 ```bash

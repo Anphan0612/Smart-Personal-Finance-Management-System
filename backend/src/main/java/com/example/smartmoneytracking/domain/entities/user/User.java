@@ -38,7 +38,12 @@ public class User {
 
     private String phone;
     private String cccd;
-    private boolean isEnabled;
+    @Column(name = "is_enabled", nullable = false)
+    private Boolean enabled = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_currency")
+    private com.example.smartmoneytracking.domain.entities.common.CurrencyUnit preferredCurrency = com.example.smartmoneytracking.domain.entities.common.CurrencyUnit.USD;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -77,17 +82,10 @@ public class User {
     }
 
     /**
-     * Check if user account is active
-     */
-    public boolean isActive() {
-        return isEnabled;
-    }
-
-    /**
      * Activate user account
      */
     public void activate() {
-        this.isEnabled = true;
+        this.enabled = true;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -95,7 +93,7 @@ public class User {
      * Deactivate user account
      */
     public void deactivate() {
-        this.isEnabled = false;
+        this.enabled = false;
         this.updatedAt = LocalDateTime.now();
     }
 

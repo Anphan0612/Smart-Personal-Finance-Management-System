@@ -1,35 +1,13 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetcher, poster } from "../services/api";
-import { Transaction } from "../types";
+import { useQuery } from "@tanstack/react-query";
+import { fetcher } from "../services/api";
+import { TransactionResponse } from "../types/api";
 
-export const useTransactions = (walletId: string | null) => {
-  const queryClient = useQueryClient();
-
-  // Fetch danh sách giao dịch
-  const transactionsQuery = useQuery({
+export const useTransactions = (walletId?: string) => {
+  return useQuery({
     queryKey: ["transactions", walletId],
-    queryFn: () => fetcher<Transaction[]>(`/transactions?walletId=${walletId}`),
+    queryFn: () => 
+      fetcher<TransactionResponse[]>(`/transactions?walletId=${walletId || ""}`),
     enabled: !!walletId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
-
-  // Mutation để tạo giao dịch mới
-  const createTransactionMutation = useMutation({
-    mutationFn: (newTransaction: Partial<Transaction>) => 
-      poster<Transaction, Partial<Transaction>>("/transactions", newTransaction),
-    onSuccess: () => {
-      // Refresh danh sách và số dư ngay lập tức
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["wallets"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-  });
-
-  return {
-    transactions: transactionsQuery.data || [],
-    isLoading: transactionsQuery.isLoading,
-    refetch: transactionsQuery.refetch,
-    error: transactionsQuery.error,
-    createTransaction: createTransactionMutation.mutate,
-    isCreating: createTransactionMutation.isPending,
-  };
 };

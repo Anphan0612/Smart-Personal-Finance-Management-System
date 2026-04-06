@@ -2,7 +2,8 @@ export interface Transaction {
   id: string;
   amount: number;
   type: "INCOME" | "EXPENSE" | "TRANSFER";
-  category: string;
+  categoryId: string;
+  categoryName: string;
   description: string;
   transactionDate: string;
   createdAt: string;
