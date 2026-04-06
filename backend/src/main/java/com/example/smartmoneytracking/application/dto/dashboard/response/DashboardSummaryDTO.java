@@ -15,5 +15,6 @@ public class DashboardSummaryDTO {
     private BigDecimal income;
     private BigDecimal expenses;
     private BigDecimal balance;
+    private BigDecimal netFlow;
     private Double savingsRate;
 }

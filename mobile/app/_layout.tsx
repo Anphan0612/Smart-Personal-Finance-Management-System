@@ -18,8 +18,13 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
+import { useColorScheme, LogBox } from "react-native";
+
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated",
+]);
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-reanimated";
 import "../global.css";
 import { useAppStore } from "../store/useAppStore";
@@ -60,9 +65,13 @@ const AtelierDarkTheme = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const token = useAppStore((state) => state.token);
+  const token = useAppStore((state) => state.setToken);
+  const currentToken = useAppStore((state) => state.token);
   const segments = useSegments();
   const router = useRouter();
+
+  // Đặt true để gỡ chặn route (bypass login) trong quá trình phát triển UI
+  const DEBUG_BYPASS_AUTH = true; 
   
   // Khởi tạo QueryClient với các cấu hình an toàn cho Finance
   const [queryClient] = useState(() => new QueryClient({
@@ -101,41 +110,44 @@ export default function RootLayout() {
   // Auth Guard Logic
   useEffect(() => {
     if (!loaded) return;
+    if (DEBUG_BYPASS_AUTH) return; // Bỏ qua nếu đang bật bypass
 
     // Ép kiểu any để tránh lỗi TypeScript gán literal 'never'
     const currentSegments = segments as any[];
     const inAuthGroup = currentSegments.includes("(auth)");
     const inTabsGroup = currentSegments.includes("(tabs)");
 
-    console.log("[ROUTING] Segments:", currentSegments, "| Token exists:", !!token);
+    console.log("[ROUTING] Segments:", currentSegments, "| Token exists:", !!currentToken);
 
-    if (!token && !inAuthGroup) {
+    if (!currentToken && !inAuthGroup) {
       console.log("[ROUTING] Redirecting to Login...");
       router.replace("/(auth)/login");
-    } else if (token && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
+    } else if (currentToken && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
       console.log("[ROUTING] Redirecting to Dashboard...");
       router.replace("/(tabs)");
     }
-  }, [token, segments, loaded]);
+  }, [currentToken, segments, loaded, DEBUG_BYPASS_AUTH]);
 
   if (!loaded) {
     return null;
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        value={colorScheme === "dark" ? AtelierDarkTheme : AtelierLightTheme}
-      >
-        <Stack>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="+not-found"
-            options={{ title: "Not Found" }}
-          />
-        </Stack>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          value={colorScheme === "dark" ? AtelierDarkTheme : AtelierLightTheme}
+        >
+          <Stack>
+            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="+not-found"
+              options={{ title: "Not Found" }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

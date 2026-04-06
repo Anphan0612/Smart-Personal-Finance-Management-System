@@ -1,12 +1,24 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
+import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { ApiResponse } from "../types/api";
 import { useAppStore } from "../store/useAppStore";
 
 const TOKEN_KEY = "auth_token";
 
+// Tự động phân giải IP của máy chủ Expo đang chạy.
+// debuggerHost sẽ trả về ví dụ: "192.168.1.5:8081" khi chạy development
+const debuggerHost = Constants.expoConfig?.hostUri;
+const lanIpAddress = debuggerHost?.split(":")[0];
+
+// Ưu tiên dùng ENV nếu có cấu hình chuẩn. 
+// Nếu không, trả về IP LAN tĩnh để cả máy thật & Emulator đều truy cập được.
+// Fallback về 10.0.2.2 nếu hoàn toàn không tự detect được IP (rất hiếm).
+const DYNAMIC_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
+  (lanIpAddress ? `http://${lanIpAddress}:8080/api/v1` : "http://10.0.2.2:8080/api/v1");
+
 const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8080/api/v1",
+  baseURL: DYNAMIC_BASE_URL,
   timeout: 30000, // Tăng timeout cho AI processing
   headers: {
     "Content-Type": "application/json",

@@ -1,6 +1,8 @@
 package com.example.smartmoneytracking.domain.entities.wallet;
 
 import com.example.smartmoneytracking.domain.entities.wallet.valueobject.*;
+import com.example.smartmoneytracking.domain.exception.BusinessException;
+import com.example.smartmoneytracking.domain.exception.ErrorCode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +34,10 @@ public class Wallet {
     @Column(nullable = false)
     private BigDecimal balance;
 
+    @Column(name = "initial_balance", nullable = false)
+    @Setter(AccessLevel.PRIVATE)
+    private BigDecimal initialBalance = BigDecimal.ZERO;
+
     @Embedded
     @Setter(AccessLevel.PUBLIC) // Currency might be changeable? Or should be final? Let's allow setting for now
     // but ideally it's part of creation
@@ -49,7 +55,7 @@ public class Wallet {
         if (id == null)
             id = UUID.randomUUID().toString();
         if (balance == null)
-            balance = BigDecimal.ZERO;
+            balance = initialBalance;
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
@@ -80,19 +86,25 @@ public class Wallet {
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
         if (this.balance.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Insufficient balance");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE, "Insufficient balance in wallet: " + this.name);
         }
         this.balance = this.balance.subtract(amount);
     }
 
     // Factory method for simpler creation
-    public static Wallet create(String userId, String name, Currency currency, WalletType type) {
+    public static Wallet create(String userId, String name, Currency currency, WalletType type, BigDecimal initialBalance) {
         Wallet wallet = new Wallet();
         wallet.userId = userId; // Private setter access
         wallet.updateName(name);
         wallet.currency = currency;
         wallet.walletType = type;
-        wallet.balance = BigDecimal.ZERO;
+        if (initialBalance != null) {
+            wallet.initialBalance = initialBalance;
+            wallet.balance = initialBalance;
+        } else {
+            wallet.initialBalance = BigDecimal.ZERO;
+            wallet.balance = BigDecimal.ZERO;
+        }
         return wallet;
     }
 

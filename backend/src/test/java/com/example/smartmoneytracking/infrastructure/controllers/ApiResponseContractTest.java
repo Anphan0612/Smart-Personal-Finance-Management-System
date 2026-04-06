@@ -64,6 +64,8 @@ class ApiResponseContractTest {
 
             assertThat(json).contains("\"success\":true");
             assertThat(json).contains("\"data\":\"data\"");
+            // Verify timestamp is an ISO string, not a number
+            assertThat(json).matches(".*\"timestamp\":\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z\".*");
             assertThat(json).doesNotContain("errorCode");
             assertThat(json).doesNotContain("traceId");
             assertThat(json).doesNotContain("path");

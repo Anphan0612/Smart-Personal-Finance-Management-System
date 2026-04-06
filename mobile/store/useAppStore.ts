@@ -11,14 +11,42 @@ export interface ChatMessage {
   isStreaming?: boolean;
   hasCard?: boolean;
   hasProgress?: boolean;
+  transactionData?: {
+    amount: number;
+    category: string;
+    type: string;
+    date: string;
+    note: string;
+    confidence: number;
+    categoryId?: string;
+  };
+  // Query history results
+  hasQueryResult?: boolean;
+  queryData?: {
+    summary: any;
+    matchedTransactions: any[];
+    filters: any;
+  };
+  // Anomaly detection results
+  hasAnomaly?: boolean;
+  anomalyData?: {
+    anomalies: any[];
+    totalChecked: number;
+  };
+}
+
+interface UserInfo {
+  name: string | null;
+  email: string | null;
 }
 
 interface AppState {
   // Auth State
   token: string | null;
   refreshToken: string | null;
+  user: UserInfo;
   setToken: (token: string | null) => void;
-  setTokens: (token: string | null, refreshToken: string | null) => void;
+  setTokens: (token: string | null, refreshToken: string | null, user?: UserInfo) => void;
   logout: () => Promise<void>;
 
   // UI State
@@ -42,11 +70,22 @@ export const useAppStore = create<AppState>()(
       // Auth Defaults
       token: null,
       refreshToken: null,
+      user: { name: null, email: null },
       setToken: (token) => set({ token }),
-      setTokens: (token, refreshToken) => set({ token, refreshToken }),
+      setTokens: (token, refreshToken, user) => set({ 
+        token, 
+        refreshToken, 
+        user: user || { name: null, email: null } 
+      }),
       logout: async () => {
         await SecureStore.deleteItemAsync("auth_token");
-        set({ token: null, refreshToken: null, activeWalletId: null });
+        set({ 
+          token: null, 
+          refreshToken: null, 
+          user: { name: null, email: null }, 
+          activeWalletId: null,
+          messages: [] 
+        });
       },
 
       // UI Defaults
@@ -78,6 +117,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({ 
         token: state.token, 
         refreshToken: state.refreshToken, 
+        user: state.user,
         messages: state.messages, 
         activeWalletId: state.activeWalletId 
       }),

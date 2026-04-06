@@ -1,168 +1,203 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Alert } from "react-native";
-import { router } from "expo-router";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Platform, Image } from "react-native";
 import { MotiView } from "moti";
-import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react-native";
-import { AtelierTypography, AtelierInput, AtelierButton } from "../../components/ui";
-import { Colors } from "../../constants/tokens";
+import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useAppStore } from "../../store/useAppStore";
 import { poster } from "../../services/api";
+import { AuthenticationResponse } from "../../types/api";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Alert, ActivityIndicator } from "react-native";
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const insets = useSafeAreaInsets();
   const [showPassword, setShowPassword] = useState(false);
-  const [isRememberMe, setIsRememberMe] = useState(true);
-  const [loading, setLoading] = useState(false);
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const setTokens = useAppStore((state) => state.setTokens);
 
   const handleLogin = async () => {
-    setErrors({});
-    if (!username || !password) {
-      if (!username) setErrors(prev => ({ ...prev, username: "Username is required" }));
-      if (!password) setErrors(prev => ({ ...prev, password: "Password is required" }));
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
-    console.log(`[LOGIN] Attempting login for: ${username}`);
-    setLoading(true);
     try {
-      console.log(`[LOGIN] Calling poster...`);
-      const response = await poster<any, any>("/auth/login", {
-        username,
-        password,
+      setIsLoading(true);
+      const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+      console.log(`[AUTH] Attempting login for ${email}...`);
+
+      const response = await poster<AuthenticationResponse, any>("/auth/login", {
+        username: email,
+        password: password,
       });
 
-      console.log(`[LOGIN] Response received. Data found:`, !!response);
-
       if (response && response.accessToken) {
-        console.log("[LOGIN] Success, Tokens received.");
-        setTokens(response.accessToken, response.refreshToken);
-        // Chuyển hướng sang TABs
-        console.log("[LOGIN] Navigating to (tabs)...");
+        setTokens(response.accessToken, response.refreshToken, {
+          name: response.name,
+          email: response.email,
+        });
         router.replace("/(tabs)");
-      } else {
-        console.warn("[LOGIN] Malformed response:", response);
-        Alert.alert("Login Failed", "Malformed response from server.");
       }
     } catch (error: any) {
-      console.error("[LOGIN] Exception caught:", error.message);
-      
-      const fieldErrors = error.response?.data?.fieldErrors;
-      if (fieldErrors && Array.isArray(fieldErrors)) {
-        const newErrors: Record<string, string> = {};
-        fieldErrors.forEach((err: any) => {
-          newErrors[err.field] = err.message;
-        });
-        setErrors(newErrors);
-      } else {
-        const message = error.response?.data?.message || "Login failed. Please check your credentials.";
-        Alert.alert("Login Failed", message);
-      }
+      console.error("[AUTH ERROR]", error);
+      const message = error.response?.data?.message || "Invalid credentials. Please try again.";
+      Alert.alert("Login Failed", message);
     } finally {
-      console.log("[LOGIN] Finished.");
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-surface-light dark:bg-surface-dark"
+    <ScrollView
+      className="flex-1 bg-surface"
+      contentContainerStyle={{
+        flexGrow: 1,
+        justifyContent: "center",
+        paddingHorizontal: 24,
+        paddingTop: insets.top + 24,
+        paddingBottom: insets.bottom + 24
+      }}
+      showsVerticalScrollIndicator={false}
     >
-      <ScrollView 
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24 }}
-        showsVerticalScrollIndicator={false}
-      >
+      <View className="w-full max-w-sm mx-auto space-y-10">
+        {/* Brand Identity Section */}
         <MotiView
-          from={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "timing", duration: 1000 }}
-          className="items-center mb-12"
+          from={{ opacity: 0, scale: 0.5, rotate: '-45deg' }}
+          animate={{ opacity: 1, scale: 1, rotate: '3deg' }}
+          transition={{ type: 'spring', duration: 1000 }}
+          className="items-center"
         >
-          <View className="w-20 h-20 bg-primary rounded-3xl items-center justify-center shadow-2xl shadow-primary/40 rotate-3">
-            <Sparkles size={40} color="white" fill="white" />
+          <LinearGradient
+            colors={["#005ab4", "#0873df"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="w-16 h-16 rounded-2xl items-center justify-center shadow-lg mb-4"
+          >
+            <Sparkles size={32} color="white" fill="white" />
+          </LinearGradient>
+          <View className="items-center">
+            <Text className="font-headline font-extrabold text-3xl tracking-tighter text-primary">
+              Atelier Finance
+            </Text>
+            <Text className="font-headline font-bold text-xl text-on-surface tracking-tight mt-1">
+              Welcome back
+            </Text>
           </View>
-          <AtelierTypography variant="h1" className="mt-6 text-primary tracking-tighter">
-            Atelier Finance
-          </AtelierTypography>
-          <AtelierTypography variant="body" className="text-neutral-500 mt-1">
-            Luxury terminal for your wealth
-          </AtelierTypography>
         </MotiView>
 
+        {/* Main Form Canvas */}
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ delay: 300 }}
-          className="bg-white dark:bg-surface-card-dark p-8 rounded-[40px] shadow-xl shadow-black/5"
+          className="bg-white p-8 rounded-[32px] shadow-sm space-y-6"
         >
-          <AtelierTypography variant="h3" className="mb-8 text-center">Welcome Back</AtelierTypography>
-          
-          <View className="gap-6">
-            <AtelierInput 
-              label="Username or Email"
-              placeholder="atelier_user"
-              value={username}
-              onChangeText={(val) => {
-                setUsername(val);
-                if (errors.username) setErrors(prev => ({ ...prev, username: "" }));
-              }}
-              leftIcon={<Mail size={20} color={Colors.neutral[400]} />}
-              error={errors.username}
-            />
-
-            <View>
-              <AtelierInput 
-                label="Password"
-                placeholder="••••••••"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={(val) => {
-                  setPassword(val);
-                  if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
-                }}
-                leftIcon={<Lock size={20} color={Colors.neutral[400]} />}
-                error={errors.password}
-                rightIcon={
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={20} color={Colors.neutral[400]} /> : <Eye size={20} color={Colors.neutral[400]} />}
-                  </TouchableOpacity>
-                }
+          {/* Email Field */}
+          <View className="space-y-2">
+            <Text className="font-headline text-[10px] uppercase tracking-widest text-on-surface-variant font-bold px-1">
+              Email Address
+            </Text>
+            <View className="bg-surface-container-low rounded-[16px] px-5 py-4 flex-row items-center">
+              <Mail size={18} color="#717785" />
+              <TextInput
+                className="flex-1 ml-3 text-[15px] font-medium text-on-surface"
+                placeholder="name@company.com"
+                placeholderTextColor="rgba(113, 119, 133, 0.4)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
-              <TouchableOpacity className="self-end mt-2">
-                <AtelierTypography variant="label" className="text-primary normal-case">Forgot password?</AtelierTypography>
-              </TouchableOpacity>
             </View>
-
-            <View className="flex-row items-center gap-2">
-               <TouchableOpacity 
-                 onPress={() => setIsRememberMe(!isRememberMe)}
-                 className={`w-6 h-6 rounded-lg border-2 items-center justify-center ${isRememberMe ? "bg-primary border-primary" : "border-neutral-300"}`}
-               >
-                 {isRememberMe && <View className="w-2 h-2 bg-white rounded-full" />}
-               </TouchableOpacity>
-               <AtelierTypography variant="label" className="normal-case">Remember me</AtelierTypography>
-            </View>
-
-            <AtelierButton 
-              label="Sign In" 
-              onPress={handleLogin}
-              loading={loading}
-              className="mt-4"
-            />
           </View>
 
-          <View className="flex-row justify-center items-center mt-8 gap-2">
-            <AtelierTypography variant="body" className="text-neutral-400">Don't have an account?</AtelierTypography>
-            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
-              <AtelierTypography variant="body" className="text-primary font-bold">Sign Up</AtelierTypography>
+          {/* Password Field */}
+          <View className="space-y-2">
+            <View className="flex-row justify-between items-center px-1">
+              <Text className="font-headline text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+                Password
+              </Text>
+              <TouchableOpacity>
+                <Text className="text-xs font-bold text-primary">Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
+            <View className="bg-surface-container-low rounded-[16px] px-5 py-4 flex-row items-center">
+              <Lock size={18} color="#717785" />
+              <TextInput
+                className="flex-1 ml-3 text-[15px] font-medium text-on-surface"
+                placeholder="••••••••"
+                placeholderTextColor="rgba(113, 119, 133, 0.4)"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff size={18} color="#717785" /> : <Eye size={18} color="#717785" />}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sign In Button */}
+          <TouchableOpacity onPress={handleLogin} activeOpacity={0.9} disabled={isLoading}>
+            <LinearGradient
+              colors={["#005ab4", "#0873df"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="w-full py-5 rounded-full shadow-lg shadow-primary/20 items-center justify-center mt-4"
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-headline font-bold text-lg">Sign In</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View className="flex-row items-center py-2">
+            <View className="flex-1 h-[1px] bg-outline-variant/10" />
+            <Text className="px-4 text-[10px] font-bold text-outline uppercase tracking-widest">
+              or continue with
+            </Text>
+            <View className="flex-1 h-[1px] bg-outline-variant/10" />
+          </View>
+
+          {/* Social Logins */}
+          <View className="flex-row gap-4">
+            <TouchableOpacity className="flex-1 flex-row items-center justify-center py-4 bg-surface rounded-[16px] border border-outline-variant/10">
+              <Image
+                source={{ uri: "https://www.google.com/favicon.ico" }}
+                className="w-5 h-5 mr-3"
+              />
+              <Text className="font-bold text-sm text-on-surface">Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="flex-1 flex-row items-center justify-center py-4 bg-surface rounded-[16px] border border-outline-variant/10">
+              <Text className="font-bold text-sm text-on-surface">Apple</Text>
             </TouchableOpacity>
           </View>
         </MotiView>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+        {/* Footer Call to Action */}
+        <MotiView
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 600 }}
+          className="items-center"
+        >
+          <Text className="text-on-surface-variant text-sm">
+            Don't have an account?{" "}
+            <Text
+              className="text-primary font-bold"
+              onPress={() => router.push("/register")}
+            >
+              Sign Up
+            </Text>
+          </Text>
+        </MotiView>
+      </View>
+    </ScrollView>
   );
 }

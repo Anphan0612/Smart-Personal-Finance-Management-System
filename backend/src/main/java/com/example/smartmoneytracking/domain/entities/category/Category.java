@@ -27,6 +27,15 @@ public class Category {
     @Column(nullable = false)
     private Type type;
 
+    @Setter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private com.example.smartmoneytracking.domain.entities.common.MaterialSymbol iconName = com.example.smartmoneytracking.domain.entities.common.MaterialSymbol.LIST;
+
+    @Setter
+    @Column(name = "nlp_label", length = 50)
+    private String nlpLabel;
+
     private LocalDateTime createdAt;
 
     @PrePersist
