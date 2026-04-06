@@ -5,12 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class NlpExtractTransactionResponse {
-    private Integer amount;
+    private BigDecimal amount;
     private String type;
     private String category;
     private String date;

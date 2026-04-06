@@ -11,11 +11,18 @@ import org.springframework.stereotype.Service;
 public class ExtractTransactionViaNlpUseCase {
 
     private final NlpExtractionClient nlpExtractionClient;
+    private final com.example.smartmoneytracking.application.service.CategoryCacheService categoryCacheService;
 
     public NlpExtractTransactionResponse execute(NlpExtractTransactionRequest request) {
-        // CategoryId mapping is intentionally left null for now because the backend
-        // does not yet expose a reliable Category lookup/find-by-type mechanism.
-        return nlpExtractionClient.extractTransaction(request);
+        NlpExtractTransactionResponse response = nlpExtractionClient.extractTransaction(request);
+        
+        if (response != null && response.getCategory() != null) {
+            String aiCategory = response.getCategory().toUpperCase();
+            String mappedId = categoryCacheService.getCategoryIdByNlpLabel(aiCategory);
+            response.setCategoryId(mappedId); // null if no mapping exists in DB
+        }
+        
+        return response;
     }
 }
 
