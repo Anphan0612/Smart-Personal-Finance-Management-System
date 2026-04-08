@@ -24,7 +24,7 @@ public class LoginUseCase {
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         // Check if user is enabled
-        if (!user.isActive()) {
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
             throw new InvalidCredentialsException("Account is disabled");
         }
 

@@ -1,6 +1,7 @@
 package com.example.smartmoneytracking.application.usecase;
 
 import com.example.smartmoneytracking.application.dto.TransactionResponse;
+import com.example.smartmoneytracking.application.mapper.TransactionMapper;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
@@ -17,6 +18,7 @@ public class GetTransactionByIdUseCase {
 
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
+    private final TransactionMapper transactionMapper;
 
     @Transactional(readOnly = true)
     public TransactionResponse execute(String id, String userId) {
@@ -30,15 +32,7 @@ public class GetTransactionByIdUseCase {
             throw new UnauthorizedException("Unauthorized access to transaction");
         }
 
-        return TransactionResponse.builder()
-                .id(transaction.getId())
-                .walletId(transaction.getWalletId())
-                .categoryId(transaction.getCategoryId())
-                .amount(transaction.getAmount())
-                .description(transaction.getDescription())
-                .type(transaction.getType())
-                .transactionDate(transaction.getTransactionDate())
-                .createdAt(transaction.getCreatedAt())
-                .build();
+        // Standardized mapping via TransactionMapper
+        return transactionMapper.toResponse(transaction);
     }
 }

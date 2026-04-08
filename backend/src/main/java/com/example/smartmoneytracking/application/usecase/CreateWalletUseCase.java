@@ -22,12 +22,9 @@ public class CreateWalletUseCase {
                 userId,
                 request.getName(),
                 new Currency(request.getCurrencyCode(), request.getCurrencyCode()),
-                request.getType());
-
-        // Initial balance
-        if (request.getBalance() != null && request.getBalance().compareTo(java.math.BigDecimal.ZERO) > 0) {
-            wallet.deposit(request.getBalance());
-        }
+                request.getType(),
+                request.getBalance()
+        );
 
         // Removed unnecessary manual timestamp setting as @PrePersist/onCreate handles
         // it

@@ -7,7 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "smartfinance",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "updates": {
+      "enabled": false
+    },
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -23,8 +25,7 @@
         "backgroundColor": "#1275e2"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.smartfinance.app",
-      "usesCleartextTraffic": true
+      "package": "com.smartfinance.app"
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +34,15 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

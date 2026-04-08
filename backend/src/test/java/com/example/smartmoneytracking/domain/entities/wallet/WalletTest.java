@@ -13,7 +13,7 @@ class WalletTest {
 
     @Test
     void shouldCreateWalletSuccessfully() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
 
         assertNotNull(wallet);
         assertEquals("user1", wallet.getUserId());
@@ -24,7 +24,7 @@ class WalletTest {
 
     @Test
     void shouldDepositSuccessfully() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
         wallet.deposit(new BigDecimal("100.00"));
 
         assertEquals(new BigDecimal("100.00"), wallet.getBalance());
@@ -32,7 +32,7 @@ class WalletTest {
 
     @Test
     void shouldThrowExceptionWhenDepositNegativeAmount() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             wallet.deposit(new BigDecimal("-10.00"));
@@ -43,7 +43,7 @@ class WalletTest {
 
     @Test
     void shouldWithdrawSuccessfully() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
         wallet.reviseBalance(new BigDecimal("100.00"));
 
         wallet.withdraw(new BigDecimal("50.00"));
@@ -53,19 +53,19 @@ class WalletTest {
 
     @Test
     void shouldThrowExceptionWhenWithdrawInsufficientBalance() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
         wallet.reviseBalance(new BigDecimal("50.00"));
 
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(com.example.smartmoneytracking.domain.exception.BusinessException.class, () -> {
             wallet.withdraw(new BigDecimal("100.00"));
         });
 
-        assertEquals("Insufficient balance", exception.getMessage());
+        assertEquals("Insufficient balance in wallet: My Wallet", exception.getMessage());
     }
 
     @Test
     void shouldThrowExceptionWhenWithdrawNegativeAmount() {
-        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH);
+        Wallet wallet = Wallet.create("user1", "My Wallet", new Currency("USD", "$"), WalletType.CASH, BigDecimal.ZERO);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             wallet.withdraw(new BigDecimal("-10.00"));

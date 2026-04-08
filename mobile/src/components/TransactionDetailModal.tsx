@@ -3,7 +3,7 @@ import { View, Modal, Pressable, StyleSheet, Dimensions } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { X, Calendar, Tag, CreditCard, FileText, ArrowUpRight, ArrowDownLeft } from "lucide-react-native";
 import { AtelierTypography, AtelierCard, AtelierButton } from "./ui";
-import { Transaction } from "../hooks/useDashboard";
+import { TransactionResponse as Transaction } from "../types/api";
 
 interface TransactionDetailModalProps {
   isVisible: boolean;

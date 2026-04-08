@@ -9,9 +9,9 @@ import {
   Receipt,
   User,
 } from "lucide-react-native";
-import { AtelierAI } from "../../components/ui/AtelierAI";
-import { TopBar } from "../../components/atelier/TopBar";
-import { useAppStore } from "../../store/useAppStore";
+import { AtelierAI } from "../../src/components/ui/AtelierAI";
+import { TopBar } from "../../src/components/atelier/TopBar";
+import { useAppStore } from "../../src/store/useAppStore";
 import { Sparkles } from "lucide-react-native";
 import { MotiView } from "moti";
 import { TouchableOpacity } from "react-native";

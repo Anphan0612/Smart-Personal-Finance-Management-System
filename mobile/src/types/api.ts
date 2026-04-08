@@ -98,6 +98,14 @@ export interface BudgetResponse {
   year: number;
 }
 
+export interface BudgetPlanningResponse {
+  targetSpending: number;
+  totalAllocated: number;
+  remainingAmount: number;
+  month: number;
+  year: number;
+}
+
 /**
  * Các lỗi nghiệp vụ phổ biến từ BE
  */

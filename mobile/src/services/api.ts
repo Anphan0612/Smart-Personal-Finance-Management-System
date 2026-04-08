@@ -17,6 +17,9 @@ const lanIpAddress = debuggerHost?.split(":")[0];
 const DYNAMIC_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
   (lanIpAddress ? `http://${lanIpAddress}:8080/api/v1` : "http://10.0.2.2:8080/api/v1");
 
+// eslint-disable-next-line no-console
+console.log(`[API CONFIG] Resolved Base URL: ${DYNAMIC_BASE_URL}`);
+
 const apiClient = axios.create({
   baseURL: DYNAMIC_BASE_URL,
   timeout: 30000, // Tăng timeout cho AI processing
@@ -24,6 +27,12 @@ const apiClient = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+// Fail fast with a clear error when API URL cannot be resolved.
+if (!DYNAMIC_BASE_URL || typeof DYNAMIC_BASE_URL !== "string") {
+  // eslint-disable-next-line no-console
+  console.error("[API CONFIG] Missing EXPO_PUBLIC_API_URL and cannot infer LAN IP from Expo hostUri.");
+}
 
 apiClient.interceptors.request.use(async (config) => {
   const state = useAppStore.getState();
@@ -49,6 +58,7 @@ apiClient.interceptors.response.use(
 
     // Log lỗi chi tiết để debug AI/Finance logic
     console.error(`[API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, {
+      baseURL: error.config?.baseURL,
       status: error.response?.status,
       message: error.response?.data?.message || error.message,
     });
@@ -74,7 +84,7 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         console.error("[API] Refresh token failed, logging out...", refreshError);
         state.setTokens(null, null);
-        // Có thể redirect về login ở đây nếu cần (mobile router)
+        // Resetting tokens will trigger the Auth Guard in app/_layout.tsx
         return Promise.reject(refreshError);
       }
     }
