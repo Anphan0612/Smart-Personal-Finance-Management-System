@@ -29,6 +29,13 @@ public class DeleteTransactionUseCase {
             throw new UnauthorizedException("Unauthorized deletion of transaction");
         }
 
+        if (transaction.isExpense()) {
+            wallet.deposit(transaction.getAmount());
+        } else if (transaction.isIncome()) {
+            wallet.withdraw(transaction.getAmount());
+        }
+        walletRepository.save(wallet);
+
         transactionRepository.deleteById(id);
     }
 }

@@ -17,6 +17,8 @@ public class TransactionResponse {
     private String id;
     private String walletId;
     private String categoryId;
+    private String categoryName;
+    private com.example.smartmoneytracking.domain.entities.common.MaterialSymbol iconName;
     private BigDecimal amount;
     private String description;
     private TransactionType type;

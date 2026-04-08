@@ -3,7 +3,7 @@ import { View, ScrollView, TouchableOpacity, ViewStyle } from "react-native";
 import { MotiView } from "moti";
 import { Wallet as WalletIcon, TrendingUp, Landmark, Banknote } from "lucide-react-native";
 import { AtelierTypography } from "./ui";
-import { Wallet } from "../hooks/useWallets";
+import { WalletResponse as Wallet } from "../types/api";
 
 interface WalletSelectorProps {
   wallets: Wallet[];

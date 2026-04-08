@@ -28,7 +28,7 @@ public class RefreshTokenUseCase {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidCredentialsException("User not found"));
 
-        if (!user.isActive()) {
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
             throw new InvalidCredentialsException("Account is disabled");
         }
 

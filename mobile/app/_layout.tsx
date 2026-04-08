@@ -20,14 +20,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { useColorScheme, LogBox } from "react-native";
 
-LogBox.ignoreLogs([
-  "SafeAreaView has been deprecated",
-]);
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-reanimated";
 import "../global.css";
-import { useAppStore } from "../store/useAppStore";
+import { useAppStore } from "../src/store/useAppStore";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -65,13 +63,13 @@ const AtelierDarkTheme = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const token = useAppStore((state) => state.setToken);
-  const currentToken = useAppStore((state) => state.token);
+  const token = useAppStore((state: any) => state.setToken);
+  const currentToken = useAppStore((state: any) => state.token);
   const segments = useSegments();
   const router = useRouter();
 
   // Đặt true để gỡ chặn route (bypass login) trong quá trình phát triển UI
-  const DEBUG_BYPASS_AUTH = true; 
+  const DEBUG_BYPASS_AUTH = false; 
   
   // Khởi tạo QueryClient với các cấu hình an toàn cho Finance
   const [queryClient] = useState(() => new QueryClient({

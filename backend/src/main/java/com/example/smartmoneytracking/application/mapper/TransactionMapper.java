@@ -44,7 +44,7 @@ public class TransactionMapper {
 
         Map<String, Category> categoryMap = new HashMap<>();
         if (!categoryIds.isEmpty()) {
-            categoryRepository.findAllById(categoryIds).forEach(cat ->
+            categoryRepository .findAllById(categoryIds).forEach(cat ->
                 categoryMap.put(cat.getId(), cat)
             );
         }

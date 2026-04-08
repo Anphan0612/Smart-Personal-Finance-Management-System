@@ -1,6 +1,6 @@
 import { Link, Stack } from "expo-router";
 import { View } from "react-native";
-import { AtelierTypography, AtelierButton } from "../components/ui";
+import { AtelierTypography, AtelierButton } from "../src/components/ui";
 
 export default function NotFoundScreen() {
   return (
