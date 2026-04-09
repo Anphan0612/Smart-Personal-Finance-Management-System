@@ -23,7 +23,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAppStore();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [totalBudget, setTotalBudget] = useState(15000000);
+
 
   const handleLogout = () => {
     Alert.alert(
@@ -36,7 +36,7 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             await logout();
-            router.replace("/(auth)/login");
+            router.replace("/(auth)/login" as any);
           }
         }
       ]
@@ -68,39 +68,7 @@ export default function ProfileScreen() {
         </Text>
       </MotiView>
 
-      {/* Budget Setup placeholder */}
-      <View className="mb-10">
-        <View className="flex-row items-center justify-between mb-6">
-          <Text className="text-xl font-bold font-headline text-on-surface">Monthly Limit</Text>
-          <TouchableOpacity>
-            <Text className="text-sm font-bold text-primary">Edit</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <MotiView
-          from={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-6 rounded-[24px] shadow-sm mb-6 border border-outline/5"
-        >
-          <View className="flex-row justify-between items-end mb-4">
-            <Text className="text-[10px] font-bold uppercase tracking-widest text-outline">
-              Target Spending
-            </Text>
-            <Text className="text-2xl font-extrabold text-primary">{formatCurrency(totalBudget)}</Text>
-          </View>
-          <Slider
-            style={{ width: '100%', height: 40 }}
-            minimumValue={5000000}
-            maximumValue={100000000}
-            step={500000}
-            value={totalBudget}
-            onValueChange={setTotalBudget}
-            minimumTrackTintColor="#005ab4"
-            maximumTrackTintColor="#f2f3fd"
-            thumbTintColor="#005ab4"
-          />
-        </MotiView>
-      </View>
+
 
       {/* App Settings */}
       <View className="mb-10">

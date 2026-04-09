@@ -67,6 +67,17 @@ export default function RootLayout() {
   const currentToken = useAppStore((state: any) => state.token);
   const segments = useSegments();
   const router = useRouter();
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydration tracking
+  useEffect(() => {
+    const checkHydration = () => {
+      setIsHydrated(useAppStore.persist.hasHydrated());
+    };
+    
+    checkHydration();
+    return useAppStore.persist.onFinishHydration(checkHydration);
+  }, []);
 
   // Đặt true để gỡ chặn route (bypass login) trong quá trình phát triển UI
   const DEBUG_BYPASS_AUTH = false; 
@@ -99,34 +110,41 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+  const isReady = loaded && isHydrated;
 
   // Auth Guard Logic
   useEffect(() => {
-    if (!loaded) return;
-    if (DEBUG_BYPASS_AUTH) return; // Bỏ qua nếu đang bật bypass
+    if (!isReady) return;
+    if (DEBUG_BYPASS_AUTH) {
+      SplashScreen.hideAsync();
+      return;
+    }
 
-    // Ép kiểu any để tránh lỗi TypeScript gán literal 'never'
     const currentSegments = segments as any[];
     const inAuthGroup = currentSegments.includes("(auth)");
     const inTabsGroup = currentSegments.includes("(tabs)");
 
     console.log("[ROUTING] Segments:", currentSegments, "| Token exists:", !!currentToken);
 
-    if (!currentToken && !inAuthGroup) {
-      console.log("[ROUTING] Redirecting to Login...");
-      router.replace("/(auth)/login");
-    } else if (currentToken && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
-      console.log("[ROUTING] Redirecting to Dashboard...");
-      router.replace("/(tabs)");
-    }
-  }, [currentToken, segments, loaded, DEBUG_BYPASS_AUTH]);
+    const performRedirect = async () => {
+      if (!currentToken && !inAuthGroup) {
+        console.log("[ROUTING] Redirecting to Login...");
+        router.replace("/(auth)/login" as any);
+      } else if (currentToken && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
+        console.log("[ROUTING] Redirecting to Dashboard...");
+        router.replace("/(tabs)" as any);
+      }
+      
+      // Hiding Splash Screen ONLY after the first stable route is determined
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+      }, 100);
+    };
 
-  if (!loaded) {
+    performRedirect();
+  }, [currentToken, segments, isReady, DEBUG_BYPASS_AUTH]);
+
+  if (!isReady) {
     return null;
   }
 

@@ -64,13 +64,23 @@ export default function BudgetScreen() {
   const [tempTarget, setTempTarget] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryAmount, setCategoryAmount] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   const isLoading = isBudgetsLoading || isPlanningLoading;
-
   const totalSpent = budgets?.reduce((s, b) => s + b.currentSpending, 0) ?? 0;
+  
+  // New Calculation: Total Allocated across all categories
+  const totalAllocated = useMemo(() => {
+    return budgets?.filter(b => b.categoryId !== null).reduce((s, b) => s + b.limitAmount, 0) ?? 0;
+  }, [budgets]);
+
   const targetSpentPct = (planning?.targetSpending ?? 0) > 0 
     ? Math.min((totalSpent / planning!.targetSpending) * 100, 100) 
     : 0;
+
+  // Mismatch Detection logic
+  const isMismatched = planning && totalAllocated > planning.targetSpending;
+  const mismatchAmount = isMismatched ? totalAllocated - planning.targetSpending : 0;
 
   const handleReset = () => {
     Alert.alert(
@@ -82,6 +92,48 @@ export default function BudgetScreen() {
           text: "Reset", 
           style: "destructive",
           onPress: () => resetBudget.mutate({ month, year })
+        }
+      ]
+    );
+  };
+
+  const handleAutoAdjust = async () => {
+    if (!planning || !budgets) return;
+    const target = planning.targetSpending;
+    const allocated = totalAllocated;
+    
+    if (allocated <= target) return;
+
+    const scalingFactor = target / allocated;
+
+    Alert.alert(
+      "Auto Adjust Budgets",
+      `This will proportionally reduce your category budgets to fit within the ${formatCurrency(target)} limit. Proceed?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Adjust All", 
+          onPress: async () => {
+            try {
+              // Proportional reduction
+              const updates = budgets
+                .filter(b => b.categoryId !== null)
+                .map(b => {
+                  const newAmount = Math.floor((b.limitAmount * scalingFactor) / 10000) * 10000; // Round to 10k
+                  return upsertBudget.mutateAsync({
+                    categoryId: b.categoryId,
+                    amount: newAmount,
+                    month,
+                    year
+                  });
+                });
+              
+              await Promise.all(updates);
+              Alert.alert("Success", "All category budgets have been adjusted.");
+            } catch (error) {
+              Alert.alert("Error", "Failed to adjust some budgets. Please try again.");
+            }
+          }
         }
       ]
     );
@@ -152,13 +204,57 @@ export default function BudgetScreen() {
             </Text>
             <Text className="font-headline font-extrabold text-3xl text-on-surface">Budget Atelier</Text>
           </View>
-          <TouchableOpacity 
-            onPress={handleReset}
-            className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
-          >
-            <Trash2 size={22} color="#ef4444" />
-          </TouchableOpacity>
+          <View className="flex-row items-center gap-3">
+            <TouchableOpacity 
+              onPress={() => setIsEditing(!isEditing)}
+              className={`px-4 py-2 rounded-full border ${isEditing ? "bg-primary border-primary" : "bg-surface-container-high border-outline/10"}`}
+            >
+              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isEditing ? "text-white" : "text-on-surface-variant"}`}>
+                {isEditing ? "Done" : "Edit"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={handleReset}
+              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+            >
+              <Trash2 size={22} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
         </MotiView>
+        
+        {/* Mismatch Alert Section */}
+        <AnimatePresence>
+          {isMismatched && (
+            <MotiView
+              from={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 32 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+              className="bg-error/10 p-6 rounded-[32px] border border-error/20"
+            >
+              <View className="flex-row items-center gap-3 mb-3">
+                <AlertTriangle size={20} color="#ef4444" />
+                <Text className="font-headline font-bold text-error text-[15px]">Budget Conflict</Text>
+              </View>
+              <Text className="text-xs text-on-surface-variant leading-5 font-medium mb-5">
+                Your total category budgets ({formatCurrency(totalAllocated)}) exceed your monthly target ({formatCurrency(planning?.targetSpending || 0)}) by <Text className="text-error font-bold">{formatCurrency(mismatchAmount)}</Text>.
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity 
+                   onPress={handleAutoAdjust}
+                   className="flex-1 bg-error py-3 rounded-full items-center justify-center"
+                >
+                  <Text className="text-white font-bold text-[10px] uppercase tracking-wider">Auto Adjust</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                   onPress={() => Alert.alert("Manual Adjust", "Please decrease limits on specific categories below.")}
+                   className="flex-1 bg-surface-container-high py-3 rounded-full items-center justify-center"
+                >
+                  <Text className="text-on-surface font-bold text-[10px] uppercase tracking-wider">Review Categories</Text>
+                </TouchableOpacity>
+              </View>
+            </MotiView>
+          )}
+        </AnimatePresence>
 
         {/* Top-Down Target Card */}
         <MotiView
@@ -180,7 +276,7 @@ export default function BudgetScreen() {
               </View>
             ) : (
               <>
-                <View className="flex-row justify-between items-start mb-6">
+                <View className="flex-row justify-between items-start mb-4">
                   <View className="flex-1">
                     <Text className="text-white/80 font-medium text-xs mb-1">Monthly Spending Target</Text>
                     <TouchableOpacity onPress={() => { setTempTarget(planning?.targetSpending?.toString() || ""); setTargetModalVisible(true); }}>
@@ -189,11 +285,32 @@ export default function BudgetScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-                  <View className="items-end">
-                    <Text className="text-white/80 font-medium text-[10px] uppercase tracking-wider">Unallocated</Text>
-                    <Text className="text-white font-bold text-lg">
+                  <View className="items-end bg-white/20 px-3 py-1.5 rounded-2xl">
+                    <Text className="text-white/80 font-bold text-[10px] uppercase tracking-wider">Unallocated</Text>
+                    <Text className="text-white font-bold text-md">
                       {formatCurrency(planning?.remainingAmount ?? 0)}
                     </Text>
+                  </View>
+                </View>
+
+                {/* TARGET SLIDER INSIDE CARD */}
+                <View className="mb-6">
+                   <Slider
+                    style={{ width: '100%', height: 32 }}
+                    minimumValue={5000000}
+                    maximumValue={100000000}
+                    step={500000}
+                    value={planning?.targetSpending || 15000000}
+                    onSlidingComplete={(val) => {
+                      upsertBudget.mutate({ categoryId: null, amount: val, month, year });
+                    }}
+                    minimumTrackTintColor="#ffffff"
+                    maximumTrackTintColor="rgba(255,255,255,0.2)"
+                    thumbTintColor="#ffffff"
+                  />
+                  <View className="flex-row justify-between px-1">
+                    <Text className="text-white/50 text-[10px] font-bold">5M</Text>
+                    <Text className="text-white/50 text-[10px] font-bold">100M</Text>
                   </View>
                 </View>
 
@@ -306,12 +423,45 @@ export default function BudgetScreen() {
                         />
                       </View>
                       
-                      <View className="flex-row justify-between mt-2">
-                         <Text className="text-[10px] font-bold text-on-surface-variant">{pct.toFixed(0)}% Used</Text>
-                         {item.remainingAmount < 0 && (
-                           <Text className="text-error text-[10px] font-bold">Overby {formatCurrency(Math.abs(item.remainingAmount))}</Text>
-                         )}
-                      </View>
+                      {isEditing ? (
+                        <MotiView
+                          from={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mt-4 pt-4 border-t border-surface-container"
+                        >
+                           <Slider
+                            style={{ width: '100%', height: 32 }}
+                            minimumValue={0}
+                            maximumValue={item.limitAmount + (planning?.remainingAmount || 0)}
+                            step={100000}
+                            value={item.limitAmount}
+                            onSlidingComplete={(val) => {
+                              upsertBudget.mutate({ 
+                                categoryId: item.categoryId, 
+                                amount: val, 
+                                month, 
+                                year 
+                              });
+                            }}
+                            minimumTrackTintColor={statusColor}
+                            maximumTrackTintColor="#f2f3fd"
+                            thumbTintColor={statusColor}
+                          />
+                          <View className="flex-row justify-between px-1">
+                            <Text className="text-[8px] font-bold text-on-surface-variant">0</Text>
+                            <Text className="text-[8px] font-bold text-on-surface-variant">
+                              MAX: {formatCurrency(item.limitAmount + (planning?.remainingAmount || 0))}
+                            </Text>
+                          </View>
+                        </MotiView>
+                      ) : (
+                        <View className="flex-row justify-between mt-2">
+                           <Text className="text-[10px] font-bold text-on-surface-variant">{pct.toFixed(0)}% Used</Text>
+                           {item.remainingAmount < 0 && (
+                             <Text className="text-error text-[10px] font-bold">Over by {formatCurrency(Math.abs(item.remainingAmount))}</Text>
+                           )}
+                        </View>
+                      )}
                     </MotiView>
                   </TouchableOpacity>
                 );
@@ -440,6 +590,24 @@ export default function BudgetScreen() {
                     <Text className="text-[10px] font-bold text-on-surface-variant">0</Text>
                     <Text className="text-[10px] font-bold text-on-surface-variant">Max: {formatCurrency(remainingForSlider)}</Text>
                   </View>
+                </View>
+
+                {/* PRESETS */}
+                <View className="flex-row gap-2 mb-8 px-2">
+                   {[0.25, 0.5, 1].map(factor => {
+                     const val = Math.floor(remainingForSlider * factor / 100000) * 100000;
+                     return (
+                       <TouchableOpacity 
+                         key={factor}
+                         onPress={() => setCategoryAmount(val)}
+                         className="flex-1 bg-surface-container py-3 rounded-2xl items-center border border-outline/5"
+                       >
+                         <Text className="text-[10px] font-bold text-primary uppercase">
+                           {factor === 1 ? "Max" : `${factor * 100}%`}
+                         </Text>
+                       </TouchableOpacity>
+                     );
+                   })}
                 </View>
 
                 <TouchableOpacity 

@@ -29,6 +29,7 @@ public class BudgetController {
 
     @PostMapping
     public ResponseEntity<com.example.smartmoneytracking.application.dto.common.ApiResponse<Budget>> upsertBudget(@RequestBody BudgetRequest request) {
+        System.out.println("DEBUG: Received BudgetRequest: " + request);
         String userId = securityUtils.getCurrentUserId();
         Budget budget = upsertBudgetUseCase.execute(userId, request.getCategoryId(), request.getAmount(), request.getMonth(), request.getYear());
         return ResponseEntity.ok(com.example.smartmoneytracking.application.dto.common.ApiResponse.success(budget));

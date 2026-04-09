@@ -38,7 +38,7 @@ export default function LoginScreen() {
           name: response.name,
           email: response.email,
         });
-        router.replace("/(tabs)");
+        router.replace("/(tabs)" as any);
       }
     } catch (error: any) {
       console.error("[AUTH ERROR]", error);
@@ -190,7 +190,7 @@ export default function LoginScreen() {
             Don't have an account?{" "}
             <Text
               className="text-primary font-bold"
-              onPress={() => router.push("/register")}
+              onPress={() => router.push("/register" as any)}
             >
               Sign Up
             </Text>

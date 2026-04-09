@@ -50,7 +50,7 @@ export const useUpsertBudget = () => {
     mutationFn: (data: { categoryId: string | null; amount: number; month: number; year: number }) =>
       fetcher<BudgetResponse>(`/budgets`, {
         method: "POST",
-        body: JSON.stringify(data),
+        data,
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["budgets", data.month, data.year] });
