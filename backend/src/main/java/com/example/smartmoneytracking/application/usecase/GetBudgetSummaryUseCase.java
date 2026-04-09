@@ -41,8 +41,15 @@ public class GetBudgetSummaryUseCase {
             return budgets.stream().map(this::mapToEmptyResponse).collect(Collectors.toList());
         }
 
-        LocalDateTime start = YearMonth.of(year, month).atDay(1).atStartOfDay();
-        LocalDateTime end = YearMonth.of(year, month).atEndOfMonth().atTime(LocalTime.MAX);
+        YearMonth resolvedYm;
+        try {
+            resolvedYm = YearMonth.of(year, month);
+        } catch (java.time.DateTimeException e) {
+            resolvedYm = YearMonth.now();
+        }
+
+        final LocalDateTime start = resolvedYm.atDay(1).atStartOfDay();
+        final LocalDateTime end = resolvedYm.atEndOfMonth().atTime(LocalTime.MAX);
 
         return budgets.stream()
                 .map(budget -> calculateProgress(budget, walletIds, start, end))
@@ -69,11 +76,12 @@ public class GetBudgetSummaryUseCase {
         }
 
         BigDecimal currentSpending = spending != null ? spending : BigDecimal.ZERO;
-        double percentage = budget.getAmount().compareTo(BigDecimal.ZERO) > 0 
-                ? currentSpending.doubleValue() / budget.getAmount().doubleValue() * 100 
+        BigDecimal limit = budget.getAmount() != null ? budget.getAmount() : BigDecimal.ZERO;
+        double percentage = limit.compareTo(BigDecimal.ZERO) > 0 
+                ? currentSpending.doubleValue() / limit.doubleValue() * 100 
                 : 0;
 
-        BigDecimal remainingAmount = budget.getAmount().subtract(currentSpending);
+        BigDecimal remainingAmount = limit.subtract(currentSpending);
         String thresholdStatus = "COMFORT";
         if (percentage >= 100) {
             thresholdStatus = "OVERBUDGET";
@@ -88,7 +96,7 @@ public class GetBudgetSummaryUseCase {
                 .categoryId(budget.getCategoryId())
                 .categoryName(categoryName)
                 .iconName(iconName)
-                .limitAmount(budget.getAmount())
+                .limitAmount(limit)
                 .currentSpending(currentSpending)
                 .percentageUsed(percentage)
                 .thresholdStatus(thresholdStatus)
@@ -102,9 +110,13 @@ public class GetBudgetSummaryUseCase {
         return BudgetResponse.builder()
                 .id(budget.getId())
                 .categoryId(budget.getCategoryId())
-                .limitAmount(budget.getAmount())
+                .categoryName(budget.getCategoryId() == null ? "Total Budget" : "Category Budget")
+                .iconName(com.example.smartmoneytracking.domain.entities.common.MaterialSymbol.LIST)
+                .limitAmount(budget.getAmount() != null ? budget.getAmount() : BigDecimal.ZERO)
                 .currentSpending(BigDecimal.ZERO)
                 .percentageUsed(0)
+                .thresholdStatus("COMFORT")
+                .remainingAmount(budget.getAmount() != null ? budget.getAmount() : BigDecimal.ZERO)
                 .month(budget.getMonth())
                 .year(budget.getYear())
                 .build();

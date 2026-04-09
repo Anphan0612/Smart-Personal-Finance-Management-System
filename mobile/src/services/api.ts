@@ -18,11 +18,15 @@ const DYNAMIC_BASE_URL = process.env.EXPO_PUBLIC_API_URL ||
   (lanIpAddress ? `http://${lanIpAddress}:8080/api/v1` : "http://10.0.2.2:8080/api/v1");
 
 // eslint-disable-next-line no-console
-console.log(`[API CONFIG] Resolved Base URL: ${DYNAMIC_BASE_URL}`);
+console.log(`[API CONFIG] 🌐 API URL: ${DYNAMIC_BASE_URL}`);
+if (!process.env.EXPO_PUBLIC_API_URL && lanIpAddress) {
+  // eslint-disable-next-line no-console
+  console.log(`[API CONFIG] 🚀 Auto-detected LAN IP: ${lanIpAddress}`);
+}
 
 const apiClient = axios.create({
   baseURL: DYNAMIC_BASE_URL,
-  timeout: 30000, // Tăng timeout cho AI processing
+  timeout: 45000, // Tăng thêm cho các tác vụ AI phức tạp
   headers: {
     "Content-Type": "application/json",
   },
@@ -60,6 +64,8 @@ apiClient.interceptors.response.use(
     console.error(`[API ERROR] ${error.config?.method?.toUpperCase()} ${error.config?.url}:`, {
       baseURL: error.config?.baseURL,
       status: error.response?.status,
+      errorCode: error.response?.data?.errorCode,
+      traceId: error.response?.data?.traceId,
       message: error.response?.data?.message || error.message,
     });
 
@@ -97,8 +103,13 @@ apiClient.interceptors.response.use(
  * Helper để bóc tách `data` từ `ApiResponse<T>` một cách an toàn.
  * Sử dụng với TanStack Query.
  */
-export const fetcher = async <T>(url: string, config = {}): Promise<T> => {
-  const response = await apiClient.get<ApiResponse<T>>(url, config);
+export const fetcher = async <T>(url: string, config: any = {}): Promise<T> => {
+  const method = config.method?.toLowerCase() || "get";
+  const response = await apiClient.request<ApiResponse<T>>({
+    url,
+    ...config,
+    method,
+  });
   return response.data.data;
 };
 
