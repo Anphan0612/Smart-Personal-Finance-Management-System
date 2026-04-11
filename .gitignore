@@ -1,17 +1,17 @@
 # ==========================================
-# 📂 Project-Wide (Structure & Docs)
+# dY", Project-Wide (Structure & Docs)
 # ==========================================
 docs/
 
 tmp/
-# ML Models (large binary files — download separately)
+# ML Models (large binary files ?" download separately)
 ml-models/
 
 # Postman collections (tracked manually in tools/)
 tools/postman/
 
 # ==========================================
-# ☕ Java / Maven (backend/)
+# ~  Java / Maven (backend/)
 # ==========================================
 HELP.md
 target/
@@ -27,7 +27,7 @@ target/
 .sts4-cache
 
 # ==========================================
-# 🐍 Python / AI (ai-service/)
+# dY?? Python / AI (ai-service/)
 # ==========================================
 **/__pycache__/
 .venv/
@@ -38,24 +38,29 @@ ai-service/models/*.h5
 ai-service/benchmark/
 
 # ==========================================
-# ⚛️ React Native / Mobile (mobile/)
+# s>,? React Native / Mobile (mobile/)
 # ==========================================
 node_modules/
 dist/
 mobile/.expo
 
 # ==========================================
-# 🔑 Security & Environment
+# dY"` Security & Environment
 # ==========================================
 .env
 .env.*
 !.env.example
 
 # ==========================================
-# 💻 IDE Settings
+# dY' IDE Settings
 # ==========================================
 .idea/
 .vscode/
 *.iws
 *.iml
 *.ipr
+
+# OCR v1 Specific Exclusions
+.venv-ocr/
+uploads/
+ai-service/models/cache/
