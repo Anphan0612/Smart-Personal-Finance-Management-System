@@ -130,7 +130,8 @@ export default function RootLayout() {
       if (!currentToken && !inAuthGroup) {
         console.log("[ROUTING] Redirecting to Login...");
         router.replace("/(auth)/login" as any);
-      } else if (currentToken && (inAuthGroup || currentSegments.length === 0 || (!inAuthGroup && !inTabsGroup))) {
+      } else if (currentToken && (inAuthGroup || currentSegments.length === 0)) {
+        // Only redirect to Dashboard from auth screens or empty segments
         console.log("[ROUTING] Redirecting to Dashboard...");
         router.replace("/(tabs)" as any);
       }
@@ -160,6 +161,10 @@ export default function RootLayout() {
             <Stack.Screen
               name="+not-found"
               options={{ title: "Not Found" }}
+            />
+            <Stack.Screen
+              name="receipt"
+              options={{ headerShown: false }}
             />
           </Stack>
         </ThemeProvider>

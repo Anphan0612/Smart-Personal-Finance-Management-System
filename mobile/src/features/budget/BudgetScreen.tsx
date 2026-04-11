@@ -226,6 +226,7 @@ export default function BudgetScreen() {
         <AnimatePresence>
           {isMismatched && (
             <MotiView
+              key="budget-mismatch-alert"
               from={{ opacity: 0, height: 0, marginBottom: 0 }}
               animate={{ opacity: 1, height: 'auto', marginBottom: 32 }}
               exit={{ opacity: 0, height: 0, marginBottom: 0 }}
@@ -382,7 +383,7 @@ export default function BudgetScreen() {
 
                 return (
                   <TouchableOpacity
-                    key={item.id}
+                    key={renderKey(ID_PREFIX.CATEGORY, item.id || item.categoryId, idx)}
                     onPress={() => {
                       setSelectedCategory(item.categoryId);
                       setCategoryAmount(item.limitAmount);
