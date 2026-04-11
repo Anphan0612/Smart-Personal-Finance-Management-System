@@ -36,6 +36,13 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cho phép ứng dụng truy cập thư viện ảnh để tải lên hóa đơn.",
+          "cameraPermission": "Cho phép ứng dụng sử dụng camera để chụp ảnh hóa đơn."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
