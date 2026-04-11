@@ -67,3 +67,18 @@ class AnomalyDetectResponse(BaseModel):
     """List of detected anomalies."""
     anomalies: list[dict[str, Any]] = []
     total_checked: int = 0
+
+
+# ---------------------------------------------------------------------------
+# OCR Receipt schemas
+# ---------------------------------------------------------------------------
+class OCRResponse(BaseModel):
+    store_name: str
+    transaction_date: Optional[str] = None
+    amount: float
+    confidence: float
+    raw_text: str
+    category_id: str = "OTHER_EXPENSE"
+    is_corrected: bool = False
+    correction_reason: Optional[str] = None
+    processing_steps: list[dict[str, Any]] = []
