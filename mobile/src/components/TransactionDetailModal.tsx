@@ -31,6 +31,7 @@ export const TransactionDetailModal = ({ isVisible, onClose, transaction }: Tran
         <AnimatePresence>
           {isVisible && (
             <MotiView
+              key="transaction-detail-modal-container"
               from={{ translateY: height }}
               animate={{ translateY: 0 }}
               exit={{ translateY: height }}

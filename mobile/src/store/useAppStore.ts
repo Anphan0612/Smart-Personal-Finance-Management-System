@@ -58,6 +58,7 @@ interface AppState {
   addMessage: (message: ChatMessage) => void;
   updateLastMessage: (content: string) => void;
   clearChat: () => void;
+  deduplicateMessages: () => void;
   
   // Active context
   activeWalletId: string | null;
@@ -94,9 +95,17 @@ export const useAppStore = create<AppState>()(
       
       // AI Chat Defaults
       messages: [],
-      addMessage: (message) => set((state) => ({ 
-        messages: [...state.messages, message] 
-      })),
+      addMessage: (message) => set((state) => {
+        const existingIndex = state.messages.findIndex(m => m.id === message.id);
+        if (existingIndex !== -1) {
+          // Logic Upsert: Nếu trùng ID, cập nhật tin nhắn cũ (Immutable)
+          const newMessages = [...state.messages];
+          newMessages[existingIndex] = message;
+          return { messages: newMessages };
+        }
+        // Thêm mới nếu ID chưa tồn tại
+        return { messages: [...state.messages, message] };
+      }),
       updateLastMessage: (content) => set((state) => {
         const newMessages = [...state.messages];
         if (newMessages.length > 0) {
@@ -107,13 +116,53 @@ export const useAppStore = create<AppState>()(
       }),
       clearChat: () => set({ messages: [] }),
       
+      deduplicateMessages: () => set((state) => {
+        try {
+          if (state.messages.length === 0) return state;
+          
+          const startCount = state.messages.length;
+          // Performance-optimized deduplication using Map (O(n))
+          const uniqueEntries = new Map(state.messages.map(m => [m.id, m]));
+          const uniqueMessages = Array.from(uniqueEntries.values());
+          
+          if (startCount !== uniqueMessages.length) {
+            console.log(`[Storage] Deduplication: ${startCount} -> ${uniqueMessages.length} messages.`);
+            return { messages: uniqueMessages };
+          }
+        } catch (error) {
+          console.error("[Storage] Auto-deduplication failed:", error);
+        }
+        return state;
+      }),
+
       // Wallet Context
       activeWalletId: null,
       setActiveWalletId: (id) => set({ activeWalletId: id }),
     }),
     {
       name: "smart-finance-storage",
+      version: 3, // Increment to VERSION 3
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state, error) => {
+        if (!error && state) {
+          console.log('[Storage] Rehydrated successfully. Running sanity check...');
+          state.deduplicateMessages();
+        }
+      },
+      migrate: (persistedState: any, version: number) => {
+        if (version < 3) {
+          try {
+            console.log(`[Storage] Migrating from version ${version} to 3...`);
+            const messages = persistedState.messages || [];
+            // Immediate cleanup during migration if possible
+            const uniqueMessages = Array.from(new Map(messages.map((m: any) => [m.id, m])).values());
+            return { ...persistedState, messages: uniqueMessages };
+          } catch (e) {
+            return persistedState;
+          }
+        }
+        return persistedState;
+      },
       partialize: (state) => ({ 
         token: state.token, 
         refreshToken: state.refreshToken, 
