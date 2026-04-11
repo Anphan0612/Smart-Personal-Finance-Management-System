@@ -69,6 +69,16 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static <T> ApiResponse<T> error(ErrorCode errorCode, String message) {
+        return ApiResponse.<T>builder()
+                .success(false)
+                .code(errorCode.getHttpStatus())
+                .errorCode(errorCode.name())
+                .message(message)
+                .timestamp(Instant.now())
+                .build();
+    }
+
     public static <T> ApiResponse<T> error(ErrorCode errorCode, String message,
                                            String path, String traceId,
                                            List<FieldError> fieldErrors) {
