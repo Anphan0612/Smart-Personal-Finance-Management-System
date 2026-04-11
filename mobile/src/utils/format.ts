@@ -36,6 +36,17 @@ export const formatVND = (amount: number = 0, options: {
 };
 
 /**
+ * Parses a formatted currency string back to a pure number.
+ * e.g., "1.500.000" -> 1500000
+ */
+export const parseVND = (value: string = '0'): number => {
+  if (!value) return 0;
+  // Remove dots, commas and currency symbols
+  const cleanValue = value.replace(/[đ\. ,]/g, '');
+  return parseInt(cleanValue, 10) || 0;
+};
+
+/**
  * Shorthand for formatVND with symbol and no shortening for standard lists.
  */
 export const formatCurrency = (amount: number = 0) => formatVND(amount);

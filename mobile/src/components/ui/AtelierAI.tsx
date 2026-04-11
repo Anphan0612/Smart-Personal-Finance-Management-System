@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator } from "react-native";
+import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Mic, Search, TrendingUp, AlertTriangle } from "lucide-react-native";
 import { AtelierTypography } from "./AtelierTypography";
@@ -7,8 +7,9 @@ import { AtelierCard } from "./AtelierCard";
 import { useAppStore, ChatMessage } from "../../store/useAppStore";
 import { fetcher, poster } from "../../services/api";
 import { AtelierTransactionCard } from "./AtelierTransactionCard";
-import { Alert, Text } from "react-native";
 import { formatCurrency } from "../../utils/format";
+import { AtelierActionSheet } from "./AtelierActionSheet";
+import { router } from "expo-router";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -23,6 +24,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const initialFetchRef = useRef(false);
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
 
   // Fetch proactive insights when opened
   useEffect(() => {
@@ -33,12 +35,12 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   }, [isOpen, activeWalletId]);
 
   const fetchProactiveInsight = async () => {
+    // Phase 1.2: Deduplication guard
+    if (useAppStore.getState().messages.length > 0) return;
+
     setIsProcessing(true);
     try {
-      // 1. Fetch comparison data
       const comparison = await fetcher<any>(`/transactions/comparison?walletId=${activeWalletId}`);
-
-      // 2. Generate Insight from AI service
       const aiResponse = await poster<any, any>("/ai/generate-insights", comparison);
 
       addMessage({
@@ -139,6 +141,25 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     }
   };
 
+  // Phase 1.3: ActionSheet handlers
+  const handleClose = () => {
+    setIsSheetVisible(false);
+    onClose();
+  };
+
+  const handleCameraPress = () => {
+    setIsSheetVisible(true);
+  };
+
+  const handleSelectSource = (source: 'camera' | 'library') => {
+    setIsSheetVisible(false);
+    onClose();
+    router.push({
+      pathname: '/receipt/scanner',
+      params: { source },
+    });
+  };
+
   // --- Render a Query Result Card inside chat ---
   const renderQueryResultCard = (data: ChatMessage["queryData"]) => {
     if (!data) return null;
@@ -225,16 +246,17 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   };
 
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
-        <View style={styles.absoluteLayer} pointerEvents="box-none">
+        <View key="atelier-ai-modal" style={styles.absoluteLayer} pointerEvents="box-none">
           {/* Backdrop */}
           <MotiView
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={styles.backdrop}
-            onTouchStart={onClose}
+            onTouchStart={handleClose}
           />
 
           {/* Bottom Sheet */}
@@ -261,7 +283,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                   <AtelierTypography variant="h3" className="text-xl">Atelier AI</AtelierTypography>
                 </View>
               </View>
-              <TouchableOpacity onPress={onClose} className="w-10 h-10 rounded-full bg-surface-container/50 items-center justify-center">
+              <TouchableOpacity onPress={handleClose} className="w-10 h-10 rounded-full bg-surface-container/50 items-center justify-center">
                 <X size={20} color="#717785" />
               </TouchableOpacity>
             </View>
@@ -293,23 +315,23 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                     </AtelierTypography>
                   </View>
                 )}
-                {messages.map((msg) => (
+                {messages.map((msg, index) => (
                   <MotiView
-                    key={msg.id}
+                    key={`msg-${msg.id}-${index}`}
                     from={{ opacity: 0, translateY: 10 }}
                     animate={{ opacity: 1, translateY: 0 }}
                     className={`mb-6 ${msg.role === "user" ? "items-end" : "items-start"}`}
                   >
-                    <View className="flex-row gap-3 max-w-[90%]">
+                    <View className={`flex-row gap-3 max-w-[90%] ${msg.role === "user" ? "flex-row-reverse self-end" : "self-start"}`}>
                       {msg.role === "assistant" && (
                         <View className="w-8 h-8 rounded-xl bg-primary-container items-center justify-center self-start mt-1">
                           <Sparkles size={14} color="white" fill="white" />
                         </View>
                       )}
-                      <View className="flex-1">
+                      <View className={`flex-shrink ${msg.role === "user" ? "items-end" : "items-start"}`}>
                         <View className={`px-5 py-4 rounded-[24px] ${msg.role === "user"
-                            ? "bg-primary rounded-br-none"
-                            : "bg-surface-container-lowest border border-surface-container rounded-tl-none"
+                          ? "bg-primary rounded-br-none"
+                          : "bg-surface-container-lowest border border-surface-container rounded-tl-none"
                           }`}>
                           <AtelierTypography
                             variant="body"
@@ -379,7 +401,10 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                   ))}
                 </ScrollView>
                 <View className="flex-row items-center gap-3">
-                  <TouchableOpacity className="w-12 h-12 bg-white border border-surface-container rounded-2xl items-center justify-center shadow-sm">
+                  <TouchableOpacity
+                    onPress={handleCameraPress}
+                    className="w-12 h-12 bg-white border border-surface-container rounded-2xl items-center justify-center shadow-sm"
+                  >
                     <Camera size={20} color="#005ab4" />
                   </TouchableOpacity>
                   <View className="flex-1 relative">
@@ -409,6 +434,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         </View>
       )}
     </AnimatePresence>
+    <AtelierActionSheet
+      isVisible={isSheetVisible}
+      onClose={() => setIsSheetVisible(false)}
+      onSelectCamera={() => handleSelectSource('camera')}
+      onSelectGallery={() => handleSelectSource('library')}
+    />
+    </>
   );
 };
 
