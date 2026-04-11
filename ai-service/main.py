@@ -1,15 +1,17 @@
-"""
-FastAPI entry point for the NLP Transaction Parser microservice.
-Endpoint: POST /api/ai/extract-transaction
-Endpoint: POST /api/ai/query-history
-Endpoint: POST /api/ai/detect-anomalies
-Endpoint: POST /api/ai/generate-insights
-"""
+import os
+# RESOLVE DLL CONFLICT: Set environment flags before any DL library is imported
+# 1. Disable OneDNN to prevent PaddleOCR crash on Windows
+os.environ["FLAGS_use_onednn"] = "0"
+os.environ["FLAGS_use_mkldnn"] = "0"
+# 2. Allow multiple OpenMP runtimes (Fixes WinError 127 co-existence between Paddle and Torch)
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+# 3. Keep CPU threading conservative to reduce oneDNN/export instability
+os.environ["OMP_NUM_THREADS"] = "1"
 
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, File, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,8 +24,10 @@ from models.schemas import (
     QueryHistoryResponse,
     AnomalyDetectRequest,
     AnomalyDetectResponse,
+    OCRResponse,
 )
 from services.ner_service import NERService
+from services.ocr_service import OCRService
 from services.insight_generator import generate_financial_insights
 from services.query_service import classify_intent, extract_filters
 from services.anomaly_service import detect_anomalies
@@ -32,16 +36,19 @@ from dotenv import load_dotenv
 # Load root .env if it exists
 load_dotenv("../.env")
 
-# ---------------------------------------------------------------------------
-# Singleton NER service (loaded once at startup to avoid per-request latency)
+# Singleton services (loaded once at startup to avoid per-request latency)
 # ---------------------------------------------------------------------------
 _ner_service: NERService | None = None
+_ocr_service: OCRService | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _ner_service
+    global _ner_service, _ocr_service
     _ner_service = NERService()
+    # Lazy load OCR service or load it here?
+    # OCR models are heavy (~150MB), better load at startup if RAM allows
+    _ocr_service = OCRService()
     yield
 
 
@@ -171,7 +178,7 @@ async def extract_transaction(request: TransactionRequest):
     amount, type, category, date, note, confidence.
     """
     global _ner_service
-    print(f"[AI SERVICE] Received request: {request.text}")
+    # Request logging handled by middleware or removed for stability on Windows
     try:
         if _ner_service is None:
             # Re-initialize if lifespan failed or initial load failed
@@ -179,7 +186,7 @@ async def extract_transaction(request: TransactionRequest):
             _ner_service = NERService()
             
         result = _ner_service.extract(request.text)
-        print(f"[AI SERVICE] Extraction result: {result}")
+        # Successfully extracted
         return EntityResponse(**result)
     except ValueError as exc:
         error_code = str(exc)
@@ -209,7 +216,7 @@ async def query_history(request: QueryHistoryRequest):
     2. For QUERY intent, extracts time/category filters and generates an AI summary.
     3. For COMMAND intent, returns intent='COMMAND' so the caller can route to extract-transaction.
     """
-    print(f"[AI SERVICE] Query request: {request.text}")
+    # print(f"[AI SERVICE] Query request: {request.text}")
 
     intent = classify_intent(request.text)
 
@@ -262,6 +269,74 @@ async def detect_anomalies_endpoint(request: AnomalyDetectRequest):
         anomalies=anomalies,
         total_checked=len(request.transactions),
     )
+
+
+@app.post(
+    "/api/ai/ocr-receipt",
+    response_model=OCRResponse,
+    tags=["OCR"],
+    summary="Extract structured data from a receipt image (Vietnamese focus)",
+)
+async def ocr_receipt(file: UploadFile = File(...)):
+    """
+    Accepts an image file via multipart/form-data.
+    Returns structured data: store_name, amount, transaction_date, confidence.
+    Pipeline: Image Pre-processing → PaddleOCR → Rule-based Parse → LLM Healing
+    """
+    global _ocr_service
+    try:
+        if _ocr_service is None:
+            _ocr_service = OCRService()
+            
+        contents = await file.read()
+        result = _ocr_service.process_receipt(contents)
+
+        # --- Detailed OCR Result Logging ---
+        print("\n" + "=" * 60)
+        print("[OCR SERVICE v3] ✅ Receipt processed (PaddleOCR + LLM Heal)")
+        print("=" * 60)
+        print(f"  📍 Store Name     : {result.get('store_name', 'N/A')}")
+        print(f"  💰 Amount         : {result.get('amount', 0):,.0f} VNĐ")
+        print(f"  📅 Date           : {result.get('transaction_date', 'Not detected')}")
+        print(f"  🎯 Confidence     : {result.get('confidence', 0):.2%}")
+        print(f"  🏷️  Category       : {result.get('category_id', 'OTHER_EXPENSE')}")
+        if result.get('is_corrected'):
+            print(f"  🔧 Corrected      : ✅ {result.get('correction_reason', 'N/A')}")
+        raw_preview = (result.get('raw_text', '')[:120] + '...') if len(result.get('raw_text', '')) > 120 else result.get('raw_text', '')
+        print(f"  📝 Raw Text       : {raw_preview}")
+
+        # Processing Steps timing
+        steps = result.get('processing_steps', [])
+        if steps:
+            print("-" * 60)
+            print("  ⏱️  Processing Steps:")
+            for step in steps:
+                print(f"     [{step['step']}] {step['label']} — {step['duration_ms']}ms")
+
+        print("-" * 60)
+        print("[OCR SERVICE v3] Transaction-ready fields:")
+        print(f"  → description : Hóa đơn từ {result.get('store_name', 'N/A')}")
+        print(f"  → amount      : {result.get('amount', 0)}")
+        print(f"  → type        : EXPENSE")
+        print(f"  → category_id : {result.get('category_id', 'OTHER_EXPENSE')}")
+        print(f"  → date        : {result.get('transaction_date', 'N/A')}")
+        print("=" * 60 + "\n")
+
+        return OCRResponse(**result)
+    except ValueError as e:
+        if str(e) == "INVALID_IMAGE_FORMAT":
+            raise HTTPException(status_code=400, detail="Định dạng ảnh không hợp lệ.")
+        if str(e) == "OCR_RUNTIME_ERROR":
+            raise HTTPException(
+                status_code=503,
+                detail="OCR engine tạm thời không khả dụng. Vui lòng thử lại sau.",
+            )
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        print(f"[AI SERVICE] OCR Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Lỗi xử lý OCR.")
 
 
 # ---------------------------------------------------------------------------

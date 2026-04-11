@@ -1,10 +1,19 @@
+--extra-index-url https://download.pytorch.org/whl/cu124
 fastapi==0.115.12
 uvicorn[standard]==0.34.0
 transformers==4.50.3
-torch==2.6.0
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+torchaudio==2.6.0+cu124
 pydantic>=2.0
 sentencepiece==0.2.0
 python-multipart==0.0.20
 httpx==0.28.1
 pytest==8.3.5
 pytest-asyncio==0.25.3
+bitsandbytes
+xformers
+opencv-python-headless
+paddleocr==2.8.1
+paddlepaddle-gpu
+python-dotenv
