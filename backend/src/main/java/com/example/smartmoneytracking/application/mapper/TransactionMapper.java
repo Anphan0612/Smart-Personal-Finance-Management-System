@@ -71,6 +71,13 @@ public class TransactionMapper {
                 .transactionDate(t.getTransactionDate())
                 .createdAt(t.getCreatedAt())
                 .type(t.getType())
+                .receiptImageUrl(formatReceiptUrl(t.getReceiptImageUrl()))
                 .build();
+    }
+
+    private String formatReceiptUrl(String fileName) {
+        if (fileName == null || fileName.trim().isEmpty()) return null;
+        if (fileName.startsWith("http")) return fileName; // Already full URL
+        return "/api/v1/receipts/images/" + fileName;
     }
 }

@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -48,11 +51,17 @@ public class GetBudgetSummaryUseCase {
             resolvedYm = YearMonth.now();
         }
 
-        final LocalDateTime start = resolvedYm.atDay(1).atStartOfDay();
-        final LocalDateTime end = resolvedYm.atEndOfMonth().atTime(LocalTime.MAX);
+        String userTz = com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone();
+        ZoneId zoneId = ZoneId.of(userTz);
+
+        ZonedDateTime localStart = resolvedYm.atDay(1).atStartOfDay(zoneId);
+        ZonedDateTime localEnd = resolvedYm.atEndOfMonth().atTime(LocalTime.MAX).atZone(zoneId);
+
+        final LocalDateTime startUtc = DateUtils.toUtc(localStart);
+        final LocalDateTime endUtc = DateUtils.toUtc(localEnd);
 
         return budgets.stream()
-                .map(budget -> calculateProgress(budget, walletIds, start, end))
+                .map(budget -> calculateProgress(budget, walletIds, startUtc, endUtc))
                 .collect(Collectors.toList());
     }
 

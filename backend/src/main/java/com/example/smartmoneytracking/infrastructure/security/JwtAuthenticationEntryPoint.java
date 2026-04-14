@@ -18,9 +18,9 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void commence(@org.springframework.lang.NonNull HttpServletRequest request,
-                         @org.springframework.lang.NonNull HttpServletResponse response,
-                         @org.springframework.lang.NonNull AuthenticationException authException) throws IOException, ServletException {
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException) throws IOException, ServletException {
         
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

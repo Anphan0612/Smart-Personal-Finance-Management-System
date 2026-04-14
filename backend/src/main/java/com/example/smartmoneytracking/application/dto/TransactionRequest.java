@@ -38,4 +38,6 @@ public class TransactionRequest {
     @PastOrPresent(message = "Transaction date cannot be in the future")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime transactionDate;
+
+    private String receiptImageUrl;
 }

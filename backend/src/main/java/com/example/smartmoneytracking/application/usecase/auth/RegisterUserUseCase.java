@@ -1,7 +1,10 @@
 package com.example.smartmoneytracking.application.usecase.auth;
 
+import com.example.smartmoneytracking.application.dto.WalletRequest;
+import com.example.smartmoneytracking.application.usecase.CreateWalletUseCase;
 import com.example.smartmoneytracking.domain.entities.user.User;
 import com.example.smartmoneytracking.domain.entities.user.exceptions.UserAlreadyExistsException;
+import com.example.smartmoneytracking.domain.entities.wallet.valueobject.WalletType;
 import com.example.smartmoneytracking.domain.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +17,7 @@ public class RegisterUserUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CreateWalletUseCase createWalletUseCase;
 
     @Transactional
     public User execute(String name, String email, String rawPassword, String phone, String cccd) {
@@ -35,6 +39,21 @@ public class RegisterUserUseCase {
         }
 
         // Save and return
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Auto-initialize Default Wallet
+        createDefaultWallet(savedUser.getId());
+
+        return savedUser;
+    }
+
+    private void createDefaultWallet(String userId) {
+        WalletRequest walletRequest = WalletRequest.builder()
+                .name("Ví chính")
+                .balance(java.math.BigDecimal.ZERO)
+                .currencyCode("VND")
+                .type(WalletType.CASH)
+                .build();
+        createWalletUseCase.execute(walletRequest, userId);
     }
 }

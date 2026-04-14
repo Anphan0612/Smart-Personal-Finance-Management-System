@@ -44,6 +44,9 @@ public class Transaction {
     @Setter(AccessLevel.PRIVATE)
     private TransactionType type;
 
+    @Setter(AccessLevel.PUBLIC)
+    private String receiptImageUrl;
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -110,5 +113,9 @@ public class Transaction {
 
     public void updateDate(LocalDateTime date) {
         this.transactionDate = date != null ? date : LocalDateTime.now();
+    }
+
+    public void updateReceiptImageUrl(String url) {
+        this.receiptImageUrl = url;
     }
 }
