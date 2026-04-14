@@ -57,7 +57,7 @@ public class ReceiptController {
             receipt = receiptRepository.save(receipt);
             
             // 3. Trigger Async OCR processing
-            ocrAsyncService.processOcrAsync(receipt.getId(), bytes, file.getOriginalFilename());
+            ocrAsyncService.processOcrAsync(receipt.getId(), bytes, file.getOriginalFilename(), com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone());
             
             // Return 202 Accepted immediately so Mobile can start polling
             return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.success(mapToResponse(receipt)));

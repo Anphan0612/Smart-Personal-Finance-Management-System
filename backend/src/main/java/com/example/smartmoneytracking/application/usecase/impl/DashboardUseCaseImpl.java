@@ -18,6 +18,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,10 +35,13 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
 
     @Override
     public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startDate = calculateStartDate(timeRange, now);
+        ZonedDateTime localNow = DateUtils.nowInUserTz();
+        ZonedDateTime localStart = calculateStartDate(timeRange, localNow);
+        
+        LocalDateTime nowUtc = DateUtils.toUtc(localNow);
+        LocalDateTime startUtc = DateUtils.toUtc(localStart);
 
-        List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startDate, now);
+        List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startUtc, nowUtc);
 
         // 1. Calculate Summary
         BigDecimal income = transactions.stream()
@@ -72,14 +78,19 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
         DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM");
         Map<String, MonthlyTrendDTO> trendMap = new LinkedHashMap<>();
         
-        LocalDateTime tempDate = startDate;
-        while (!tempDate.isAfter(now)) {
+        ZonedDateTime tempDate = localStart;
+        while (!tempDate.isAfter(localNow)) {
             trendMap.put(tempDate.format(monthFormatter), new MonthlyTrendDTO(tempDate.format(monthFormatter), BigDecimal.ZERO, BigDecimal.ZERO));
             tempDate = tempDate.plusMonths(1);
         }
 
         for (Transaction t : transactions) {
-            String month = t.getTransactionDate().format(monthFormatter);
+            // Convert UTC storage to user local time for correct grouping by month
+            LocalDateTime localDate = t.getTransactionDate().atZone(java.time.ZoneOffset.UTC)
+                    .withZoneSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()))
+                    .toLocalDateTime();
+            
+            String month = localDate.format(monthFormatter);
             MonthlyTrendDTO trend = trendMap.getOrDefault(month, new MonthlyTrendDTO(month, BigDecimal.ZERO, BigDecimal.ZERO));
             if (t.isIncome()) {
                 trend.setIncome(trend.getIncome().add(t.getAmount()));
@@ -132,11 +143,11 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
                 .build();
     }
 
-    private LocalDateTime calculateStartDate(String timeRange, LocalDateTime now) {
+    private ZonedDateTime calculateStartDate(String timeRange, ZonedDateTime now) {
         if ("3_months".equals(timeRange)) {
-            return now.minusMonths(3).withDayOfMonth(1).withHour(0).withMinute(0);
+            return now.minusMonths(3).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         }
-        return now.withDayOfMonth(1).withHour(0).withMinute(0);
+        return now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 
     private String getColorForCategory(String categoryId) {

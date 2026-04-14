@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,7 +26,7 @@ public class OcrAsyncService {
     private final MerchantMappingService merchantMappingService;
 
     @Async
-    public void processOcrAsync(String receiptId, byte[] imageBytes, String fileName) {
+    public void processOcrAsync(String receiptId, byte[] imageBytes, String fileName, String userTimezone) {
         long startTime = System.currentTimeMillis();
         log.info("[OCR] Starting background processing - Job: {}, File: {}", receiptId, fileName);
         
@@ -60,11 +63,17 @@ public class OcrAsyncService {
                             int month = Integer.parseInt(parts[1]);
                             int year = Integer.parseInt(parts[2]);
                             if (year < 100) year += 2000;
-                            date = LocalDateTime.of(year, month, day, 0, 0);
+                            LocalDateTime localDate = LocalDateTime.of(year, month, day, 0, 0);
+                            
+                            // Convert from User Timezone to UTC for storage
+                            ZoneId userZone = ZoneId.of(userTimezone);
+                            date = ZonedDateTime.of(localDate, userZone)
+                                    .withZoneSameInstant(ZoneOffset.UTC)
+                                    .toLocalDateTime();
                         }
                     }
                 } catch (Exception e) {
-                    date = LocalDateTime.now();
+                    date = LocalDateTime.now(); // Already UTC due to global config
                 }
             }
 
