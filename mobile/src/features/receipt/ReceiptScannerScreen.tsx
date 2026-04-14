@@ -21,10 +21,19 @@ export default function ReceiptScannerScreen() {
   const { source } = useLocalSearchParams<{ source: 'camera' | 'library' }>();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const isLoadingRef = useRef(false);
+  const isCancelledRef = useRef(false);
   const [hasInited, setHasInited] = useState(false);
   const [currentStep, setCurrentStep] = useState(-1);
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const stepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Helper sync logic
+  const setLoadingState = (val: boolean) => {
+    setLoading(val);
+    isLoadingRef.current = val;
+  };
 
   useEffect(() => {
     if (source && !hasInited) {
@@ -35,7 +44,10 @@ export default function ReceiptScannerScreen() {
 
   useEffect(() => {
     return () => {
+      isCancelledRef.current = true;
+      isLoadingRef.current = false;
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+      if (pollingTimerRef.current) clearTimeout(pollingTimerRef.current);
     };
   }, []);
 
@@ -89,10 +101,10 @@ export default function ReceiptScannerScreen() {
           });
 
       if (!result.canceled) {
-        setLoading(true);
+        setLoadingState(true);
         const compressed = await compressImage(result.assets[0].uri);
         setImage(compressed);
-        setLoading(false);
+        setLoadingState(false);
       } else if (!image) {
         router.back();
       }
@@ -101,10 +113,72 @@ export default function ReceiptScannerScreen() {
     }
   };
 
+  const pollWithDelay = async (receiptId: string, retryCount = 0) => {
+    // 1. Kiểm tra Unmount Guard hoặc loading đã tắt (Dừng poll)
+    if (isCancelledRef.current || !isLoadingRef.current) {
+        console.log(`[OCR] Polling stopped - Cancelled: ${isCancelledRef.current}, Loading: ${isLoadingRef.current}`);
+        return;
+    }
+
+    try {
+      const response = await apiClient.get(`/receipts/${receiptId}`);
+      
+      if (response.data.success) {
+        const status = response.data.data.status;
+        
+        // Cập nhật step simulation dựa trên thời gian thực tế
+        if (currentStep < 2) setCurrentStep(2);
+
+        if (status === 'PROCESSED' || status === 'CONFIRMED') {
+          finishSteps();
+          setTimeout(() => {
+            if (isCancelledRef.current) return;
+            setLoadingState(false);
+            router.push({
+                pathname: '/receipt/review',
+                params: { receiptId }
+            });
+          }, 800);
+          return; // Kết thúc poll thành công
+        } else if (status === 'FAILED') {
+          setLoadingState(false);
+          Alert.alert("Lỗi", "AI không thể xử lý hóa đơn này.");
+          return; // Kết thúc poll thất bại
+        }
+      }
+
+      // Nếu vẫn PENDING, đợi 3s rồi poll tiếp
+      pollingTimerRef.current = setTimeout(() => pollWithDelay(receiptId, 0), 3000);
+
+    } catch (error: any) {
+      // 1. Xử lý lỗi Critical (401/403)
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
+        console.error(`[OCR] Critical Error ${status}. Stopping poll.`);
+        setLoadingState(false);
+        Alert.alert("Phiên làm việc hết hạn", "Vui lòng đăng nhập lại.");
+        router.replace('/(auth)/login');
+        return;
+      }
+
+      // 2. Xử lý lỗi Network/Transient
+      if (retryCount >= 10) {
+        console.error("[OCR] Max retries reached. Stopping poll.");
+        setLoading(false);
+        Alert.alert("Lỗi kết nối", "Mạng không ổn định. Vui lòng kiểm tra lại sau trong danh sách giao dịch.");
+        return;
+      }
+
+      console.warn(`[OCR] Network Error (Attempt ${retryCount + 1}/10). Retrying...`);
+      // Thử lại ngay sau 3s nếu lỗi mạng (Quiet retry)
+      pollingTimerRef.current = setTimeout(() => pollWithDelay(receiptId, retryCount + 1), 3000);
+    }
+  };
+
   const uploadAndProcess = async () => {
     if (!image) return;
 
-    setLoading(true);
+    setLoadingState(true);
     simulateSteps();
 
     try {
@@ -116,43 +190,36 @@ export default function ReceiptScannerScreen() {
         type: 'image/jpeg',
       });
 
+      console.log("[OCR] Uploading receipt...");
       const response = await apiClient.post('/receipts/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      finishSteps();
-
       if (response.data.success) {
-        // Brief pause to show "Hoàn tất!" step
-        setTimeout(() => {
-          router.push({
-            pathname: '/receipt/review',
-            params: { receiptId: response.data.data.id }
-          });
-        }, 800);
+        const receiptId = response.data.data.id;
+        console.log(`[OCR] Upload success. Job ID: ${receiptId}. Starting recursive polling...`);
+        pollWithDelay(receiptId);
       }
     } catch (error) {
-      finishSteps();
+      if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+      setLoadingState(false);
       console.error("OCR Upload error:", error);
       Alert.alert(
-        "Lỗi OCR",
-        "Không thể tự động nhận diện hóa đơn này. Bạn có muốn nhập thủ công không?",
+        "Lỗi Upload",
+        "Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng.",
         [
-          { text: "Thử lại", style: "cancel", onPress: () => resetState() },
-          { text: "Nhập tay", onPress: () => router.push('/(tabs)/transactions') }
+          { text: "Thử lại", style: "cancel", onPress: () => resetState() }
         ]
       );
-    } finally {
-      setLoading(false);
     }
   };
 
   const resetState = () => {
     setCurrentStep(-1);
     setCompletedSteps([]);
-    setLoading(false);
+    setLoadingState(false);
   };
 
   const renderStepIndicator = () => {
