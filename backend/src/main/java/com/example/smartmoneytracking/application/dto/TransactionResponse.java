@@ -22,6 +22,7 @@ public class TransactionResponse {
     private BigDecimal amount;
     private String description;
     private TransactionType type;
+    private String receiptImageUrl;
 
     @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime transactionDate;

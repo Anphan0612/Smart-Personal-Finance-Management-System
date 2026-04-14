@@ -30,6 +30,7 @@ import { formatCurrency } from "../../utils/format";
 import { Skeleton } from "../../components/common/Skeleton";
 import type { BudgetResponse, ThresholdStatus } from "../../types/api";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { renderKey, ID_PREFIX } from "@/utils/id";
 
 const THRESHOLD_COLORS: Record<ThresholdStatus, string> = {
   COMFORT: "#10b981",
@@ -381,9 +382,11 @@ export default function BudgetScreen() {
                 const barColor = THRESHOLD_BG[status] || "bg-primary";
                 const statusColor = THRESHOLD_COLORS[status] || "#005ab4";
 
+                const categoryKey = renderKey(ID_PREFIX.CATEGORY, (item.id || item.categoryId)!, idx);
+
                 return (
                   <TouchableOpacity
-                    key={renderKey(ID_PREFIX.CATEGORY, item.id || item.categoryId, idx)}
+                    key={categoryKey}
                     onPress={() => {
                       setSelectedCategory(item.categoryId);
                       setCategoryAmount(item.limitAmount);

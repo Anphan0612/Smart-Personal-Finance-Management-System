@@ -11,24 +11,38 @@ import {
   ArrowDownLeft,
   ArrowUpRight
 } from "lucide-react-native";
-import { useAppStore } from "../../store/useAppStore";
-import { useTransactions } from "../../hooks/useTransactions";
-import { TransactionResponse } from "../../types/api";
-import { Skeleton } from "../../components/common/Skeleton";
+import { useAppStore } from "@/store/useAppStore";
+import { useTransactions } from "@/hooks/useTransactions";
+import { TransactionResponse } from "@/types/api";
+import { Skeleton } from "@/components/common/Skeleton";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
-import { formatCurrency } from "../../utils/format";
+import { formatCurrency } from "@/utils/format";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import TransactionDetailSheet from "./components/TransactionDetailSheet";
 
 export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
+  const [isSheetVisible, setIsSheetVisible] = useState(false);
   
   const { 
     data: transactions, 
     isLoading, 
     refetch 
   } = useTransactions(activeWalletId || "");
+
+  const handleTransactionPress = (transaction: TransactionResponse) => {
+    setSelectedTransaction(transaction);
+    setIsSheetVisible(true);
+  };
+
+  const handleCloseSheet = () => {
+    setIsSheetVisible(false);
+    // Optional: Only clear selected after animation
+    // setSelectedTransaction(null);
+  };
 
   // Group transactions by date
   const groupedTransactions = useMemo(() => {
@@ -127,6 +141,7 @@ export default function TransactionsScreen() {
                     <TouchableOpacity
                       key={item.id}
                       activeOpacity={0.7}
+                      onPress={() => handleTransactionPress(item)}
                       className="bg-white p-4 rounded-[20px] flex-row items-center justify-between shadow-sm border border-outline/5"
                     >
                       <View className="flex-1 flex-row items-center gap-4 mr-3">
@@ -165,6 +180,12 @@ export default function TransactionsScreen() {
           )}
         </View>
       </ScrollView>
+
+      <TransactionDetailSheet 
+        transaction={selectedTransaction}
+        isVisible={isSheetVisible}
+        onClose={handleCloseSheet}
+      />
     </View>
   );
 }

@@ -50,3 +50,23 @@ export const parseVND = (value: string = '0'): number => {
  * Shorthand for formatVND with symbol and no shortening for standard lists.
  */
 export const formatCurrency = (amount: number = 0) => formatVND(amount);
+
+/**
+ * Formats a raw string of numbers into a partitioned currency string for live inputs.
+ * e.g., "100000" -> "100.000"
+ */
+export const formatLiveCurrency = (value: string): string => {
+  if (!value) return "";
+  const numericValue = value.replace(/\D/g, "");
+  if (!numericValue) return "";
+  return new Intl.NumberFormat("vi-VN").format(parseInt(numericValue, 10));
+};
+
+/**
+ * Robustly parses any currency string back to number.
+ */
+export const parseCurrency = (value: string): number => {
+  if (!value) return 0;
+  const numericString = value.replace(/\D/g, "");
+  return parseInt(numericString, 10) || 0;
+};

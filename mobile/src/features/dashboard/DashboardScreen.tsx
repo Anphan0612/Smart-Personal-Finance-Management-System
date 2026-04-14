@@ -7,7 +7,8 @@ import {
   Sparkles, 
   Coffee, 
   Wallet, 
-  ChevronDown
+  ChevronDown,
+  Plus
 } from "lucide-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAppStore } from "../../store/useAppStore";
@@ -20,7 +21,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatCurrency } from "../../utils/format";
 import { AtelierInsightCard } from "../../components/ui/AtelierInsightCard";
 import { BudgetAlertModal } from "../../components/ui/BudgetAlertModal";
+import { ManualTransactionModal } from "../transactions/ManualTransactionModal";
 import { poster } from "../../services/api";
+import * as Haptics from "expo-haptics";
 import type { BudgetResponse, ThresholdStatus } from "../../types/api";
 
 const ALERT_DISMISSED_KEY = "budget_alert_dismissed_";
@@ -35,6 +38,8 @@ export default function HomeScreen() {
     overspentAmount: number;
     aiInsight: string;
   } | null>(null);
+  
+  const [manualEntryVisible, setManualEntryVisible] = useState(false);
   
   const { 
     data: wallets, 
@@ -328,6 +333,44 @@ export default function HomeScreen() {
           )}
         </View>
       </View>
+
+      {/* Manual Entry Modal */}
+      <ManualTransactionModal 
+        isVisible={manualEntryVisible} 
+        onClose={() => setManualEntryVisible(false)} 
+      />
+
+      {/* Floating Action Button (FAB) */}
+      <MotiView
+        from={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", delay: 1000 }}
+        style={{
+          position: "absolute",
+          bottom: 30,
+          right: 24,
+          shadowColor: "#005ab4",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.3,
+          shadowRadius: 15,
+          elevation: 10,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            setManualEntryVisible(true);
+          }}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#005ab4", "#0873df"]}
+            className="w-16 h-16 rounded-full items-center justify-center border-2 border-white/20"
+          >
+            <Plus size={32} color="white" strokeWidth={2.5} />
+          </LinearGradient>
+        </TouchableOpacity>
+      </MotiView>
     </ScrollView>
   );
 }
