@@ -24,8 +24,10 @@ public class Receipt {
     private String imageUrl;
 
     private String storeName;
+    private String aiStoreName;
 
     private BigDecimal amount;
+    private BigDecimal aiAmount;
 
     private LocalDateTime transactionDate;
 
@@ -39,8 +41,13 @@ public class Receipt {
     private String rawOcrText;
 
     private Double confidence;
+    private Double aiConfidence;
+
     private String categoryId;
+    private String aiCategoryId;
+
     private Boolean isCorrected;
+    private Boolean isMappedFromHistory;
 
     @Column(columnDefinition = "TEXT")
     private String correctionReason;
@@ -71,15 +78,32 @@ public class Receipt {
 
     public void updateOcrResult(String storeName, BigDecimal amount, LocalDateTime date, String rawText,
                                 Double confidence, String categoryId, Boolean isCorrected, String correctionReason) {
+        // Store both AI prediction and initial effective value
         this.storeName = storeName;
+        this.aiStoreName = storeName;
+        
         this.amount = amount;
+        this.aiAmount = amount;
+        
         this.transactionDate = date;
         this.rawOcrText = rawText;
+        
         this.confidence = confidence;
+        this.aiConfidence = confidence;
+        
         this.categoryId = categoryId;
+        this.aiCategoryId = categoryId;
+        
         this.isCorrected = isCorrected;
         this.correctionReason = correctionReason;
+        this.isMappedFromHistory = false; // Default to false, can be set by service
         this.status = ReceiptStatus.PROCESSED;
+    }
+
+    public void applyManualOverride(String storeName, BigDecimal amount, String categoryId) {
+        this.storeName = storeName;
+        this.amount = amount;
+        this.categoryId = categoryId;
     }
 
     public void confirm(String transactionId) {
