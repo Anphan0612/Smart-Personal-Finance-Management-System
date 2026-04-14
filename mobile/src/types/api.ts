@@ -60,6 +60,7 @@ export interface TransactionResponse {
   type: TransactionType;
   transactionDate: string;
   createdAt: string;
+  receiptImageUrl?: string;
 }
 
 export type WalletType = "CASH" | "BANK" | "EWALLET" | "INVESTMENT";

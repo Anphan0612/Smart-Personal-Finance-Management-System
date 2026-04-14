@@ -1,8 +1,9 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
-import { ApiResponse } from "../types/api";
-import { useAppStore } from "../store/useAppStore";
+import { ApiResponse } from "@/types/api";
+import { useAppStore } from "@/store/useAppStore";
+import * as Localization from "expo-localization";
 
 const TOKEN_KEY = "auth_token";
 
@@ -14,7 +15,7 @@ const lanIpAddress = debuggerHost?.split(":")[0];
 // Ưu tiên dùng ENV nếu có cấu hình chuẩn. 
 // Nếu không, trả về IP LAN tĩnh để cả máy thật & Emulator đều truy cập được.
 // Fallback về 10.0.2.2 nếu hoàn toàn không tự detect được IP (rất hiếm).
-const DYNAMIC_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
+export const DYNAMIC_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 
   (lanIpAddress ? `http://${lanIpAddress}:8080/api/v1` : "http://10.0.2.2:8080/api/v1");
 
 // eslint-disable-next-line no-console
@@ -24,9 +25,9 @@ if (!process.env.EXPO_PUBLIC_API_URL && lanIpAddress) {
   console.log(`[API CONFIG] 🚀 Auto-detected LAN IP: ${lanIpAddress}`);
 }
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: DYNAMIC_BASE_URL,
-  timeout: 45000, // Tăng thêm cho các tác vụ AI phức tạp
+  timeout: 30000, // Response is now immediate (202 Accepted), polling handles the rest
   headers: {
     "Content-Type": "application/json",
   },
@@ -39,6 +40,7 @@ if (!DYNAMIC_BASE_URL || typeof DYNAMIC_BASE_URL !== "string") {
 }
 
 apiClient.interceptors.request.use(async (config) => {
+  // Access store INSIDE the interceptor to break static cycles and avoid race conditions
   const state = useAppStore.getState();
   const token = state.token;
   
@@ -48,6 +50,11 @@ apiClient.interceptors.request.use(async (config) => {
   if (token && !isAuthPath) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Inject Timezone for localized reporting
+  const timezone = Localization.getCalendars()[0]?.timeZone || "UTC";
+  config.headers["X-Timezone"] = timezone;
+
   return config;
 });
 
@@ -58,6 +65,8 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError<ApiResponse<any>>) => {
     const originalRequest: any = error.config;
+    
+    // Access store INSIDE the interceptor
     const state = useAppStore.getState();
 
     // Log lỗi chi tiết để debug AI/Finance logic

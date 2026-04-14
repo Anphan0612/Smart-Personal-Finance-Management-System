@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
+// import apiClient from "../services/api"; // Removed to break require cycle
+import { WalletResponse } from "../types/api";
+import { Category } from "../hooks/useCategories";
 
 export interface ChatMessage {
   id: string;
@@ -63,6 +66,12 @@ interface AppState {
   // Active context
   activeWalletId: string | null;
   setActiveWalletId: (id: string | null) => void;
+
+  // Metadata State
+  wallets: WalletResponse[];
+  categories: Category[];
+  isMetadataLoading: boolean;
+  refreshMetadata: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()(
@@ -138,6 +147,16 @@ export const useAppStore = create<AppState>()(
       // Wallet Context
       activeWalletId: null,
       setActiveWalletId: (id) => set({ activeWalletId: id }),
+
+      // Metadata Implementation
+      wallets: [],
+      categories: [],
+      isMetadataLoading: false,
+      refreshMetadata: async () => {
+        // This is now handled by src/services/metadataService.ts
+        // Implementation left as placeholder to avoid breaking UI components
+        console.warn("[Storage] refreshMetadata called from store. Use metadataService instead.");
+      },
     }),
     {
       name: "smart-finance-storage",

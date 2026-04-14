@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Calendar, Store, Tag, Wallet as WalletIcon, Check, ChevronLeft, AlertCircle, Brain, Shield } from 'lucide-react-native';
@@ -8,12 +8,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore } from '../../store/useAppStore';
 import { formatVND, parseVND } from '../../utils/format';
 
+const MAX_POLLING_RETRIES = 5;
+
 export default function ReceiptReviewForm() {
   const { receiptId: rawReceiptId } = useLocalSearchParams();
   const receiptId = Array.isArray(rawReceiptId) ? rawReceiptId[0] : rawReceiptId;
-  const { addMessage } = useAppStore();
+  const { 
+    addMessage, 
+    wallets, 
+    categories, 
+    refreshMetadata, 
+    isMetadataLoading,
+    activeWalletId 
+  } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [pollingRetries, setPollingRetries] = useState(0);
+  const isLoadingRef = useRef(true);
   const [showCorrectionDetail, setShowCorrectionDetail] = useState(false);
   const [ocrMeta, setOcrMeta] = useState({
     confidence: 0,
@@ -24,10 +35,63 @@ export default function ReceiptReviewForm() {
     storeName: '',
     amount: '',
     transactionDate: new Date().toISOString(),
-    walletId: 'default-wallet',
-    categoryId: 'default-category',
+    walletId: activeWalletId || '',
+    categoryId: '',
     description: ''
   });
+  const [aiValues, setAiValues] = useState({
+    storeName: '',
+    amount: '',
+    categoryId: '',
+    isMappedFromHistory: false
+  });
+  const [fieldEdited, setFieldEdited] = useState({
+    storeName: false,
+    amount: false,
+    categoryId: false
+  });
+
+  useEffect(() => {
+    if (wallets.length === 0 || categories.length === 0) {
+      refreshMetadata();
+    }
+  }, []);
+
+  // Sync activeWalletId to formData if it changes and formData.walletId is empty
+  useEffect(() => {
+    if (activeWalletId && !formData.walletId) {
+      setFormData(prev => ({ ...prev, walletId: activeWalletId }));
+    }
+  }, [activeWalletId]);
+
+  // Set default category if available
+  useEffect(() => {
+    if (categories.length > 0 && !formData.categoryId) {
+      // Find 'Shopping' or 'Food' as a good default for receipts
+      const defaultCat = categories.find(c => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop')) || categories[0];
+      setFormData(prev => ({ ...prev, categoryId: defaultCat.id }));
+    }
+  }, [categories]);
+
+  const pollWithDelay = async () => {
+    if (!isLoadingRef.current) return;
+
+    try {
+      await fetchReceiptData();
+      setPollingRetries(0);
+      setTimeout(pollWithDelay, 3000);
+    } catch (err) {
+      console.log('Polling failure:', err);
+      if (pollingRetries < MAX_POLLING_RETRIES) {
+        setPollingRetries(prev => prev + 1);
+        setTimeout(pollWithDelay, 5000 * (pollingRetries + 1));
+      } else {
+        setLoading(false);
+        isLoadingRef.current = false;
+        Alert.alert('Kết nối không ổn định', 'Không thể kết nối với máy chủ AI. Vui lòng thử lại sau.');
+      }
+    }
+  };
 
   useEffect(() => {
     fetchReceiptData();
@@ -38,12 +102,23 @@ export default function ReceiptReviewForm() {
       const response = await apiClient.get(`/receipts/${receiptId}`);
       if (response.data.success) {
         const data = response.data.data;
+        const formattedAmount = data.amount ? formatVND(data.amount.toString()) : '';
+        
         setFormData(prev => ({
           ...prev,
           storeName: data.storeName || '',
-          amount: data.amount ? data.amount.toString() : '',
-          transactionDate: data.transactionDate || new Date().toISOString()
+          amount: formattedAmount,
+          transactionDate: data.transactionDate || new Date().toISOString(),
+          categoryId: data.categoryId || prev.categoryId
         }));
+
+        setAiValues({
+          storeName: data.aiStoreName || data.storeName || '',
+          amount: data.aiAmount ? formatVND(data.aiAmount.toString()) : formattedAmount,
+          categoryId: data.aiCategoryId || data.categoryId || '',
+          isMappedFromHistory: data.isMappedFromHistory || false
+        });
+
         setOcrMeta({
           confidence: data.confidence || 0,
           isCorrected: data.isCorrected || false,
@@ -59,25 +134,37 @@ export default function ReceiptReviewForm() {
   };
 
   const handleConfirm = async () => {
+    if (!formData.walletId) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng chọn ví để tiếp tục.');
+      return;
+    }
+
+    if (!formData.categoryId) {
+      Alert.alert('Thiếu thông tin', 'Vui lòng chọn danh mục cho giao dịch này.');
+      return;
+    }
+
     const rawAmount = parseVND(formData.amount);
-    if (!formData.walletId || !formData.categoryId || !rawAmount) {
-      Alert.alert("Thiếu thông tin", "Vui lòng chọn Ví và Danh mục.");
+    if (!rawAmount) {
+      Alert.alert("Thiếu thông tin", "Vui lòng nhập số tiền hợp lệ.");
       return;
     }
 
     setSubmitting(true);
     const confirmUrl = `/receipts/${receiptId}/confirm`;
-    console.log(`[OCR CONFIRM] Calling: ${confirmUrl}`, { walletId: formData.walletId, categoryId: formData.categoryId });
     
     try {
-      const response = await apiClient.post(confirmUrl, {
+      const cleanAmount = formData.amount.replace(/[^0-9]/g, '');
+      const payload = {
         walletId: formData.walletId,
         categoryId: formData.categoryId,
         storeName: formData.storeName,
-        amount: rawAmount,
+        amount: parseInt(cleanAmount),
         transactionDate: formData.transactionDate,
         description: formData.description
-      });
+      };
+
+      const response = await apiClient.post(confirmUrl, payload);
 
       if (response.data.success) {
         addMessage({
@@ -219,17 +306,24 @@ export default function ReceiptReviewForm() {
               <TextInput
                 value={formData.amount}
                 onChangeText={(val) => {
-                  // Chỉ cho phép nhập số
                   const cleanVal = val.replace(/[^0-9]/g, '');
-                  setFormData({ ...formData, amount: formatVND(cleanVal) });
+                  setFormData({ ...formData, amount: formatVND(parseInt(cleanVal || '0')) });
+                  if (!fieldEdited.amount) setFieldEdited({ ...fieldEdited, amount: true });
                 }}
                 placeholder="0"
                 keyboardType="numeric"
                 className="text-white text-5xl font-bold text-center tracking-tighter"
                 style={{ textShadowColor: 'rgba(59, 130, 246, 0.5)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 10 }}
               />
-              <View className="mt-2 py-1 px-4 bg-blue-500/10 rounded-full border border-blue-500/20">
-                <Text className="text-blue-400 font-bold tracking-widest uppercase text-xs">VNĐ</Text>
+              <View className="flex-row items-center mt-2 gap-2">
+                <View className="py-1 px-4 bg-blue-500/10 rounded-full border border-blue-500/20">
+                  <Text className="text-blue-400 font-bold tracking-widest uppercase text-xs">VNĐ</Text>
+                </View>
+                {!fieldEdited.amount && (
+                  <MotiView from={{ scale: 0 }} animate={{ scale: 1 }} className="bg-yellow-500/10 p-1 rounded-full border border-yellow-500/20">
+                    <Text className="text-[10px]">✨ AI</Text>
+                  </MotiView>
+                )}
               </View>
             </View>
 
@@ -238,11 +332,19 @@ export default function ReceiptReviewForm() {
                 <Store size={20} color="#3b82f6" className="mr-3" />
                 <TextInput
                   value={formData.storeName}
-                  onChangeText={(val) => setFormData({ ...formData, storeName: val })}
+                  onChangeText={(val) => {
+                    setFormData({ ...formData, storeName: val });
+                    if (!fieldEdited.storeName) setFieldEdited({ ...fieldEdited, storeName: true });
+                  }}
                   placeholder="Tên cửa hàng"
                   placeholderTextColor="#64748b"
                   className="flex-1 text-white text-base"
                 />
+                {!fieldEdited.storeName && (
+                  <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-row items-center bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
+                    <Text className="text-yellow-500 text-[10px] font-bold">✨ AI</Text>
+                  </MotiView>
+                )}
               </View>
 
               <View className="flex-row items-center bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
@@ -260,20 +362,37 @@ export default function ReceiptReviewForm() {
 
             <View className="space-y-4">
               {/* Wallet & Category Pickers would go here - Mocking for now */}
-              <TouchableOpacity className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+              <TouchableOpacity 
+                disabled={isMetadataLoading}
+                className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
+              >
                 <View className="flex-row items-center">
                   <WalletIcon size={20} color="#94a3b8" className="mr-3" />
                   <Text className="text-slate-400">Chọn Ví</Text>
                 </View>
-                <Text className="text-blue-400">Ví Chính</Text>
+                <Text className="text-blue-400">
+                  {isMetadataLoading ? 'Đang tải...' : (wallets.find(w => w.id === formData.walletId)?.name || 'Chưa chọn')}
+                </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+              <TouchableOpacity 
+                disabled={isMetadataLoading}
+                className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
+              >
                 <View className="flex-row items-center">
                   <Tag size={20} color="#94a3b8" className="mr-3" />
                   <Text className="text-slate-400">Chọn Danh mục</Text>
                 </View>
-                <Text className="text-blue-400">Ăn uống</Text>
+                <View className="flex-row items-center gap-2">
+                  {aiValues.isMappedFromHistory && !fieldEdited.categoryId && (
+                    <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-green-500/10 px-2 py-1 rounded-md border border-green-500/20">
+                      <Text className="text-green-500 text-[10px] font-bold">✨ THÓI QUEN</Text>
+                    </MotiView>
+                  )}
+                  <Text className="text-blue-400 text-right">
+                    {isMetadataLoading ? 'Đang tải...' : (categories.find(c => c.id === formData.categoryId)?.name || 'Chưa chọn')}
+                  </Text>
+                </View>
               </TouchableOpacity>
 
               <TextInput
@@ -287,10 +406,19 @@ export default function ReceiptReviewForm() {
             </View>
           </View>
 
+          {wallets.length === 0 && !isMetadataLoading && (
+            <View className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20 mb-4 flex-row items-center">
+              <AlertCircle size={18} color="#ef4444" className="mr-3" />
+              <Text className="text-red-400 text-xs flex-1">
+                Bạn chưa có ví nào. Vui lòng tạo ví trong phần Cài đặt trước khi lưu giao dịch.
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity
             onPress={handleConfirm}
-            disabled={submitting}
-            className={`h-16 rounded-2xl flex-row items-center justify-center ${submitting ? 'bg-slate-800' : 'bg-blue-600'}`}
+            disabled={submitting || wallets.length === 0 || isMetadataLoading}
+            className={`h-16 rounded-2xl flex-row items-center justify-center ${submitting || wallets.length === 0 || isMetadataLoading ? 'bg-slate-800' : 'bg-blue-600'}`}
           >
             {submitting ? (
               <ActivityIndicator color="white" />
