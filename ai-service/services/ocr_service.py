@@ -102,13 +102,16 @@ class OCRService:
             if force_cpu_safe:
                 raise RuntimeError("Force safe CPU initialization")
 
+            # Use larger batch size for GPU if available
+            rec_batch = 12 if not force_cpu_safe else 6
+            
             reader = PaddleOCR(
                 use_angle_cls=True,
                 lang='vi',
-                use_gpu=True,
+                use_gpu=not force_cpu_safe,
                 det_db_thresh=0.3,
                 det_db_box_thresh=0.5,
-                rec_batch_num=6,
+                rec_batch_num=rec_batch,
                 enable_mkldnn=False,
                 show_log=False,
             )
@@ -138,23 +141,43 @@ class OCRService:
             # Set local cache path BEFORE importing transformers to ensure it's picked up
             os.environ["HF_HOME"] = os.path.join(os.getcwd(), "models", "cache")
             
-            from transformers import pipeline, AutoTokenizer, T5Tokenizer, AutoModelForSeq2SeqLM
+            from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
             import torch
  
             # Use a specialized ViT5 Correction model
             model_id = "hoanghaiduong/vit5-correction"
-            logger.info(f"Initializing ViT5 Corrector ({model_id}, Safe CPU mode)...")
             
-            # Use CPU for stability and low load
-            tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
-            model = AutoModelForSeq2SeqLM.from_pretrained(
-                model_id,
-                device_map={"": "cpu"},
-                torch_dtype=torch.float32,
-                trust_remote_code=True
-            )
-            pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
-            logger.info(f"✅ ViT5 OCR Corrector initialized on CPU.")
+            # Detect fastest available device
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            torch_dtype = torch.float16 if device == "cuda" else torch.float32
+            
+            logger.info(f"Initializing ViT5 Corrector ({model_id}) on {device.upper()}...")
+            
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+                model = AutoModelForSeq2SeqLM.from_pretrained(
+                    model_id,
+                    device_map={"": device},
+                    torch_dtype=torch_dtype,
+                    trust_remote_code=True
+                )
+                pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
+                logger.info(f"✅ ViT5 OCR Corrector initialized on {device.upper()}.")
+            except Exception as e:
+                if device == "cuda":
+                    logger.warning(f"⚠️ GPU Initialization for T5 failed: {e}. Falling back to CPU...")
+                    tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_id,
+                        device_map={"": "cpu"},
+                        torch_dtype=torch.float32,
+                        trust_remote_code=True
+                    )
+                    pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
+                    logger.info(f"✅ ViT5 OCR Corrector initialized on CPU (Fallback).")
+                else:
+                    raise e
+
             return pipe
         except Exception as e:
             import traceback
