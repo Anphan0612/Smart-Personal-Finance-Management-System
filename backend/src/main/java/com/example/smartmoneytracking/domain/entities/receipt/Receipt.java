@@ -17,10 +17,10 @@ public class Receipt {
     @Setter(AccessLevel.PRIVATE)
     private String id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(nullable = false)
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
     private String storeName;
@@ -29,6 +29,7 @@ public class Receipt {
     private BigDecimal amount;
     private BigDecimal aiAmount;
 
+    @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
 
     @Enumerated(EnumType.STRING)

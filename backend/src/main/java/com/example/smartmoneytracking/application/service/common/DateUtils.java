@@ -37,4 +37,18 @@ public class DateUtils {
                 .withZoneSameInstant(java.time.ZoneOffset.UTC)
                 .toLocalDateTime();
     }
+
+    /**
+     * Returns current time in UTC.
+     */
+    public static LocalDateTime nowUtc() {
+        return ZonedDateTime.now(java.time.ZoneOffset.UTC).toLocalDateTime();
+    }
+
+    /**
+     * Returns current time in user's local timezone.
+     */
+    public static LocalDateTime nowLocal() {
+        return LocalDateTime.now(ZoneId.of(TimezoneContextHolder.getTimezone()));
+    }
 }

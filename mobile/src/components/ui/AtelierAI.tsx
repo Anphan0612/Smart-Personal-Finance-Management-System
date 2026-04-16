@@ -23,21 +23,22 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   const [inputText, setInputText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const initialFetchRef = useRef(false);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
 
   // Fetch proactive insights when opened
   useEffect(() => {
-    if (isOpen && messages.length === 0 && !initialFetchRef.current && activeWalletId) {
-      initialFetchRef.current = true;
+    // Luôn fetch insight khi mở modal nếu chưa có tin nhắn nào hoặc tin nhắn cuối không phải là insight gần đây
+    const shouldFetch = isOpen && activeWalletId && (
+      messages.length === 0 || 
+      !messages.some(m => m.id.startsWith("proactive-insight"))
+    );
+
+    if (shouldFetch) {
       fetchProactiveInsight();
     }
   }, [isOpen, activeWalletId]);
 
   const fetchProactiveInsight = async () => {
-    // Phase 1.2: Deduplication guard
-    if (useAppStore.getState().messages.length > 0) return;
-
     setIsProcessing(true);
     try {
       const comparison = await fetcher<any>(`/transactions/comparison?walletId=${activeWalletId}`);

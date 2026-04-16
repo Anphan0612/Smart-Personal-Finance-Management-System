@@ -26,6 +26,7 @@ public class Wallet {
     private String id;
 
     @Setter(AccessLevel.PRIVATE) // ID should not change, but maybe needed for initial setup if not auto-gen
+    @Column(name = "user_id")
     private String userId;
 
     @Column(nullable = false)
@@ -45,9 +46,22 @@ public class Wallet {
 
     @Enumerated(EnumType.STRING)
     @Setter(AccessLevel.PUBLIC)
+    @Column(name = "wallet_type")
     private WalletType walletType;
 
+    @Column(name = "account_number")
+    private String accountNumber;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "branch")
+    private String branch;
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -72,6 +86,12 @@ public class Wallet {
             throw new IllegalArgumentException("Wallet name cannot be empty");
         }
         this.name = name;
+    }
+
+    public void updateBankDetails(String bankName, String accountNumber, String branch) {
+        this.bankName = bankName;
+        this.accountNumber = accountNumber;
+        this.branch = branch;
     }
 
     public void deposit(BigDecimal amount) {
@@ -105,6 +125,13 @@ public class Wallet {
             wallet.initialBalance = BigDecimal.ZERO;
             wallet.balance = BigDecimal.ZERO;
         }
+        return wallet;
+    }
+
+    public static Wallet createBankWallet(String userId, String name, Currency currency, BigDecimal initialBalance, 
+                                          String bankName, String accountNumber, String branch) {
+        Wallet wallet = create(userId, name, currency, WalletType.BANK, initialBalance);
+        wallet.updateBankDetails(bankName, accountNumber, branch);
         return wallet;
     }
 

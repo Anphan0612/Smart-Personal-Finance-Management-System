@@ -5,6 +5,7 @@ import com.example.smartmoneytracking.application.dto.TransactionResponse;
 import com.example.smartmoneytracking.application.mapper.TransactionMapper;
 import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
+import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import com.example.smartmoneytracking.domain.exception.BusinessException;
 import com.example.smartmoneytracking.domain.exception.ErrorCode;
@@ -35,9 +36,14 @@ public class CreateTransactionUseCase {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS, "You do not own this wallet");
         }
 
-        // 2. Validate Category exists
-        categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        // 2. Validate Category exists (only for non-TRANSFER transactions)
+        if (request.getCategoryId() != null && !request.getCategoryId().isBlank()) {
+            categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        } else if (request.getType() != null && !request.getType().equals(TransactionType.TRANSFER)) {
+            // Category is required for INCOME and EXPENSE transactions
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Category is required for " + request.getType() + " transactions");
+        }
 
         Transaction transaction = Transaction.create(
                 request.getWalletId(),

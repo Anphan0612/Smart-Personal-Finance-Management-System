@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Animated } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Calendar, Store, Tag, Wallet as WalletIcon, Check, ChevronLeft, AlertCircle, Brain, Shield } from 'lucide-react-native';
 import apiClient from '../../services/api';
@@ -7,6 +7,10 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore } from '../../store/useAppStore';
 import { formatVND, parseVND } from '../../utils/format';
+import { WalletPicker } from '../transactions/components/WalletPicker';
+import { CategoryPicker } from '../transactions/components/CategoryPicker';
+import * as Haptics from 'expo-haptics';
+import { WalletResponse } from '../../types/api';
 
 const MAX_POLLING_RETRIES = 5;
 
@@ -50,6 +54,12 @@ export default function ReceiptReviewForm() {
     amount: false,
     categoryId: false
   });
+  const [validationErrors, setValidationErrors] = useState({
+    walletId: false,
+    categoryId: false,
+    amount: false
+  });
+  const shakeAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (wallets.length === 0 || categories.length === 0) {
@@ -72,6 +82,28 @@ export default function ReceiptReviewForm() {
       setFormData(prev => ({ ...prev, categoryId: defaultCat.id }));
     }
   }, [categories]);
+
+  const triggerShake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true })
+    ]).start();
+  };
+
+  const handleWalletSelect = useCallback((wallet: WalletResponse) => {
+    setFormData(prev => ({ ...prev, walletId: wallet.id }));
+    setValidationErrors(prev => ({ ...prev, walletId: false }));
+  }, []);
+
+  const handleCategorySelect = useCallback((category: { id: string; name: string; iconName: string }) => {
+    setFormData(prev => ({ ...prev, categoryId: category.id }));
+    setValidationErrors(prev => ({ ...prev, categoryId: false }));
+    if (!fieldEdited.categoryId) {
+      setFieldEdited(prev => ({ ...prev, categoryId: true }));
+    }
+  }, [fieldEdited.categoryId]);
 
   const pollWithDelay = async () => {
     if (!isLoadingRef.current) return;
@@ -134,25 +166,25 @@ export default function ReceiptReviewForm() {
   };
 
   const handleConfirm = async () => {
-    if (!formData.walletId) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng chọn ví để tiếp tục.');
-      return;
-    }
-
-    if (!formData.categoryId) {
-      Alert.alert('Thiếu thông tin', 'Vui lòng chọn danh mục cho giao dịch này.');
-      return;
-    }
-
     const rawAmount = parseVND(formData.amount);
-    if (!rawAmount) {
-      Alert.alert("Thiếu thông tin", "Vui lòng nhập số tiền hợp lệ.");
+
+    const errors = {
+      walletId: !formData.walletId,
+      categoryId: !formData.categoryId,
+      amount: !rawAmount
+    };
+
+    setValidationErrors(errors);
+
+    if (errors.walletId || errors.categoryId || errors.amount) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      triggerShake();
       return;
     }
 
     setSubmitting(true);
     const confirmUrl = `/receipts/${receiptId}/confirm`;
-    
+
     try {
       const cleanAmount = formData.amount.replace(/[^0-9]/g, '');
       const payload = {
@@ -361,39 +393,40 @@ export default function ReceiptReviewForm() {
             <Text className="text-slate-400 font-bold mb-4">Chi tiết giao dịch</Text>
 
             <View className="space-y-4">
-              {/* Wallet & Category Pickers would go here - Mocking for now */}
-              <TouchableOpacity 
-                disabled={isMetadataLoading}
-                className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
-              >
-                <View className="flex-row items-center">
-                  <WalletIcon size={20} color="#94a3b8" className="mr-3" />
-                  <Text className="text-slate-400">Chọn Ví</Text>
-                </View>
-                <Text className="text-blue-400">
-                  {isMetadataLoading ? 'Đang tải...' : (wallets.find(w => w.id === formData.walletId)?.name || 'Chưa chọn')}
-                </Text>
-              </TouchableOpacity>
+              {/* Wallet Picker */}
+              <View>
+                {validationErrors.walletId && (
+                  <Text className="text-red-400 text-xs mb-2 px-1">Vui lòng chọn ví</Text>
+                )}
+                <WalletPicker
+                  label="Chọn Ví"
+                  selectedId={formData.walletId}
+                  wallets={wallets}
+                  onSelect={handleWalletSelect}
+                />
+              </View>
 
-              <TouchableOpacity 
-                disabled={isMetadataLoading}
-                className="flex-row items-center justify-between bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50"
-              >
-                <View className="flex-row items-center">
-                  <Tag size={20} color="#94a3b8" className="mr-3" />
-                  <Text className="text-slate-400">Chọn Danh mục</Text>
-                </View>
-                <View className="flex-row items-center gap-2">
+              {/* Category Picker */}
+              <View>
+                <View className="flex-row items-center justify-between mb-3 px-1">
+                  <Text className="text-slate-400 font-bold">Danh mục</Text>
                   {aiValues.isMappedFromHistory && !fieldEdited.categoryId && (
-                    <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-green-500/10 px-2 py-1 rounded-md border border-green-500/20">
+                    <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                      className="bg-green-500/10 px-2 py-1 rounded-md border border-green-500/20">
                       <Text className="text-green-500 text-[10px] font-bold">✨ THÓI QUEN</Text>
                     </MotiView>
                   )}
-                  <Text className="text-blue-400 text-right">
-                    {isMetadataLoading ? 'Đang tải...' : (categories.find(c => c.id === formData.categoryId)?.name || 'Chưa chọn')}
-                  </Text>
                 </View>
-              </TouchableOpacity>
+                {validationErrors.categoryId && (
+                  <Text className="text-red-400 text-xs mb-2 px-1">Vui lòng chọn danh mục</Text>
+                )}
+                <CategoryPicker
+                  selectedId={formData.categoryId}
+                  categories={categories}
+                  isLoading={isMetadataLoading}
+                  onSelect={handleCategorySelect}
+                />
+              </View>
 
               <TextInput
                 value={formData.description}
@@ -419,6 +452,7 @@ export default function ReceiptReviewForm() {
             onPress={handleConfirm}
             disabled={submitting || wallets.length === 0 || isMetadataLoading}
             className={`h-16 rounded-2xl flex-row items-center justify-center ${submitting || wallets.length === 0 || isMetadataLoading ? 'bg-slate-800' : 'bg-blue-600'}`}
+            style={{ transform: [{ translateX: shakeAnimation }] }}
           >
             {submitting ? (
               <ActivityIndicator color="white" />

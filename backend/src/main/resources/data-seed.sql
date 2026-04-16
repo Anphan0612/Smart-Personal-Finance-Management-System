@@ -15,18 +15,54 @@ INSERT INTO users (id, username, email, password, user_role, is_enabled, created
 VALUES ('user-demo-001', 'demo', 'user@atelier.com', '$2a$10$XFMmG3J.IQuG.K2zPImMvuA3H9JjW0B.FhTjU0.eU1U.G1U.G1U.G', 0, 1, NOW(), NOW());
 
 -- 3. SEED CATEGORIES
--- INCOME Categories
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-inc-001', 'Salary', 'INCOME', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-inc-002', 'Freelance', 'INCOME', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-inc-003', 'Investment', 'INCOME', NOW());
+-- Step 1: Insert categories without icon_name (for backward compatibility)
+-- INCOME Categories (with color field)
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-inc-001', 'Salary', 'INCOME', 'SALARY', '#2ECC71', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-inc-002', 'Freelance', 'INCOME', 'FREELANCE', '#27AE60', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-inc-003', 'Investment', 'INCOME', 'INVESTMENT', '#16A085', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-inc-004', 'Gift', 'INCOME', 'GIFT', '#1ABC9C', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-inc-005', 'Other Income', 'INCOME', 'OTHER_INCOME', '#95A5A6', NOW());
 
--- EXPENSE Categories
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-001', 'Dining Out', 'EXPENSE', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-002', 'Rent & Utilities', 'EXPENSE', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-003', 'Shopping', 'EXPENSE', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-004', 'Transport', 'EXPENSE', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-005', 'Groceries', 'EXPENSE', NOW());
-INSERT INTO categories (id, name, type, created_at) VALUES ('cat-exp-006', 'Entertainment', 'EXPENSE', NOW());
+-- EXPENSE Categories (with color field)
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-001', 'Dining Out', 'EXPENSE', 'DINING_OUT', '#E67E22', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-002', 'Rent & Utilities', 'EXPENSE', 'HOUSING', '#3498DB', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-003', 'Shopping', 'EXPENSE', 'SHOPPING', '#9B59B6', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-004', 'Transport', 'EXPENSE', 'TRANSPORT', '#34495E', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-005', 'Groceries', 'EXPENSE', 'GROCERIES_FOOD', '#FF5733', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-006', 'Entertainment', 'EXPENSE', 'ENTERTAINMENT', '#F39C12', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-007', 'Healthcare', 'EXPENSE', 'HEALTH_CARE', '#E74C3C', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-008', 'Education', 'EXPENSE', 'EDUCATION', '#1F618D', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-009', 'Utilities', 'EXPENSE', 'UTILITIES', '#F1C40F', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-010', 'Household', 'EXPENSE', 'HOUSEHOLD', '#8E44AD', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-011', 'Food & Dining', 'EXPENSE', 'FOOD', '#D35400', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-012', 'Other Expenses', 'EXPENSE', 'OTHER_EXPENSE', '#7F8C8D', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-013', 'Savings', 'EXPENSE', 'SAVING', '#16A085', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-014', 'Subscription', 'EXPENSE', 'SUBSCRIPTION', '#607D8B', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-015', 'Insurance', 'EXPENSE', 'INSURANCE', '#5D4037', NOW());
+INSERT INTO categories (id, name, type, nlp_label, color, created_at) VALUES ('cat-exp-016', 'Charity', 'EXPENSE', 'CHARITY', '#E91E63', NOW());
+
+-- Step 2: Update icon_name if column exists (will be created by Hibernate on first run)
+UPDATE categories SET icon_name = 'PAYMENTS' WHERE id = 'cat-inc-001';
+UPDATE categories SET icon_name = 'WORK' WHERE id = 'cat-inc-002';
+UPDATE categories SET icon_name = 'ANALYTICS' WHERE id = 'cat-inc-003';
+UPDATE categories SET icon_name = 'CARD_GIFTCARD' WHERE id = 'cat-inc-004';
+UPDATE categories SET icon_name = 'MORE_HORIZ' WHERE id = 'cat-inc-005';
+UPDATE categories SET icon_name = 'RESTAURANT' WHERE id = 'cat-exp-001';
+UPDATE categories SET icon_name = 'HOME' WHERE id = 'cat-exp-002';
+UPDATE categories SET icon_name = 'SHOPPING_BAG' WHERE id = 'cat-exp-003';
+UPDATE categories SET icon_name = 'DIRECTIONS_CAR' WHERE id = 'cat-exp-004';
+UPDATE categories SET icon_name = 'GROCERY' WHERE id = 'cat-exp-005';
+UPDATE categories SET icon_name = 'CELEBRATION' WHERE id = 'cat-exp-006';
+UPDATE categories SET icon_name = 'HEALTH' WHERE id = 'cat-exp-007';
+UPDATE categories SET icon_name = 'SCHOOL' WHERE id = 'cat-exp-008';
+UPDATE categories SET icon_name = 'BOLT' WHERE id = 'cat-exp-009';
+UPDATE categories SET icon_name = 'HOME_REPAIR' WHERE id = 'cat-exp-010';
+UPDATE categories SET icon_name = 'RESTAURANT_MENU' WHERE id = 'cat-exp-011';
+UPDATE categories SET icon_name = 'MORE_HORIZ' WHERE id = 'cat-exp-012';
+UPDATE categories SET icon_name = 'SAVINGS' WHERE id = 'cat-exp-013';
+UPDATE categories SET icon_name = 'SUBSCRIPTIONS' WHERE id = 'cat-exp-014';
+UPDATE categories SET icon_name = 'SHIELD' WHERE id = 'cat-exp-015';
+UPDATE categories SET icon_name = 'VOLUNTEER_ACTIVISM' WHERE id = 'cat-exp-016';
 
 -- 4. SEED BANK ACCOUNTS & WALLETS
 -- Main Wallet
@@ -88,3 +124,4 @@ VALUES ('tx-014', 'wal-001', 'cat-exp-004', 50000.00, 'EXPENSE', 'Gasoline', '20
 
 INSERT INTO transactions (id, wallet_id, category_id, amount, type, description, transaction_date, created_at) 
 VALUES ('tx-015', 'wal-001', 'cat-exp-001', 120000.00, 'EXPENSE', 'Starbucks Matcha', '2026-04-28 15:45:00', NOW());
+

@@ -15,15 +15,16 @@ public class MerchantPreference {
     @Setter(AccessLevel.PRIVATE)
     private String id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(nullable = false)
+    @Column(name = "normalized_pattern", nullable = false)
     private String normalizedPattern; // Normalized name (lowercase, no accents)
 
-    @Column(nullable = false)
+    @Column(name = "category_id", nullable = false)
     private String categoryId;
 
+    @Column(name = "last_used_at")
     private LocalDateTime lastUsedAt;
 
     @PrePersist
