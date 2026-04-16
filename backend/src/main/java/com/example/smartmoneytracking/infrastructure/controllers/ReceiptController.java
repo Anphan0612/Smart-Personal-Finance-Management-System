@@ -102,7 +102,9 @@ public class ReceiptController {
         txRequest.setWalletId(request.getWalletId());
         txRequest.setCategoryId(request.getCategoryId());
         txRequest.setAmount(request.getAmount());
-        txRequest.setTransactionDate(request.getTransactionDate() != null ? request.getTransactionDate() : LocalDateTime.now());
+        txRequest.setTransactionDate(request.getTransactionDate() != null ? 
+                request.getTransactionDate() : 
+                com.example.smartmoneytracking.application.service.common.DateUtils.nowLocal());
         txRequest.setDescription("Receipt: " + request.getStoreName() + (request.getDescription() != null ? " - " + request.getDescription() : ""));
         txRequest.setType(TransactionType.EXPENSE);
         txRequest.setReceiptImageUrl(receipt.getImageUrl());

@@ -22,6 +22,8 @@ import { formatCurrency } from "../../utils/format";
 import { AtelierInsightCard } from "../../components/ui/AtelierInsightCard";
 import { BudgetAlertModal } from "../../components/ui/BudgetAlertModal";
 import { ManualTransactionModal } from "../transactions/ManualTransactionModal";
+import { WalletModal } from "../wallets/WalletModal";
+import { WalletSelectionModal } from "../wallets/WalletSelectionModal";
 import { poster } from "../../services/api";
 import * as Haptics from "expo-haptics";
 import type { BudgetResponse, ThresholdStatus } from "../../types/api";
@@ -40,6 +42,9 @@ export default function HomeScreen() {
   } | null>(null);
   
   const [manualEntryVisible, setManualEntryVisible] = useState(false);
+  const [walletModalVisible, setWalletModalVisible] = useState(false);
+  const [selectionModalVisible, setSelectionModalVisible] = useState(false);
+  const [editingWallet, setEditingWallet] = useState<any | null>(null);
   
   const { 
     data: wallets, 
@@ -61,13 +66,7 @@ export default function HomeScreen() {
   const { data: budgets } = useBudgets();
 
   const isLoading = isWalletsLoading || isDashboardLoading;
-  const activeWallet = wallets?.find(w => w.id === activeWalletId) || wallets?.[0];
-
-  useEffect(() => {
-    if (wallets?.length && !activeWalletId) {
-      setActiveWalletId(wallets[0].id);
-    }
-  }, [wallets, activeWalletId]);
+  const activeWallet = wallets?.find(w => w.id === activeWalletId);
 
   // Gamification: Check budgets for DANGER/OVERBUDGET and fire alert modal
   useEffect(() => {
@@ -180,6 +179,10 @@ export default function HomeScreen() {
         </MotiView>
 
         <TouchableOpacity 
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            setSelectionModalVisible(true);
+          }}
           className="bg-white px-4 py-2 rounded-full shadow-sm border border-outline/10 flex-row items-center gap-2"
           activeOpacity={0.7}
         >
@@ -338,6 +341,30 @@ export default function HomeScreen() {
       <ManualTransactionModal 
         isVisible={manualEntryVisible} 
         onClose={() => setManualEntryVisible(false)} 
+      />
+
+      {/* Wallet Management Modal */}
+      <WalletModal
+        isVisible={walletModalVisible}
+        onClose={() => setWalletModalVisible(false)}
+        walletToEdit={editingWallet}
+      />
+
+      {/* Wallet Selection Modal */}
+      <WalletSelectionModal
+        isVisible={selectionModalVisible}
+        onClose={() => setSelectionModalVisible(false)}
+        wallets={wallets || []}
+        activeId={activeWalletId}
+        onSelect={(id) => setActiveWalletId(id)}
+        onAdd={() => {
+          setEditingWallet(null);
+          setWalletModalVisible(true);
+        }}
+        onEdit={(wallet) => {
+          setEditingWallet(wallet);
+          setWalletModalVisible(true);
+        }}
       />
 
       {/* Floating Action Button (FAB) */}

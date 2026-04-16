@@ -1,6 +1,8 @@
 package com.example.smartmoneytracking.domain.repositories;
 
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,6 +13,8 @@ public interface TransactionRepository {
     Optional<Transaction> findById(String id);
 
     List<Transaction> findByWalletId(String walletId);
+
+    Page<Transaction> findByWalletId(String walletId, Pageable pageable);
 
     List<Transaction> findByCategoryId(String categoryId);
 

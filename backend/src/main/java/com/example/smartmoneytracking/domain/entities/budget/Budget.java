@@ -31,10 +31,10 @@ public class Budget {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false)
+    @Column(name = "`month`", nullable = false)
     private int month; // 1-12
 
-    @Column(nullable = false)
+    @Column(name = "`year`", nullable = false)
     private int year;
 
     @Column(name = "created_at", nullable = false, updatable = false)

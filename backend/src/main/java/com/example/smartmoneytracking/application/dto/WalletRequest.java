@@ -29,4 +29,8 @@ public class WalletRequest {
 
     @NotNull(message = "Wallet type is required")
     private WalletType type;
+
+    private String bankName;
+    private String accountNumber;
+    private String branch;
 }

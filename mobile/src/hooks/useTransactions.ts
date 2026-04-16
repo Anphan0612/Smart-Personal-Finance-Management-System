@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetcher, poster, apiClient } from "@/services/api";
 import { TransactionResponse, TransactionType, ApiResponse } from "@/types/api";
+import { useAppStore } from "@/store/useAppStore";
 
 export const useTransactions = (walletId?: string) => {
+  const token = useAppStore((state) => state.token);
+
   return useQuery({
     queryKey: ["transactions", walletId],
-    queryFn: () => 
+    queryFn: () =>
       fetcher<TransactionResponse[]>(`/transactions?walletId=${walletId || ""}`),
-    enabled: !!walletId,
+    enabled: !!walletId && !!token, // Only fetch when both walletId and token exist
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };

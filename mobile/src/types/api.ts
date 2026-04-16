@@ -55,6 +55,8 @@ export interface TransactionResponse {
   walletId: string;
   categoryId: string;
   categoryName: string;
+  iconName?: string;
+  isAiSuggested?: boolean;
   amount: number;
   description: string;
   type: TransactionType;
@@ -73,6 +75,9 @@ export interface WalletResponse {
   currencyCode: string;
   currencySymbol: string;
   type: WalletType;
+  bankName?: string;
+  accountNumber?: string;
+  branch?: string;
   createdAt: string;
 }
 

@@ -22,4 +22,7 @@ public class WalletUpdateRequest {
 
     private String currencyCode;
     private WalletType type;
+    private String bankName;
+    private String accountNumber;
+    private String branch;
 }

@@ -42,9 +42,12 @@ public class TransactionController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getTransactions(@RequestParam("walletId") String walletId) {
+    public ResponseEntity<ApiResponse<com.example.smartmoneytracking.application.dto.common.PagedResponse<TransactionResponse>>> getTransactions(
+            @RequestParam("walletId") String walletId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
         String userId = securityUtils.getCurrentUserId();
-        return ResponseEntity.ok(ApiResponse.success(getTransactionsByWalletIdUseCase.execute(walletId, userId)));
+        return ResponseEntity.ok(ApiResponse.success(getTransactionsByWalletIdUseCase.execute(walletId, userId, page, size)));
     }
 
     @GetMapping("/{id}")

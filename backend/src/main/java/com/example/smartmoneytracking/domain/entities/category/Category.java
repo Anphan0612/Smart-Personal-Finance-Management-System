@@ -29,13 +29,14 @@ public class Category {
 
     @Setter
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "icon_name", nullable = false)
     private com.example.smartmoneytracking.domain.entities.common.MaterialSymbol iconName = com.example.smartmoneytracking.domain.entities.common.MaterialSymbol.LIST;
 
     @Setter
     @Column(name = "nlp_label", length = 50)
     private String nlpLabel;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist

@@ -1,52 +1,76 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, TextInput } from 'react-native';
-import { 
-  Utensils, 
-  Wallet, 
-  Car, 
-  Home, 
-  Clapperboard, 
-  ShoppingBag, 
-  HeartPulse, 
-  MoreHorizontal,
-  Search,
-  Check
-} from 'lucide-react-native';
+import React, { useState, useMemo } from 'react';
+import { View, TouchableOpacity, TextInput } from 'react-native';
+import { Search } from 'lucide-react-native';
 import { AtelierTypography } from '@/components/ui/AtelierTypography';
 import { MotiView } from 'moti';
 import * as Haptics from 'expo-haptics';
+import { getIconFromName, getColorForCategory } from '@/constants/icon-map';
 
 export interface Category {
   id: string;
   name: string;
-  icon: any;
-  color: string;
+  iconName: string;
 }
-
-const COMMON_CATEGORIES: Category[] = [
-  { id: 'c1', name: 'Ăn uống', icon: Utensils, color: '#FF9500' },
-  { id: 'c2', name: 'Lương', icon: Wallet, color: '#34C759' },
-  { id: 'c3', name: 'Di chuyển', icon: Car, color: '#007AFF' },
-  { id: 'c4', name: 'Thuê nhà', icon: Home, color: '#5856D6' },
-  { id: 'c5', name: 'Giải trí', icon: Clapperboard, color: '#FF2D55' },
-  { id: 'c6', name: 'Mua sắm', icon: ShoppingBag, color: '#FFCC00' },
-  { id: 'c7', name: 'Sức khỏe', icon: HeartPulse, color: '#FF3B30' },
-  { id: 'c8', name: 'Khác', icon: MoreHorizontal, color: '#8E8E93' },
-];
 
 interface CategoryPickerProps {
   selectedId: string | null;
+  categories: Category[];
   onSelect: (category: Category) => void;
+  isLoading?: boolean;
 }
 
-export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) => {
+export const CategoryPicker = React.memo(({ selectedId, categories, onSelect, isLoading = false }: CategoryPickerProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery) return categories;
+    return categories.filter(cat =>
+      cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [categories, searchQuery]);
 
   const handleSelect = (category: Category) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onSelect(category);
   };
+
+  if (isLoading) {
+    return (
+      <View className="gap-4">
+        <View className="flex-row justify-between items-center px-1">
+          <AtelierTypography variant="label" className="text-surface-on-variant">
+            Danh mục
+          </AtelierTypography>
+        </View>
+        <View className="flex-row flex-wrap justify-between gap-y-4">
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <View key={i} className="items-center w-[22%]">
+              <View className="w-14 h-14 rounded-2xl bg-slate-800 animate-pulse mb-1" />
+              <View className="w-12 h-3 rounded bg-slate-800 animate-pulse" />
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <View className="gap-4">
+        <View className="flex-row justify-between items-center px-1">
+          <AtelierTypography variant="label" className="text-surface-on-variant">
+            Danh mục
+          </AtelierTypography>
+        </View>
+        <View className="py-8 items-center">
+          <AtelierTypography variant="body" className="text-slate-500 text-sm">
+            Không có danh mục nào
+          </AtelierTypography>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View className="gap-4">
@@ -61,12 +85,13 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
         </TouchableOpacity>
       </View>
 
-      {/* Grid of Common Categories */}
+      {/* Grid of Categories */}
       <View className="flex-row flex-wrap justify-between gap-y-4">
-        {COMMON_CATEGORIES.map((cat) => {
+        {filteredCategories.map((cat) => {
           const isSelected = selectedId === cat.id;
-          const Icon = cat.icon;
-          
+          const Icon = getIconFromName(cat.iconName);
+          const color = getColorForCategory(cat.id);
+
           return (
             <TouchableOpacity
               key={cat.id}
@@ -77,11 +102,11 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
               <MotiView
                 animate={{
                   scale: isSelected ? 1.1 : 1,
-                  backgroundColor: isSelected ? cat.color : '#F5F7FA',
+                  backgroundColor: isSelected ? color : '#F5F7FA',
                 }}
                 className="w-14 h-14 rounded-2xl items-center justify-center mb-1"
                 style={{
-                  shadowColor: isSelected ? cat.color : '#000',
+                  shadowColor: isSelected ? color : '#000',
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: isSelected ? 0.3 : 0,
                   shadowRadius: 8,
@@ -89,8 +114,8 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
               >
                 <Icon size={24} color={isSelected ? '#FFF' : '#4B5563'} strokeWidth={2} />
               </MotiView>
-              <AtelierTypography 
-                variant="caption" 
+              <AtelierTypography
+                variant="caption"
                 className={`text-[10px] text-center ${isSelected ? 'text-surface-on font-bold' : 'text-surface-on-variant'}`}
                 numberOfLines={1}
               >
@@ -101,7 +126,7 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
         })}
       </View>
 
-      {/* Search Bar - only shown or focused when needed */}
+      {/* Search Bar - only shown when expanded */}
       {isExpanded && (
         <MotiView
           from={{ opacity: 0, translateY: -10 }}
@@ -118,22 +143,17 @@ export const CategoryPicker = ({ selectedId, onSelect }: CategoryPickerProps) =>
               placeholderTextColor="#ABACB2"
             />
           </View>
-          
-          {/* This would be populated by search results in a real implementation */}
-          {searchQuery.length > 0 && (
-            <View className="mt-2 bg-white rounded-xl shadow-sm border border-neutral-100 p-2">
-              <TouchableOpacity className="flex-row items-center p-3">
-                <View className="w-8 h-8 rounded-lg bg-neutral-100 items-center justify-center mr-3">
-                  <MoreHorizontal size={16} color="#4B5563" />
-                </View>
-                <AtelierTypography variant="body" className="text-sm">
-                  Kết quả cho "{searchQuery}"
-                </AtelierTypography>
-              </TouchableOpacity>
+
+          {/* Show no results message if search returns nothing */}
+          {searchQuery.length > 0 && filteredCategories.length === 0 && (
+            <View className="mt-2 bg-white rounded-xl shadow-sm border border-neutral-100 p-4">
+              <AtelierTypography variant="body" className="text-sm text-center text-slate-500">
+                Không tìm thấy danh mục "{searchQuery}"
+              </AtelierTypography>
             </View>
           )}
         </MotiView>
       )}
     </View>
   );
-};
+});

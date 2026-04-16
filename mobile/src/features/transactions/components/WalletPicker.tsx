@@ -38,29 +38,46 @@ export const WalletPicker = ({
   };
 
   const getWalletIcon = (type: string) => {
-    switch (type) {
-      case 'BANK': return CreditCard;
-      case 'CASH': return Banknote;
-      case 'EWALLET': return Smartphone;
-      case 'INVESTMENT': return LineChart;
-      default: return Banknote;
-    }
+     switch (type) {
+       case 'BANK': return CreditCard;
+       case 'CASH': return Banknote;
+       case 'EWALLET': return Smartphone;
+       case 'INVESTMENT': return LineChart;
+       default: return Banknote;
+     }
   };
 
+  const Icon = selectedWallet ? getWalletIcon(selectedWallet.type) : Banknote;
+
   return (
-    <View className="gap-3">
-      <AtelierTypography variant="label" className="text-surface-on-variant ml-1">
-        {label}
-      </AtelierTypography>
+    <View className="gap-4">
+      <TouchableOpacity
+        activeOpacity={0.8}
+        className="flex-row items-center p-4 bg-surface-container-low rounded-[24px]"
+      >
+        <View className="w-10 h-10 rounded-full bg-primary items-center justify-center mr-4">
+           <Icon size={18} color="#FFF" />
+        </View>
+        <View className="flex-1">
+          <AtelierTypography variant="h3" className="text-sm font-manrope-bold text-on-surface">
+             {selectedWallet ? selectedWallet.name : placeholder}
+          </AtelierTypography>
+          <AtelierTypography variant="caption" className="text-[10px] text-on-surface-variant font-medium">
+             {selectedWallet ? `Balance: ${new Intl.NumberFormat('vi-VN').format(selectedWallet.balance)} đ` : 'Tap to select account'}
+          </AtelierTypography>
+        </View>
+        <ChevronRight size={18} color="#737685" />
+      </TouchableOpacity>
       
+      {/* Quick Selection List (Keeping it functional but subtle) */}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 4, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 4, gap: 10 }}
       >
         {filteredWallets.map((wallet) => {
           const isSelected = selectedId === wallet.id;
-          const Icon = getWalletIcon(wallet.type);
+          const WalletIcon = getWalletIcon(wallet.type);
           
           return (
             <TouchableOpacity
@@ -71,36 +88,24 @@ export const WalletPicker = ({
               <MotiView
                 animate={{
                   backgroundColor: isSelected ? '#003D9B' : '#FFFFFF',
-                  borderColor: isSelected ? '#003D9B' : '#E5E7EB',
+                  scale: isSelected ? 1 : 0.95
                 }}
-                className="flex-row items-center px-4 py-3 rounded-2xl border min-w-[140px]"
+                className={`flex-row items-center px-4 py-2 rounded-xl ${!isSelected && 'border border-surface-container'}`}
                 style={{
-                  shadowColor: '#000',
+                  shadowColor: '#171c1f',
                   shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: isSelected ? 0.1 : 0.05,
+                  shadowOpacity: isSelected ? 0.1 : 0.02,
                   shadowRadius: 4,
-                  elevation: 2,
+                  elevation: isSelected ? 2 : 0,
                 }}
               >
-                <View 
-                  className={`w-8 h-8 rounded-full items-center justify-center mr-3 ${isSelected ? 'bg-white/20' : 'bg-surface-container-low'}`}
+                <WalletIcon size={14} color={isSelected ? '#FFF' : '#434654'} className="mr-2" />
+                <AtelierTypography 
+                  variant="label" 
+                  className={`text-[10px] lowercase tracking-normal ${isSelected ? 'text-white' : 'text-on-surface-variant'}`}
                 >
-                  <Icon size={16} color={isSelected ? '#FFF' : '#374151'} />
-                </View>
-                <View>
-                  <AtelierTypography 
-                    variant="h3" 
-                    className={`text-sm ${isSelected ? 'text-white' : 'text-surface-on'}`}
-                  >
-                    {wallet.name}
-                  </AtelierTypography>
-                  <AtelierTypography 
-                    variant="caption" 
-                    className={`text-[10px] ${isSelected ? 'text-white/70' : 'text-surface-on-variant'}`}
-                  >
-                    {new Intl.NumberFormat('vi-VN').format(wallet.balance)} đ
-                  </AtelierTypography>
-                </View>
+                  {wallet.name}
+                </AtelierTypography>
               </MotiView>
             </TouchableOpacity>
           );

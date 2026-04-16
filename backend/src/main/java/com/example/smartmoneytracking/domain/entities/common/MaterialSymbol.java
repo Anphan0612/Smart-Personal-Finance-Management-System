@@ -18,5 +18,13 @@ public enum MaterialSymbol {
     PERSON,
     NOTIFICATIONS,
     LIST,
-    RECEIPT_LONG
+    RECEIPT_LONG,
+    // New additions for expanded category support
+    HEALTH,              // Healthcare
+    SCHOOL,              // Education
+    BOLT,                // Utilities
+    HOME_REPAIR,         // Household
+    RESTAURANT_MENU,     // Food & Dining
+    CARD_GIFTCARD,       // Gift
+    MORE_HORIZ           // Other Income/Expense
 }

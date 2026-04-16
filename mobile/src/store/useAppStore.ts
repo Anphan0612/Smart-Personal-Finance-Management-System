@@ -72,6 +72,10 @@ interface AppState {
   categories: Category[];
   isMetadataLoading: boolean;
   refreshMetadata: () => Promise<void>;
+  
+  // Storage Hydration state
+  isHydrated: boolean;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -157,6 +161,10 @@ export const useAppStore = create<AppState>()(
         // Implementation left as placeholder to avoid breaking UI components
         console.warn("[Storage] refreshMetadata called from store. Use metadataService instead.");
       },
+
+      // Hydration state
+      isHydrated: false,
+      setHydrated: (hydrated) => set({ isHydrated: hydrated }),
     }),
     {
       name: "smart-finance-storage",
@@ -166,6 +174,9 @@ export const useAppStore = create<AppState>()(
         if (!error && state) {
           console.log('[Storage] Rehydrated successfully. Running sanity check...');
           state.deduplicateMessages();
+          state.setHydrated(true);
+        } else if (error) {
+          console.error('[Storage] Hydration error:', error);
         }
       },
       migrate: (persistedState: any, version: number) => {

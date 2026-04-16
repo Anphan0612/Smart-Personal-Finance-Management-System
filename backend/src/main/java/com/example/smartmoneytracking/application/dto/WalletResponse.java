@@ -21,5 +21,8 @@ public class WalletResponse {
     private String currencyCode;
     private String currencySymbol;
     private WalletType type; // or String displayName
+    private String bankName;
+    private String accountNumber;
+    private String branch;
     private LocalDateTime createdAt;
 }

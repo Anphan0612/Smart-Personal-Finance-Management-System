@@ -26,6 +26,10 @@ public class CreateWalletUseCase {
                 request.getBalance()
         );
 
+        if (request.getBankName() != null || request.getAccountNumber() != null || request.getBranch() != null) {
+            wallet.updateBankDetails(request.getBankName(), request.getAccountNumber(), request.getBranch());
+        }
+
         // Removed unnecessary manual timestamp setting as @PrePersist/onCreate handles
         // it
 
@@ -41,6 +45,9 @@ public class CreateWalletUseCase {
                 .currencyCode(savedWallet.getCurrency().getCode())
                 .currencySymbol(savedWallet.getCurrency().getSymbol())
                 .type(savedWallet.getWalletType())
+                .bankName(savedWallet.getBankName())
+                .accountNumber(savedWallet.getAccountNumber())
+                .branch(savedWallet.getBranch())
                 .createdAt(savedWallet.getCreatedAt())
                 .build();
     }

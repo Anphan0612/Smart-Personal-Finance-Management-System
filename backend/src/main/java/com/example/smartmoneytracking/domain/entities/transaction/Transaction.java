@@ -23,12 +23,14 @@ public class Transaction {
     private String id;
 
     @Setter(AccessLevel.PRIVATE)
+    @Column(name = "wallet_id")
     private String walletId;
 
     @Setter(AccessLevel.PUBLIC) // Category can be updated?
+    @Column(name = "category_id")
     private String categoryId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     @Setter(AccessLevel.PRIVATE) // Date usually fixed at creation, but maybe editable?
     private LocalDateTime transactionDate;
 
@@ -45,8 +47,10 @@ public class Transaction {
     private TransactionType type;
 
     @Setter(AccessLevel.PUBLIC)
+    @Column(name = "receipt_image_url")
     private String receiptImageUrl;
 
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist

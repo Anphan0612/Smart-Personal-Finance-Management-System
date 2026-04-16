@@ -73,4 +73,31 @@ class WalletTest {
 
         assertEquals("Withdrawal amount must be positive", exception.getMessage());
     }
+
+    @Test
+    void shouldCreateBankWalletSuccessfully() {
+        Wallet wallet = Wallet.createBankWallet(
+            "user1", 
+            "Bank Acc", 
+            new Currency("USD", "$"), 
+            new BigDecimal("1000"),
+            "Chase", "123456789", "NYC"
+        );
+
+        assertEquals(WalletType.BANK, wallet.getWalletType());
+        assertEquals("Chase", wallet.getBankName());
+        assertEquals("123456789", wallet.getAccountNumber());
+        assertEquals("NYC", wallet.getBranch());
+        assertEquals(new BigDecimal("1000"), wallet.getBalance());
+    }
+
+    @Test
+    void shouldUpdateBankDetailsSuccessfully() {
+        Wallet wallet = Wallet.create("user1", "Bank Acc", new Currency("USD", "$"), WalletType.BANK, BigDecimal.ZERO);
+        wallet.updateBankDetails("VIB", "987654321", "Saigon");
+
+        assertEquals("VIB", wallet.getBankName());
+        assertEquals("987654321", wallet.getAccountNumber());
+        assertEquals("Saigon", wallet.getBranch());
+    }
 }

@@ -32,6 +32,9 @@ public class GetWalletByIdUseCase {
                 .currencyCode(wallet.getCurrency().getCode())
                 .currencySymbol(wallet.getCurrency().getSymbol())
                 .type(wallet.getWalletType())
+                .bankName(wallet.getBankName())
+                .accountNumber(wallet.getAccountNumber())
+                .branch(wallet.getBranch())
                 .createdAt(wallet.getCreatedAt())
                 .build();
     }
