@@ -152,27 +152,49 @@ class OCRService:
             torch_dtype = torch.float16 if device == "cuda" else torch.float32
             
             logger.info(f"Initializing ViT5 Corrector ({model_id}) on {device.upper()}...")
-            
+
+            def load_tokenizer():
+                # Keep T5 tokenizer behavior explicit to avoid runtime warning noise
+                # and preserve compatibility with existing checkpoints.
+                try:
+                    return AutoTokenizer.from_pretrained(model_id, use_fast=False, legacy=True)
+                except TypeError:
+                    # Non-T5 tokenizers may not accept `legacy`.
+                    return AutoTokenizer.from_pretrained(model_id, use_fast=False)
+
+            def align_embeddings(model, tokenizer):
+                tokenizer_vocab_size = len(tokenizer)
+                model_vocab_size = model.get_input_embeddings().num_embeddings
+                if tokenizer_vocab_size > model_vocab_size:
+                    logger.warning(
+                        "Tokenizer vocab (%s) > model embeddings (%s). Resizing embeddings for compatibility.",
+                        tokenizer_vocab_size,
+                        model_vocab_size,
+                    )
+                    model.resize_token_embeddings(tokenizer_vocab_size)
+
             try:
-                tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+                tokenizer = load_tokenizer()
                 model = AutoModelForSeq2SeqLM.from_pretrained(
                     model_id,
                     device_map={"": device},
                     torch_dtype=torch_dtype,
                     trust_remote_code=True
                 )
+                align_embeddings(model, tokenizer)
                 pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
                 logger.info(f"✅ ViT5 OCR Corrector initialized on {device.upper()}.")
             except Exception as e:
                 if device == "cuda":
                     logger.warning(f"⚠️ GPU Initialization for T5 failed: {e}. Falling back to CPU...")
-                    tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+                    tokenizer = load_tokenizer()
                     model = AutoModelForSeq2SeqLM.from_pretrained(
                         model_id,
                         device_map={"": "cpu"},
                         torch_dtype=torch.float32,
                         trust_remote_code=True
                     )
+                    align_embeddings(model, tokenizer)
                     pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
                     logger.info(f"✅ ViT5 OCR Corrector initialized on CPU (Fallback).")
                 else:
