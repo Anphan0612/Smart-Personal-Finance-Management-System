@@ -143,14 +143,15 @@ export default function HomeScreen() {
     : "bg-primary";
 
   return (
-    <ScrollView 
-      className="flex-1 bg-surface"
-      contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 120 }}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor="#005ab4" />
-      }
-    >
+    <View className="flex-1 bg-surface">
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor="#005ab4" />
+        }
+      >
       {/* Gamification Alert Modal */}
       {alertData && (
         <BudgetAlertModal
@@ -336,68 +337,83 @@ export default function HomeScreen() {
           )}
         </View>
       </View>
-
-      {/* Manual Entry Modal */}
-      <ManualTransactionModal 
-        isVisible={manualEntryVisible} 
-        onClose={() => setManualEntryVisible(false)} 
-      />
-
-      {/* Wallet Management Modal */}
-      <WalletModal
-        isVisible={walletModalVisible}
-        onClose={() => setWalletModalVisible(false)}
-        walletToEdit={editingWallet}
-      />
-
-      {/* Wallet Selection Modal */}
-      <WalletSelectionModal
-        isVisible={selectionModalVisible}
-        onClose={() => setSelectionModalVisible(false)}
-        wallets={wallets || []}
-        activeId={activeWalletId}
-        onSelect={(id) => setActiveWalletId(id)}
-        onAdd={() => {
-          setEditingWallet(null);
-          setWalletModalVisible(true);
-        }}
-        onEdit={(wallet) => {
-          setEditingWallet(wallet);
-          setWalletModalVisible(true);
-        }}
-      />
-
-      {/* Floating Action Button (FAB) */}
-      <MotiView
-        from={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", delay: 1000 }}
-        style={{
-          position: "absolute",
-          bottom: 30,
-          right: 24,
-          shadowColor: "#005ab4",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.3,
-          shadowRadius: 15,
-          elevation: 10,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setManualEntryVisible(true);
-          }}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={["#005ab4", "#0873df"]}
-            className="w-16 h-16 rounded-full items-center justify-center border-2 border-white/20"
-          >
-            <Plus size={32} color="white" strokeWidth={2.5} />
-          </LinearGradient>
-        </TouchableOpacity>
-      </MotiView>
     </ScrollView>
+
+    {/* Modals and Overlays MUST be outside ScrollView for absolute placement to work correctly */}
+    {/* Gamification Alert Modal */}
+    {alertData && (
+      <BudgetAlertModal
+        visible={alertVisible}
+        onDismiss={handleDismissAlert}
+        categoryName={alertData.categoryName}
+        percentageUsed={alertData.percentageUsed}
+        overspentAmount={alertData.overspentAmount}
+        aiInsight={alertData.aiInsight}
+      />
+    )}
+
+    {/* Manual Entry Modal */}
+    <ManualTransactionModal 
+      isVisible={manualEntryVisible} 
+      onClose={() => setManualEntryVisible(false)} 
+    />
+
+    {/* Wallet Management Modal */}
+    <WalletModal
+      isVisible={walletModalVisible}
+      onClose={() => setWalletModalVisible(false)}
+      walletToEdit={editingWallet}
+    />
+
+    {/* Wallet Selection Modal */}
+    <WalletSelectionModal
+      isVisible={selectionModalVisible}
+      onClose={() => setSelectionModalVisible(false)}
+      wallets={wallets || []}
+      activeId={activeWalletId}
+      onSelect={(id) => setActiveWalletId(id)}
+      onAdd={() => {
+        setEditingWallet(null);
+        setWalletModalVisible(true);
+      }}
+      onEdit={(wallet) => {
+        setEditingWallet(wallet);
+        setWalletModalVisible(true);
+      }}
+    />
+
+    {/* Floating Action Button (FAB) */}
+    <MotiView
+      from={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", delay: 1000 }}
+      style={{
+        position: "absolute",
+        bottom: 30,
+        right: 24,
+        shadowColor: "#005ab4",
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 10,
+        zIndex: 50,
+      }}
+    >
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setManualEntryVisible(true);
+        }}
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={["#005ab4", "#0873df"]}
+          className="w-16 h-16 rounded-full items-center justify-center border-2 border-white/20"
+        >
+          <Plus size={32} color="white" strokeWidth={2.5} />
+        </LinearGradient>
+      </TouchableOpacity>
+    </MotiView>
+  </View>
   );
 }

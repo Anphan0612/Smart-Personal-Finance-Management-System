@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text } from "react-native";
+import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text, Modal } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Mic, Search, TrendingUp, AlertTriangle } from "lucide-react-native";
 import { AtelierTypography } from "./AtelierTypography";
@@ -10,6 +10,8 @@ import { AtelierTransactionCard } from "./AtelierTransactionCard";
 import { formatCurrency } from "../../utils/format";
 import { AtelierActionSheet } from "./AtelierActionSheet";
 import { router } from "expo-router";
+import { ManualTransactionModal } from "../../features/transactions/ManualTransactionModal";
+import { CompactReviewSheet } from "./CompactReviewSheet";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -24,6 +26,10 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+  const [selectedTxData, setSelectedTxData] = useState<any>(null);
 
   // Fetch proactive insights when opened
   useEffect(() => {
@@ -148,6 +154,39 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     onClose();
   };
 
+  const handleEdit = (data: any) => {
+    setSelectedTxData(data);
+    setIsReviewModalVisible(true);
+  };
+
+  const onSaveReview = async (formData: any) => {
+    try {
+      if (!activeWalletId) {
+        Alert.alert("Lỗi", "Vui lòng chọn ví trước khi lưu.");
+        return;
+      }
+
+      await poster("/transactions", {
+        ...formData,
+        walletId: activeWalletId,
+        description: formData.note || "Trích xuất bởi AI",
+      });
+
+      // Thêm tin nhắn xác nhận vào chat
+      addMessage({
+        id: "confirm-" + Date.now(),
+        role: "assistant",
+        content: `✅ Đã lưu giao dịch: ${formData.note || "Giao dịch mới"} (${formatCurrency(formData.amount)}) vào ví của bạn.`,
+        timestamp: Date.now(),
+      });
+      
+      setIsReviewModalVisible(false);
+    } catch (error: any) {
+      const apiError = error.response?.data;
+      Alert.alert("Lỗi Giao dịch", apiError?.message || "Không thể lưu giao dịch.");
+    }
+  };
+
   const handleCameraPress = () => {
     setIsSheetVisible(true);
   };
@@ -246,8 +285,20 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     );
   };
 
+  const [isModalMounted, setIsModalMounted] = React.useState(isOpen);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsModalMounted(true);
+    } else {
+      const timer = setTimeout(() => setIsModalMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   return (
     <>
+    <Modal transparent visible={isModalMounted} animationType="none" onRequestClose={handleClose}>
     <AnimatePresence>
       {isOpen && (
         <View key="atelier-ai-modal" style={styles.absoluteLayer} pointerEvents="box-none">
@@ -374,9 +425,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                                   Alert.alert("Lỗi Giao dịch", errorMessage);
                                 }
                               }}
-                              onEdit={() => {
-                                Alert.alert("Chỉnh sửa", "Đang chuyển đến bộ chỉnh sửa thủ công...");
-                              }}
+                              onEdit={() => handleEdit(msg.transactionData)}
                             />
                           </MotiView>
                         )}
@@ -435,6 +484,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         </View>
       )}
     </AnimatePresence>
+    </Modal>
+    <CompactReviewSheet
+      isVisible={isReviewModalVisible}
+      onClose={() => setIsReviewModalVisible(false)}
+      onSave={onSaveReview}
+      initialData={selectedTxData}
+    />
     <AtelierActionSheet
       isVisible={isSheetVisible}
       onClose={() => setIsSheetVisible(false)}
