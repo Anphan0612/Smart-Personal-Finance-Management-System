@@ -1,0 +1,38 @@
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+# General caches
+**/__pycache__
+**/.pytest_cache
+**/.DS_Store
+
+# Node / Expo
+node_modules
+mobile/node_modules
+mobile/.expo
+mobile/android
+mobile/ios
+
+# Java
+backend/target
+target
+
+# Python
+.venv
+ai-service/.venv
+ai-service/.venv-ocr
+
+# Runtime artifacts
+uploads
+ai-service/models/cache
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.develop
+!.env.staging
+!.env.production.example
