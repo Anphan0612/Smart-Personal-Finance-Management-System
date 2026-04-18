@@ -1,0 +1,121 @@
+name: smart-finance
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: smart-finance-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-smart_money_tracking}
+      MYSQL_USER: ${MYSQL_USER:-smartuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-smartpass}
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/src/main/resources/data-seed.sql:/docker-entrypoint-initdb.d/10-data-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart-finance-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    environment:
+      DB_URL: ${DB_URL:-jdbc:mysql://db:3306/smart_money_tracking?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+      DB_USERNAME: ${DB_USERNAME:-smartuser}
+      DB_PASSWORD: ${DB_PASSWORD:-smartpass}
+      JWT_SECRET: ${JWT_SECRET:-replace-with-strong-secret-at-least-32-bytes}
+      NLP_SERVICE_URL: ${NLP_SERVICE_URL:-http://ai-service:8000}
+      NlpServiceUrl: ${NLP_SERVICE_URL:-http://ai-service:8000}
+      "nlp.service.url": ${NLP_SERVICE_URL:-http://ai-service:8000}
+    ports:
+      - "8080:8080"
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: smart-finance-ai
+    restart: unless-stopped
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      GROQ_TIMEOUT_SEC: ${GROQ_TIMEOUT_SEC:-15}
+      ENABLE_LLM_REPAIR: ${ENABLE_LLM_REPAIR:-true}
+      LLM_CONFIDENCE_THRESHOLD: ${LLM_CONFIDENCE_THRESHOLD:-0.65}
+      PHOBERT_MODEL_PATH: ${PHOBERT_MODEL_PATH:-/app/ml-models/phobert-finance-ner-final}
+      HF_HOME: /app/models/cache
+      FLAGS_use_onednn: "0"
+      FLAGS_use_mkldnn: "0"
+      KMP_DUPLICATE_LIB_OK: "TRUE"
+      OMP_NUM_THREADS: "1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml-models:/app/ml-models:ro
+      - ai_model_cache:/app/models/cache
+      - ai_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "python3.10", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  mobile-builder:
+    build:
+      context: ./mobile
+      dockerfile: Dockerfile.android
+    container_name: smart-finance-mobile-builder
+    working_dir: /workspace/mobile
+    environment:
+      EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://host.docker.internal:8080/api/v1}
+      EAS_LOCAL_BUILD_SKIP_CLEANUP: "1"
+      CI: "1"
+      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      ANDROID_HOME: /opt/android-sdk
+      ANDROID_SDK_ROOT: /opt/android-sdk
+      GRADLE_USER_HOME: /workspace/.gradle
+      NPM_CONFIG_CACHE: /workspace/.npm
+    volumes:
+      - ./mobile:/workspace/mobile
+      - mobile_node_modules:/workspace/mobile/node_modules
+      - mobile_artifacts:/workspace/mobile/artifacts
+      - ./mobile/artifacts:/workspace/mobile-host/artifacts
+      - mobile_android_cache:/opt/android-sdk
+      - mobile_gradle_cache:/workspace/.gradle
+      - mobile_npm_cache:/workspace/.npm
+    entrypoint: ["bash", "-lc"]
+    command: >-
+      "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then
+         npm install;
+       fi;
+       tail -f /dev/null"
+
+volumes:
+  db_data:
+  ai_model_cache:
+  ai_uploads:
+  mobile_node_modules:
+  mobile_artifacts:
+  mobile_android_cache:
+  mobile_gradle_cache:
+  mobile_npm_cache:
