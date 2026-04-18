@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity, Dimensions, StyleSheet, Pressable } from "react-native";
+import { View, TouchableOpacity, Dimensions, StyleSheet, Pressable, Modal } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { Camera, Image as ImageIcon, X } from "lucide-react-native";
 import { AtelierTypography } from "./AtelierTypography";
@@ -23,9 +23,21 @@ export const AtelierActionSheet = ({
   title = "Nguồn biên lai",
   subtitle = "Chọn cách bạn muốn thêm giao dịch mới"
 }: AtelierActionSheetProps) => {
+  const [isModalMounted, setIsModalMounted] = React.useState(isVisible);
+
+  React.useEffect(() => {
+    if (isVisible) {
+      setIsModalMounted(true);
+    } else {
+      const timer = setTimeout(() => setIsModalMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible]);
+
   return (
-    <AnimatePresence>
-      {isVisible && (
+    <Modal transparent visible={isModalMounted} animationType="none" onRequestClose={onClose}>
+      <AnimatePresence>
+        {isVisible && (
         <View key="atelier-action-sheet" style={styles.container} pointerEvents="box-none">
           {/* Backdrop */}
           <MotiView
@@ -111,6 +123,7 @@ export const AtelierActionSheet = ({
         </View>
       )}
     </AnimatePresence>
+    </Modal>
   );
 };
 
