@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -9,7 +9,8 @@ import {
   Platform,
   ScrollView,
   Alert,
-  StatusBar
+  StatusBar,
+  Modal
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import {
@@ -137,8 +138,20 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
     }
   };
 
+  const [isModalMounted, setIsModalMounted] = useState(isVisible);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsModalMounted(true);
+    } else {
+      const timer = setTimeout(() => setIsModalMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible]);
+
   return (
-    <AnimatePresence>
+    <Modal transparent visible={isModalMounted} animationType="none" onRequestClose={onClose}>
+      <AnimatePresence>
       {isVisible && (
         <View style={styles.container}>
           <StatusBar barStyle="light-content" />
@@ -357,6 +370,7 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
         </View>
       )}
     </AnimatePresence>
+    </Modal>
   );
 };
 
