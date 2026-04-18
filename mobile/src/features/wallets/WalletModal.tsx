@@ -7,7 +7,8 @@ import {
   TextInput,
   ScrollView,
   Alert,
-  StatusBar
+  StatusBar,
+  Modal
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import {
@@ -117,8 +118,20 @@ export const WalletModal = ({ isVisible, onClose, walletToEdit }: WalletModalPro
     setBalance(formatLiveCurrency(numeric));
   };
 
+  const [isModalMounted, setIsModalMounted] = useState(isVisible);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsModalMounted(true);
+    } else {
+      const timer = setTimeout(() => setIsModalMounted(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible]);
+
   return (
-    <AnimatePresence>
+    <Modal transparent visible={isModalMounted} animationType="none" onRequestClose={onClose}>
+      <AnimatePresence>
       {isVisible && (
         <View style={styles.container}>
           <StatusBar barStyle="light-content" />
@@ -333,6 +346,7 @@ export const WalletModal = ({ isVisible, onClose, walletToEdit }: WalletModalPro
         </View>
       )}
     </AnimatePresence>
+    </Modal>
   );
 };
 
