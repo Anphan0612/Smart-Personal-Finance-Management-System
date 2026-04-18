@@ -30,15 +30,18 @@ export default function TransactionsScreen() {
   const {
     data,
     isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
     refetch
   } = useTransactions(activeWalletId || "");
 
-  // Flatten all pages into a single array
+  const isFetchingNextPage = false;
+  const hasNextPage = false;
+  const fetchNextPage = () => {};
+
+  // Extract content from PagedResponse
   const transactions = useMemo(() => {
-    return data?.pages.flatMap(page => page.content) ?? [];
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    return (data as any).content ?? [];
   }, [data]);
 
   const handleTransactionPress = (transaction: TransactionResponse) => {
