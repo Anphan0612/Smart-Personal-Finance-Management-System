@@ -23,19 +23,35 @@ function Get-ComposeFiles {
     return @("-f", "docker-compose.yml", "-f", "docker-compose.override.yml")
 }
 
+function Get-EnvFilePath {
+    param([string]$TargetEnv)
+
+    $envFile = Join-Path "infrastructure/envs" ".env.$TargetEnv"
+    if (Test-Path $envFile) {
+        return $envFile
+    }
+
+    # Backward compatibility for local setups that still keep env files at root.
+    $legacyEnvFile = ".env.$TargetEnv"
+    if (Test-Path $legacyEnvFile) {
+        return $legacyEnvFile
+    }
+
+    throw "Environment file for '$TargetEnv' not found. Expected '$envFile' (or legacy '$legacyEnvFile')."
+}
+
 function Invoke-Compose {
     param([string[]]$ComposeArgs)
 
-    $baseArgs = @("compose") + (Get-ComposeFiles) + @("--env-file", ".env.$Env")
+    $resolvedEnvFile = Get-EnvFilePath -TargetEnv $Env
+    $baseArgs = @("compose") + (Get-ComposeFiles) + @("--env-file", $resolvedEnvFile)
     & docker @baseArgs @ComposeArgs
     if ($LASTEXITCODE -ne 0) {
         throw "docker compose command failed: docker $($baseArgs + $ComposeArgs -join ' ')"
     }
 }
 
-if (-not (Test-Path ".env.$Env")) {
-    throw "Environment file .env.$Env does not exist."
-}
+$null = Get-EnvFilePath -TargetEnv $Env
 
 if (-not ($Up -or $Clean -or $ResetDB -or $MobileBuild)) {
     Write-Step "No action provided. Defaulting to -Up"
