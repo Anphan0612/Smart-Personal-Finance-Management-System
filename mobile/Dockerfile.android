@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:18-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
+    ANDROID_HOME=/opt/android-sdk \
+    ANDROID_SDK_ROOT=/opt/android-sdk \
+    PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:/opt/android-sdk/emulator:/usr/lib/jvm/java-17-openjdk-amd64/bin:${PATH}
+
+RUN set -eux; \
+    for i in 1 2 3; do \
+      apt-get update && apt-get install -y --no-install-recommends \
+        openjdk-17-jdk \
+        curl \
+        unzip \
+        wget \
+        git \
+        ca-certificates \
+        python3 \
+        build-essential && break || (echo "apt failed, retrying..." && sleep 5); \
+    done; \
+    npm install -g npm@10 eas-cli expo-cli; \
+    rm -rf /var/lib/apt/lists/*
+
+# Android command line tools
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    cd /tmp && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip && \
+    unzip -q cmdline-tools.zip -d ${ANDROID_HOME}/cmdline-tools && \
+    mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm -f cmdline-tools.zip
+
+# Accept licenses and install required SDK packages for APK builds
+RUN yes | sdkmanager --licenses && \
+    sdkmanager \
+      "platform-tools" \
+      "platforms;android-34" \
+      "build-tools;34.0.0" \
+      "cmdline-tools;latest"
+
+WORKDIR /workspace/mobile
+
+COPY build-apk.sh /usr/local/bin/build-apk.sh
+RUN chmod +x /usr/local/bin/build-apk.sh
+
+CMD ["bash"]

@@ -1,0 +1,83 @@
+export const Colors = {
+  primary: {
+    DEFAULT: "#1275e2",
+    50: "#e8f2fd",
+    100: "#c5dffb",
+    200: "#9ecbf8",
+    300: "#76b6f5",
+    400: "#4da1f2",
+    500: "#1275e2",
+    600: "#0f63c4",
+    700: "#0b4f9e",
+    800: "#083c78",
+    900: "#052952",
+  },
+  secondary: {
+    DEFAULT: "#5f78a3",
+    50: "#eef1f6",
+    100: "#d5dce8",
+    200: "#bcc7da",
+    300: "#a3b2cc",
+    400: "#8a9dbe",
+    500: "#5f78a3",
+    600: "#4d6389",
+    700: "#3c4e6f",
+    800: "#2b3955",
+    900: "#1a243b",
+  },
+  tertiary: {
+    DEFAULT: "#c55b00",
+    50: "#fff3e6",
+    100: "#ffdab3",
+    200: "#ffc180",
+    300: "#ffa84d",
+    400: "#ff8f1a",
+    500: "#c55b00",
+    600: "#a74d00",
+    700: "#893f00",
+    800: "#6b3100",
+    900: "#4d2300",
+  },
+  neutral: {
+    DEFAULT: "#74777f",
+    50: "#f3f3f4",
+    100: "#e1e2e4",
+    200: "#cfd0d3",
+    300: "#bdbfc3",
+    400: "#abacb2",
+    500: "#74777f",
+    600: "#5e6068",
+    700: "#484a51",
+    800: "#32343a",
+    900: "#1c1d23",
+  },
+  surface: {
+    light: "#fafafa",
+    dark: "#121212",
+    card: "#ffffff",
+    cardDark: "#1e1e1e",
+    elevated: "#f5f5f5",
+    elevatedDark: "#2a2a2a",
+  },
+  success: "#22c55e",
+  warning: "#f59e0b",
+  error: "#ef4444",
+} as const;
+
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  "2xl": 48,
+} as const;
+
+export const BorderRadius = {
+  xs: 12,
+  sm: 16,
+  md: 24,
+  lg: 32,
+} as const;
+
+export type ColorKey = keyof typeof Colors;
