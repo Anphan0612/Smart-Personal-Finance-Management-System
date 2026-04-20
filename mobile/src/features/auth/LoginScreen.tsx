@@ -38,7 +38,7 @@ export default function LoginScreen() {
           name: response.name,
           email: response.email,
         });
-        router.replace("/(tabs)" as any);
+        router.replace("/(tabs)");
       }
     } catch (error: any) {
       console.error("[AUTH ERROR]", error);

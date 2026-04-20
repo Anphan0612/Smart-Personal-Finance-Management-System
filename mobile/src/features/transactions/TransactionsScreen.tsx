@@ -3,11 +3,6 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, RefreshControl, Acti
 import { MotiView } from "moti";
 import {
   Search,
-  TrendingUp,
-  Wallet,
-  Calendar,
-  ChevronRight,
-  Filter,
   ArrowDownLeft,
   ArrowUpRight
 } from "lucide-react-native";
@@ -20,6 +15,22 @@ import { formatCurrency } from "@/utils/format";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TransactionDetailSheet from "./components/TransactionDetailSheet";
 
+const TransactionSkeleton = () => (
+  <View className="bg-white p-4 rounded-[20px] flex-row items-center justify-between shadow-sm border border-outline/5 mb-3">
+    <View className="flex-row items-center gap-4 flex-1">
+      <Skeleton width={48} height={48} radius={24} />
+      <View className="flex-1 gap-2">
+        <Skeleton width="70%" height={16} radius={4} />
+        <Skeleton width="40%" height={12} radius={4} />
+      </View>
+    </View>
+    <View className="items-end gap-2">
+      <Skeleton width={80} height={20} radius={4} />
+      <Skeleton width={40} height={10} radius={4} />
+    </View>
+  </View>
+);
+
 export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
@@ -30,18 +41,28 @@ export default function TransactionsScreen() {
   const {
     data,
     isLoading,
-    refetch
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+    isRefetching
   } = useTransactions(activeWalletId || "");
 
-  const isFetchingNextPage = false;
-  const hasNextPage = false;
-  const fetchNextPage = () => {};
+  // Flatten and Filter Duplicates (Technical Note 1)
+  const allTransactions = useMemo(() => {
+    if (!data?.pages) return [];
+    
+    // Safely flatten pages and filter duplicates by ID
+    const rawItems = data.pages.flatMap(page => page.content || []);
+    const uniqueItemsMap = new Map<string, TransactionResponse>();
+    
+    rawItems.forEach(item => {
+      if (item && item.id) {
+        uniqueItemsMap.set(item.id, item);
+      }
+    });
 
-  // Extract content from PagedResponse
-  const transactions = useMemo(() => {
-    if (!data) return [];
-    if (Array.isArray(data)) return data;
-    return (data as any).content ?? [];
+    return Array.from(uniqueItemsMap.values());
   }, [data]);
 
   const handleTransactionPress = (transaction: TransactionResponse) => {
@@ -51,18 +72,16 @@ export default function TransactionsScreen() {
 
   const handleCloseSheet = () => {
     setIsSheetVisible(false);
-    // Optional: Only clear selected after animation
-    // setSelectedTransaction(null);
   };
 
   // Group transactions by date
   const groupedTransactions = useMemo(() => {
-    if (!transactions || transactions.length === 0) return [];
+    if (!allTransactions || allTransactions.length === 0) return [];
 
     // Filter by search query if any
-    const filtered = transactions.filter((t: TransactionResponse) =>
-      t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = allTransactions.filter((t: TransactionResponse) =>
+      (t.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.categoryName || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const groups: { [key: string]: TransactionResponse[] } = {};
@@ -72,14 +91,13 @@ export default function TransactionsScreen() {
       groups[date].push(t);
     });
 
-    // Sort dates descending and convert to array format for FlatList
     return Object.keys(groups)
       .sort((a, b) => b.localeCompare(a))
       .map(date => ({
         date,
         items: groups[date]
       }));
-  }, [transactions, searchQuery]);
+  }, [allTransactions, searchQuery]);
 
   const formatDateLabel = (dateStr: string) => {
     const date = parseISO(dateStr);
@@ -95,10 +113,10 @@ export default function TransactionsScreen() {
   };
 
   const renderFooter = () => {
-    if (!isFetchingNextPage) return null;
+    if (!isFetchingNextPage) return <View className="h-20" />; // Extra space for FAB
     return (
-      <View className="py-4 items-center">
-        <ActivityIndicator size="small" color="#005ab4" />
+      <View className="py-4 gap-3">
+        {[1, 2, 3].map(i => <TransactionSkeleton key={`footer-skele-${i}`} />)}
       </View>
     );
   };
@@ -130,7 +148,7 @@ export default function TransactionsScreen() {
       key={item.date}
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ delay: index * 100 }}
+      transition={{ delay: index * 50 }}
       className="mb-8"
     >
       <Text className="font-headline font-bold text-[10px] uppercase tracking-widest text-outline mb-4 px-1">
@@ -183,11 +201,11 @@ export default function TransactionsScreen() {
       return (
         <View>
           {[1, 2, 3, 4].map(i => (
-            <View key={i} className="mb-8">
+            <View key={`loading-skele-${i}`} className="mb-8">
               <Skeleton width={120} height={16} radius={4} style={{ marginBottom: 12 }} />
               <View className="gap-3">
-                <Skeleton width="100%" height={80} radius={20} />
-                <Skeleton width="100%" height={80} radius={20} />
+                <TransactionSkeleton />
+                <TransactionSkeleton />
               </View>
             </View>
           ))}
@@ -196,7 +214,8 @@ export default function TransactionsScreen() {
     }
     return (
       <View className="items-center justify-center py-20">
-        <Text className="text-outline font-bold">No transactions found</Text>
+        <Text className="text-outline font-bold text-[15px]">No transactions found</Text>
+        <Text className="text-outline/60 text-[12px] mt-1">Try chatting with AI to add some!</Text>
       </View>
     );
   };
@@ -211,11 +230,16 @@ export default function TransactionsScreen() {
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={0.5} // High threshold for early fetching (Technical Consideration 3)
         contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 160 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refetch} tintColor="#005ab4" />
+          <RefreshControl 
+            refreshing={isRefetching} 
+            onRefresh={refetch} 
+            tintColor="#005ab4" 
+            colors={["#005ab4"]} // Android
+          />
         }
       />
 

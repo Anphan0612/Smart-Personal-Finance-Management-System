@@ -121,3 +121,16 @@ export enum AppErrorCode {
   TRANSACTION_NOT_FOUND = "TXN_001",
   AI_PROCESSING_ERROR = "AI_001",
 }
+
+/**
+ * Cấu trúc phân trang từ Backend Spring Boot
+ */
+export interface PagedResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+}

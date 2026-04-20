@@ -1,16 +1,20 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetcher, poster, apiClient } from "@/services/api";
-import { TransactionResponse, TransactionType, ApiResponse } from "@/types/api";
+import { TransactionResponse, TransactionType, ApiResponse, PagedResponse } from "@/types/api";
 import { useAppStore } from "@/store/useAppStore";
 
 export const useTransactions = (walletId?: string) => {
   const token = useAppStore((state) => state.token);
 
-  return useQuery({
+  return useInfiniteQuery<PagedResponse<TransactionResponse>>({
     queryKey: ["transactions", walletId],
-    queryFn: () =>
-      fetcher<TransactionResponse[]>(`/transactions?walletId=${walletId || ""}`),
-    enabled: !!walletId && !!token, // Only fetch when both walletId and token exist
+    queryFn: ({ pageParam = 0 }) =>
+      fetcher<PagedResponse<TransactionResponse>>(
+        `/transactions?walletId=${walletId || ""}&page=${pageParam}&size=50`
+      ),
+    getNextPageParam: (lastPage) => (lastPage.last ? undefined : lastPage.page + 1),
+    initialPageParam: 0,
+    enabled: !!walletId && !!token,
     staleTime: 1000 * 60 * 2, // 2 minutes
   });
 };
