@@ -1,0 +1,11 @@
+node_modules/
+backend/
+ai-service/
+ml-models/
+dist/
+build/
+.expo/
+android/
+ios/
+package-lock.json
+*.md

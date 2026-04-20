@@ -1,0 +1,20 @@
+services:
+  ai-service:
+    command: ["python3.10", "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - ./ai-service:/app
+      - ./ml-models:/app/ml-models:ro
+      - ai_model_cache:/app/models/cache
+      - ai_uploads:/app/uploads
+    ports:
+      - "5678:5678"
+
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "5005:5005"
+
+  mobile-builder:
+    environment:
+      EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://host.docker.internal:8080/api/v1}
