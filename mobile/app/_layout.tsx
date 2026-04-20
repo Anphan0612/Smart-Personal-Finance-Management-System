@@ -15,11 +15,10 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { useColorScheme, LogBox } from "react-native";
-
+import { useColorScheme, LogBox, View } from "react-native";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,7 +27,24 @@ import "../global.css";
 import { useAppStore } from "../src/store/useAppStore";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-export { ErrorBoundary } from "expo-router";
+import { Pressable, Text } from "react-native";
+
+export function ErrorBoundary(props: any) {
+  return (
+    <View style={{ flex: 1, backgroundColor: "white", justifyContent: "center", alignItems: "center", padding: 20 }}>
+      <Text style={{ fontSize: 20, fontWeight: "bold", color: "red", marginBottom: 10 }}>❌ App Crash Detected</Text>
+      <Text style={{ fontSize: 14, color: "#333", marginBottom: 20, textAlign: 'center' }}>
+        {props.error.message}
+      </Text>
+      <Pressable 
+        onPress={props.retry} 
+        style={{ backgroundColor: "#005ab4", padding: 15, borderRadius: 10 }}
+      >
+        <Text style={{ color: "white", fontWeight: "bold" }}>Try Again</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -64,20 +80,23 @@ const AtelierDarkTheme = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const token = useAppStore((state: any) => state.setToken);
   const currentToken = useAppStore((state: any) => state.token);
   const segments = useSegments();
   const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Hydration tracking
+  // Hydration tracking with diagnostic logging
   useEffect(() => {
-    const checkHydration = () => {
-      setIsHydrated(useAppStore.persist.hasHydrated());
-    };
-    
-    checkHydration();
-    return useAppStore.persist.onFinishHydration(checkHydration);
+    const hydrated = useAppStore.persist.hasHydrated();
+    if (hydrated) {
+      setIsHydrated(true);
+    } else {
+      const unsub = useAppStore.persist.onFinishHydration(() => {
+        setIsHydrated(true);
+      });
+      return unsub;
+    }
   }, []);
 
   // Đặt true để gỡ chặn route (bypass login) trong quá trình phát triển UI
@@ -91,8 +110,7 @@ export default function RootLayout() {
           if (error?.response?.status === 403 || error?.response?.status === 401) return false;
           return failureCount < 1;
         },
-        refetchOnWindowFocus: true,
-        staleTime: 1000 * 30, // Dữ liệu cũ sau 30 giây
+        staleTime: 1000 * 30,
       },
     },
   }));
@@ -108,7 +126,9 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (error) throw error;
+    if (error) {
+      console.error("[FONT ERROR]", error);
+    }
   }, [error]);
 
   const isReady = loaded && isHydrated;
@@ -116,35 +136,27 @@ export default function RootLayout() {
   // Auth Guard Logic
   useEffect(() => {
     if (!isReady) return;
-    if (DEBUG_BYPASS_AUTH) {
-      SplashScreen.hideAsync();
-      return;
+
+    // CRITICAL: Wait for navigation state to be ready
+    if (!rootNavigationState?.key) return;
+
+    const currentSegments = segments as string[];
+    const inAuthGroup = currentSegments.includes("(auth)");
+
+    // Tránh vòng lặp: Chỉ redirect nếu thực sự cần thiết
+    if (!currentToken && !inAuthGroup) {
+      console.log("[ROUTING] Unauthenticated -> Login");
+      router.replace("/(auth)/login");
+    } else if (currentToken && (inAuthGroup || currentSegments.length === 0)) {
+      console.log("[ROUTING] Authenticated -> Tabs");
+      router.replace("/(tabs)");
     }
 
-    const currentSegments = segments as any[];
-    const inAuthGroup = currentSegments.includes("(auth)");
-    const inTabsGroup = currentSegments.includes("(tabs)");
-
-    console.log("[ROUTING] Segments:", currentSegments, "| Token exists:", !!currentToken);
-
-    const performRedirect = async () => {
-      if (!currentToken && !inAuthGroup) {
-        console.log("[ROUTING] Redirecting to Login...");
-        router.replace("/(auth)/login" as any);
-      } else if (currentToken && (inAuthGroup || currentSegments.length === 0)) {
-        // Only redirect to Dashboard from auth screens or empty segments
-        console.log("[ROUTING] Redirecting to Dashboard...");
-        router.replace("/(tabs)" as any);
-      }
-      
-      // Hiding Splash Screen ONLY after the first stable route is determined
-      setTimeout(() => {
-        SplashScreen.hideAsync();
-      }, 100);
-    };
-
-    performRedirect();
-  }, [currentToken, segments, isReady, DEBUG_BYPASS_AUTH]);
+    // Ẩn Splash Screen sau khi đã xác định được tuyến đường
+    if (isReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [currentToken, segments, isReady, rootNavigationState?.key]);
 
   if (!isReady) {
     return null;
