@@ -1,33 +1,29 @@
 # ==========================================
-# dY", Project-Wide (Structure & Docs)
+# Project-wide generated artifacts
 # ==========================================
-docs/
-
+node_modules/
+dist/
 tmp/
-# ML Models (large binary files ?" download separately)
-ml-models/
 
-# Postman collections (tracked manually in tools/)
-tools/postman/
+# Keep docs in Git (do not ignore docs/)
 
 # ==========================================
-# ~  Java / Maven (backend/)
+# Java / Maven (backend/)
 # ==========================================
 HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
 # ==========================================
-# dY?? Python / AI (ai-service/)
+# Python / AI (ai-service/)
 # ==========================================
 **/__pycache__/
 .venv/
@@ -36,23 +32,30 @@ ai-service/models/*.bin
 ai-service/models/*.pt
 ai-service/models/*.h5
 ai-service/benchmark/
+ai-service/models/cache/
+.venv-ocr/
+ai-service/.venv-ocr/
 
 # ==========================================
-# s>,? React Native / Mobile (mobile/)
+# Mobile / Expo / Android
 # ==========================================
-node_modules/
-dist/
-mobile/.expo
+mobile/.expo/
+mobile/.expo-shared/
+mobile/android/.gradle/
+mobile/android/build/
 
 # ==========================================
-# dY"` Security & Environment
+# Security & Environment
 # ==========================================
 .env
 .env.*
 !.env.example
+!infrastructure/envs/.env.develop
+!infrastructure/envs/.env.staging
+!infrastructure/envs/.env.production.example
 
 # ==========================================
-# dY' IDE Settings
+# IDE / editor state
 # ==========================================
 .idea/
 .vscode/
@@ -60,7 +63,11 @@ mobile/.expo
 *.iml
 *.ipr
 
-# OCR v1 Specific Exclusions
-.venv-ocr/
+# ==========================================
+# Local work / uploads / scratch
+# ==========================================
 uploads/
-ai-service/models/cache/
+scratch/
+
+# Optional local model store (large)
+ml-models/
