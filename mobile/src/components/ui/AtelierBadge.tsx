@@ -9,11 +9,11 @@ interface AtelierBadgeProps {
 }
 
 const variantStyles: Record<string, string> = {
-  default: "bg-neutral-100 dark:bg-neutral-800",
+  default: "bg-surface-container-low dark:bg-surface-container/10",
   success: "bg-green-100 dark:bg-green-900/30",
   warning: "bg-amber-100 dark:bg-amber-900/30",
   danger: "bg-red-100 dark:bg-red-900/30",
-  info: "bg-primary-100 dark:bg-primary-900/30",
+  info: "bg-primary-50 dark:bg-primary-900/30",
 };
 
 const variantTextColors: Record<string, string> = {

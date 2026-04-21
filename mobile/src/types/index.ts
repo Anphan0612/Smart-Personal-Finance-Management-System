@@ -43,4 +43,4 @@ export type TypographyVariant =
   | "caption"
   | "label";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "link";
+export type ButtonVariant = "primary" | "secondary" | "outline" | "link" | "elevated" | "default" | "gradient" | "tertiary";

@@ -261,7 +261,7 @@ export const CompactReviewSheet = ({
 
             {/* Editing Section / Grid */}
             <View className="relative px-6 py-4" style={{ minHeight: 220 }}>
-              <AnimatePresence mode="wait">
+              <AnimatePresence exitBeforeEnter>
                 {activePicker === "none" ? (
                   <MotiView
                     key="main-grid"

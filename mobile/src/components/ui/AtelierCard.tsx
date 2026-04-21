@@ -4,7 +4,7 @@ import type { ElevationLevel } from "../../types";
 
 interface AtelierCardProps extends ViewProps {
   elevation?: ElevationLevel;
-  variant?: "default" | "gradient" | "outline" | "tertiary";
+  variant?: "default" | "gradient" | "outline" | "tertiary" | "elevated";
   padding?: "none" | "sm" | "md" | "lg";
   children: React.ReactNode;
 }
@@ -23,10 +23,11 @@ const paddingStyles: Record<string, string> = {
 };
 
 const variantStyles: Record<string, string> = {
-  default: "bg-surface-container-lowest",
+  default: "bg-surface-card",
   gradient: "bg-primary",
   tertiary: "bg-tertiary-container/10 border border-tertiary-container/20",
   outline: "bg-transparent border border-outline-variant",
+  elevated: "bg-surface-container-low",
 };
 
 export function AtelierCard({

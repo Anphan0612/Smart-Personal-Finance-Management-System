@@ -22,6 +22,10 @@ const variantBaseStyles: Record<ButtonVariant, string> = {
   outline:
     "bg-transparent border-2 border-primary active:bg-primary-50 dark:active:bg-primary-900",
   link: "bg-transparent",
+  elevated: "bg-surface-container-low active:bg-surface-container",
+  default: "bg-surface-container active:bg-surface-container-low",
+  gradient: "bg-primary active:bg-primary-600",
+  tertiary: "bg-tertiary active:bg-tertiary-600",
 };
 
 const variantTextColors: Record<ButtonVariant, string> = {
@@ -29,6 +33,10 @@ const variantTextColors: Record<ButtonVariant, string> = {
   secondary: "#ffffff",
   outline: "#1275e2",
   link: "#1275e2",
+  elevated: "#181c22",
+  default: "#181c22",
+  gradient: "#ffffff",
+  tertiary: "#ffffff",
 };
 
 const sizeStyles: Record<string, string> = {
