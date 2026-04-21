@@ -1,9 +1,10 @@
 import React from "react";
-import { View, Text, Image, TouchableOpacity, Platform } from "react-native";
+import { View, Image, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Bell } from "lucide-react-native";
 import { MotiView } from "moti";
-// BlurView can be added later if needed via expo-blur
+import { AtelierTypography } from "../ui/AtelierTypography";
+import { Colors } from "@/constants/tokens";
 
 interface TopBarProps {
   title?: string;
@@ -25,12 +26,12 @@ export const TopBar = ({
         paddingTop: insets.top + 12,
         paddingBottom: 16,
         paddingHorizontal: 24,
-        backgroundColor: "rgba(249, 249, 255, 0.85)", // bg-surface/85
+        backgroundColor: "rgba(255, 255, 255, 0.9)", 
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         borderBottomWidth: 1,
-        borderBottomColor: "rgba(113, 119, 133, 0.1)", // outline variant with low opacity
+        borderBottomColor: Colors.neutral[100],
         zIndex: 50,
       }}
       className="absolute top-0 left-0 right-0"
@@ -43,16 +44,16 @@ export const TopBar = ({
             resizeMode="cover"
           />
         </View>
-        <Text className="font-headline text-lg font-bold tracking-tight text-primary">
+        <AtelierTypography variant="h3" className="text-primary">
           {title}
-        </Text>
+        </AtelierTypography>
       </View>
 
       <TouchableOpacity 
         activeOpacity={0.7}
-        className="w-10 h-10 items-center justify-center rounded-full bg-surface-container"
+        className="w-10 h-10 items-center justify-center rounded-full bg-neutral-50"
       >
-        <Bell size={24} color="#005ab4" strokeWidth={2.5} />
+        <Bell size={24} color={Colors.primary.DEFAULT} strokeWidth={2} />
       </TouchableOpacity>
     </MotiView>
   );

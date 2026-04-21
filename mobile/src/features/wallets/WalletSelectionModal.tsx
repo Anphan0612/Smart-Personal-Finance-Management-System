@@ -21,6 +21,7 @@ import {
 import { AtelierTypography } from '@/components/ui/AtelierTypography';
 import { WalletResponse } from '@/types/api';
 import * as Haptics from 'expo-haptics';
+import { Colors } from '@/constants/tokens';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -83,30 +84,30 @@ export const WalletSelectionModal = ({
               animate={{ translateY: 0 }}
               exit={{ translateY: SCREEN_HEIGHT }}
               transition={{ type: 'spring', damping: 28, stiffness: 220 }}
-              style={styles.sheet}
+              style={[styles.sheet, { backgroundColor: Colors.surface.card }]}
             >
               <View className="items-center pt-2 pb-4">
-                <View className="w-12 h-1.5 bg-surface-container-highest rounded-full" />
+                <View className="w-12 h-1.5 bg-neutral-100 rounded-full" />
               </View>
 
-              <View className="px-8 flex-row justify-between items-center mb-6">
-                <AtelierTypography variant="h2" className="text-xl font-manrope-extrabold text-surface-on">
+              <View className="px-8 flex-row justify-between items-center mb-8">
+                <AtelierTypography variant="h1" className="text-2xl">
                   Tài khoản của tôi
                 </AtelierTypography>
                 <TouchableOpacity 
                   onPress={onClose} 
-                  className="w-10 h-10 bg-surface-container-low rounded-full items-center justify-center shadow-sm"
+                  className="w-12 h-12 bg-white border border-neutral-100 rounded-full items-center justify-center shadow-atelier-low"
                 >
-                  <X size={20} color="#171c1f" strokeWidth={2.5} />
+                  <X size={20} color={Colors.neutral[600]} strokeWidth={2} />
                 </TouchableOpacity>
               </View>
 
               <ScrollView 
                 className="flex-1 px-6"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 120 }}
               >
-                <View className="gap-y-3">
+                <View className="gap-y-4">
                   {wallets.map((wallet) => {
                     const isActive = activeId === wallet.id;
                     const Icon = getWalletIcon(wallet.type);
@@ -115,10 +116,10 @@ export const WalletSelectionModal = ({
                       <MotiView
                         key={wallet.id}
                         animate={{
-                          backgroundColor: isActive ? '#f0f4ff' : '#ffffff',
-                          borderColor: isActive ? '#005ab4' : 'rgba(0,0,0,0.05)'
+                          backgroundColor: isActive ? 'white' : 'white',
+                          borderColor: isActive ? Colors.primary.DEFAULT : Colors.neutral[50]
                         }}
-                        className="p-4 rounded-[24px] border flex-row items-center border-outline/10 shadow-sm"
+                        className={`p-5 rounded-[32px] border ${isActive ? 'border-2' : 'border-neutral-50'} flex-row items-center shadow-atelier-low`}
                       >
                         <TouchableOpacity 
                           className="flex-1 flex-row items-center"
@@ -128,23 +129,23 @@ export const WalletSelectionModal = ({
                             onClose();
                           }}
                         >
-                          <View className={`w-12 h-12 rounded-full items-center justify-center mr-4 ${isActive ? 'bg-primary' : 'bg-surface-container-low'}`}>
-                            <Icon size={20} color={isActive ? '#ffffff' : '#434654'} />
+                          <View className={`w-14 h-14 rounded-full items-center justify-center mr-4 ${isActive ? 'bg-primary' : 'bg-neutral-50'}`}>
+                            <Icon size={24} color={isActive ? 'white' : Colors.neutral[500]} />
                           </View>
                           <View className="flex-1">
-                            <AtelierTypography variant="h3" className="text-[15px] font-manrope-bold text-on-surface">
+                            <AtelierTypography variant="h3" className="text-base font-bold">
                               {wallet.name}
                             </AtelierTypography>
-                            <AtelierTypography variant="caption" className="text-[11px] text-on-surface-variant">
-                              {wallet.type === 'BANK' ? `${wallet.bankName} • ****${wallet.accountNumber?.slice(-4)}` : wallet.type}
+                            <AtelierTypography variant="caption" className="text-neutral-400 mt-0.5">
+                              {wallet.type === 'BANK' ? `${wallet.bankName || 'Ngân hàng'} • ****${wallet.accountNumber?.slice(-4) || 'N/A'}` : wallet.type}
                             </AtelierTypography>
-                            <AtelierTypography variant="label" className="text-primary font-manrope-bold text-[13px] mt-1">
+                            <AtelierTypography variant="label" color="primary" className="font-bold text-base mt-1">
                               {new Intl.NumberFormat('vi-VN').format(wallet.balance)} đ
                             </AtelierTypography>
                           </View>
                           {isActive && (
-                            <View className="w-6 h-6 rounded-full bg-primary/10 items-center justify-center mr-2">
-                               <Check size={14} color="#005ab4" strokeWidth={3} />
+                            <View className="w-8 h-8 rounded-full bg-blue-50 items-center justify-center mr-2">
+                               <Check size={16} color={Colors.primary.DEFAULT} strokeWidth={3} />
                             </View>
                           )}
                         </TouchableOpacity>
@@ -154,9 +155,9 @@ export const WalletSelectionModal = ({
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             onEdit(wallet);
                           }}
-                          className="w-10 h-10 items-center justify-center rounded-full bg-surface-container-low"
+                          className="w-12 h-12 items-center justify-center rounded-full bg-neutral-50 ml-2"
                         >
-                          <Edit2 size={16} color="#737685" />
+                          <Edit2 size={18} color={Colors.neutral[400]} />
                         </TouchableOpacity>
                       </MotiView>
                     );
@@ -167,11 +168,13 @@ export const WalletSelectionModal = ({
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                       onAdd();
                     }}
-                    className="flex-row items-center justify-center p-5 border-2 border-dashed border-primary/20 rounded-[24px] mt-2"
+                    className="flex-row items-center justify-center p-6 border-2 border-dashed border-blue-100/50 bg-blue-50/20 rounded-[32px] mt-4"
                   >
-                    <Plus size={20} color="#005ab4" className="mr-2" />
-                    <AtelierTypography variant="label" className="text-primary font-manrope-bold uppercase tracking-widest text-[11px]">
-                      Thêm tài khoản mới
+                    <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3">
+                      <Plus size={20} color={Colors.primary.DEFAULT} strokeWidth={3} />
+                    </View>
+                    <AtelierTypography variant="label" className="text-primary font-bold uppercase tracking-widest">
+                      Thêm tài khoản
                     </AtelierTypography>
                   </TouchableOpacity>
                 </View>
@@ -192,18 +195,17 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(9, 9, 11, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   sheet: {
-    backgroundColor: '#f6fafe',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
-    maxHeight: SCREEN_HEIGHT * 0.7,
+    maxHeight: SCREEN_HEIGHT * 0.75,
     minHeight: SCREEN_HEIGHT * 0.5,
-    shadowColor: '#171c1f',
-    shadowOffset: { width: 0, height: -12 },
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -20 },
     shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 24,
+    shadowRadius: 30,
+    elevation: 30,
   }
 });

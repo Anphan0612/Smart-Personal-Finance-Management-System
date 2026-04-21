@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
+import { View, ScrollView, TouchableOpacity, RefreshControl } from "react-native";
 import { MotiView } from "moti";
 import { LinearGradient } from "expo-linear-gradient";
 import { 
   TrendingUp, 
-  Sparkles, 
-  Coffee, 
   Wallet, 
   ChevronDown,
   Plus
@@ -16,17 +14,22 @@ import { useWallets } from "../../hooks/useWallets";
 import { useDashboard } from "../../hooks/useDashboard";
 import { useComparison } from "../../hooks/useComparison";
 import { useBudgets } from "../../hooks/useBudgets";
-import { Skeleton } from "../../components/common/Skeleton";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatCurrency } from "../../utils/format";
-import { AtelierInsightCard } from "../../components/ui/AtelierInsightCard";
-import { BudgetAlertModal } from "../../components/ui/BudgetAlertModal";
+import { 
+  AtelierTypography, 
+  AtelierInsightCard, 
+  BudgetAlertModal,
+  AtelierCard,
+  AtelierTransactionCard,
+  SkeletonBox
+} from "../../components/ui";
 import { ManualTransactionModal } from "../transactions/ManualTransactionModal";
 import { WalletModal } from "../wallets/WalletModal";
 import { WalletSelectionModal } from "../wallets/WalletSelectionModal";
 import { poster } from "../../services/api";
 import * as Haptics from "expo-haptics";
-import type { BudgetResponse, ThresholdStatus } from "../../types/api";
+import type { BudgetResponse } from "../../types/api";
 
 const ALERT_DISMISSED_KEY = "budget_alert_dismissed_";
 
@@ -137,33 +140,21 @@ export default function HomeScreen() {
   const spendingBarColor = budgetPct >= 100
     ? "bg-error"
     : budgetPct >= 80
-    ? "bg-[#f97316]"
-    : budgetPct >= 50
     ? "bg-[#f59e0b]"
+    : budgetPct >= 50
+    ? "bg-primary-300"
     : "bg-primary";
 
   return (
-    <View className="flex-1 bg-surface">
+    <View className="flex-1 bg-surface-container-lowest">
       <ScrollView 
         className="flex-1"
         contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor="#005ab4" />
+          <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor="#1275e2" />
         }
       >
-      {/* Gamification Alert Modal */}
-      {alertData && (
-        <BudgetAlertModal
-          visible={alertVisible}
-          onDismiss={handleDismissAlert}
-          categoryName={alertData.categoryName}
-          percentageUsed={alertData.percentageUsed}
-          overspentAmount={alertData.overspentAmount}
-          aiInsight={alertData.aiInsight}
-        />
-      )}
-
       {/* Greeting & Wallet Selection */}
       <View className="mb-8 flex-row justify-between items-start">
         <MotiView
@@ -171,12 +162,12 @@ export default function HomeScreen() {
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", duration: 800 }}
         >
-          <Text className="font-headline text-on-surface-variant text-sm font-bold tracking-widest uppercase mb-1">
-            Welcome back,
-          </Text>
-          <Text className="font-headline font-extrabold text-2xl text-on-surface tracking-tight">
+          <AtelierTypography variant="label" className="text-neutral-400 mb-1">
+            Chào mừng trở lại,
+          </AtelierTypography>
+          <AtelierTypography variant="h2" className="text-neutral-900">
             {user?.name || "Atelier Finance"}
-          </Text>
+          </AtelierTypography>
         </MotiView>
 
         <TouchableOpacity 
@@ -184,14 +175,14 @@ export default function HomeScreen() {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setSelectionModalVisible(true);
           }}
-          className="bg-white px-4 py-2 rounded-full shadow-sm border border-outline/10 flex-row items-center gap-2"
+          className="bg-white px-4 py-2 rounded-full shadow-atelier-low border border-neutral-100 flex-row items-center gap-2"
           activeOpacity={0.7}
         >
-          <Wallet size={16} color="#005ab4" />
-          <Text className="font-bold text-sm text-on-surface">
-            {activeWallet?.name || "Main Wallet"}
-          </Text>
-          <ChevronDown size={14} color="#717785" />
+          <Wallet size={16} color="#1275e2" />
+          <AtelierTypography variant="label" className="text-neutral-900 normal-case lowercase-none">
+            {activeWallet?.name || "Ví chính"}
+          </AtelierTypography>
+          <ChevronDown size={14} color="#74777f" />
         </TouchableOpacity>
       </View>
 
@@ -203,39 +194,38 @@ export default function HomeScreen() {
         className="mb-8"
       >
         <LinearGradient
-          colors={["#005ab4", "#0873df"]}
+          colors={["#1275e2", "#0b4f9e"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="p-8 rounded-[32px] min-h-[180px] shadow-xl"
-          style={{ shadowColor: "#005ab4", shadowOpacity: 0.3, shadowRadius: 20 }}
+          className="p-8 rounded-[32px] min-h-[180px] shadow-xl shadow-primary/30"
         >
-          <Text className="text-white/80 font-medium text-sm">Total Balance</Text>
+          <AtelierTypography variant="label" className="text-white/80 normal-case">Tổng số dư</AtelierTypography>
           {isLoading ? (
-            <Skeleton width={200} height={40} radius={8} style={{ marginTop: 12, backgroundColor: 'rgba(255,255,255,0.2)' }} />
+            <SkeletonBox height={40} radius={8} className="mt-2 bg-white/20" />
           ) : (
             <View>
-              <Text className="text-white font-headline font-extrabold text-4xl mt-2 tracking-tighter">
+              <AtelierTypography variant="h1" className="text-white text-4xl mt-2">
                 {formatCurrency(dashboard?.summary?.balance)}
-              </Text>
+              </AtelierTypography>
               {dashboard?.summary?.netFlow !== undefined && (
-                <Text className="text-white/80 font-medium text-sm mt-1">
-                  Net Flow this month: <Text className={dashboard.summary.netFlow >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}>
+                <AtelierTypography variant="caption" className="text-white/80 mt-1">
+                  Biến động tháng này: <AtelierTypography variant="caption" className={dashboard.summary.netFlow >= 0 ? "text-green-300" : "text-red-300"}>
                     {dashboard.summary.netFlow >= 0 ? '+' : ''}{formatCurrency(dashboard.summary.netFlow)}
-                  </Text>
-                </Text>
+                  </AtelierTypography>
+                </AtelierTypography>
               )}
             </View>
           )}
           
           <View className="flex-row items-center gap-4 mt-6">
             <View>
-              <Text className="text-white/60 text-[10px] font-bold uppercase tracking-wider">Income</Text>
-              <Text className="text-white font-bold text-md">{formatCurrency(dashboard?.summary?.income)}</Text>
+              <AtelierTypography variant="label" className="text-white/60">THU NHẬP</AtelierTypography>
+              <AtelierTypography variant="h3" className="text-white text-md">{formatCurrency(dashboard?.summary?.income)}</AtelierTypography>
             </View>
             <View className="w-[1px] h-8 bg-white/10" />
             <View>
-              <Text className="text-white/60 text-[10px] font-bold uppercase tracking-wider">Expense</Text>
-              <Text className="text-white font-bold text-md">{formatCurrency(dashboard?.summary?.expenses)}</Text>
+              <AtelierTypography variant="label" className="text-white/60">CHI TIÊU</AtelierTypography>
+              <AtelierTypography variant="h3" className="text-white text-md">{formatCurrency(dashboard?.summary?.expenses)}</AtelierTypography>
             </View>
           </View>
         </LinearGradient>
@@ -247,64 +237,59 @@ export default function HomeScreen() {
           type="weekly"
           current={comparison.currentWeek.totalExpense}
           previous={comparison.lastWeek.totalExpense}
-          onPress={() => {/* Navigation for AI modal handled by parent FAB or store */}}
+          onPress={() => setSelectionModalVisible(true)}
         />
       )}
 
-      {/* Main Budget Progress UI (LIVE) */}
-      <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: "timing", delay: 500 }}
-        className="bg-white p-6 rounded-[24px] shadow-sm mb-8 border border-outline/5"
-      >
+      {/* Main Budget Progress UI */}
+      <AtelierCard elevation="lowest" className="mb-8 border border-neutral-100">
         <View className="flex-row justify-between items-end mb-4">
           <View>
-            <Text className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">
-              Spending Power
-            </Text>
-            <Text className="font-headline font-bold text-lg text-on-surface">
+            <AtelierTypography variant="label" className="text-neutral-400 mb-1">
+              Sức mua khả dụng
+            </AtelierTypography>
+            <AtelierTypography variant="h3" className="text-neutral-900">
               {formatCurrency(dashboard?.summary?.expenses)}
-              <Text className="text-on-surface-variant font-normal text-sm">
-                {hasBudgets ? ` / ${formatCurrency(totalBudgetLimit)}` : " / Limit unset"}
-              </Text>
-            </Text>
+              <AtelierTypography variant="body" className="text-neutral-400 text-sm">
+                {hasBudgets ? ` / ${formatCurrency(totalBudgetLimit)}` : " / Chưa đặt hạn mức"}
+              </AtelierTypography>
+            </AtelierTypography>
           </View>
           {hasBudgets ? (
-            <Text 
-              className="text-xs font-bold"
-              style={{ color: budgetPct >= 80 ? "#ef4444" : budgetPct >= 50 ? "#f59e0b" : "#005ab4" }}
+            <AtelierTypography 
+              variant="label"
+              className={`text-xs ${budgetPct >= 80 ? "text-error" : budgetPct >= 50 ? "text-warning" : "text-primary"}`}
             >
-              {budgetPct.toFixed(0)}% used
-            </Text>
+              Đã dùng {budgetPct.toFixed(0)}%
+            </AtelierTypography>
           ) : (
-            <Text className="text-xs font-bold text-primary">
-              {dashboard?.summary?.savingsRate?.toFixed(0)}% saved
-            </Text>
+            <AtelierTypography variant="label" className="text-xs text-primary">
+              Tỷ lệ tiết kiệm {dashboard?.summary?.savingsRate?.toFixed(0)}%
+            </AtelierTypography>
           )}
         </View>
-        <View className="w-full h-3 bg-surface-container rounded-full overflow-hidden">
+        <View className="w-full h-3 bg-surface-container-low rounded-full overflow-hidden">
           <MotiView
             from={{ width: "0%" }}
-            animate={{ width: hasBudgets ? `${budgetPct}%` : "42%" }}
+            animate={{ width: hasBudgets ? `${budgetPct}%` : "0%" }}
             transition={{ type: "timing", duration: 1500, delay: 800 }}
             className={`h-full rounded-full ${hasBudgets ? spendingBarColor : "bg-primary"}`}
           />
         </View>
-      </MotiView>
+      </AtelierCard>
 
       {/* Recent Activity Feed */}
       <View className="mb-4">
         <View className="flex-row justify-between items-center mb-4 px-1">
-          <Text className="font-headline font-bold text-lg text-on-surface">Latest Flows</Text>
+          <AtelierTypography variant="h3">Giao dịch gần đây</AtelierTypography>
           <TouchableOpacity>
-            <Text className="text-primary font-bold text-sm">View Feed</Text>
+            <AtelierTypography variant="label" className="text-primary text-sm normal-case">Tất cả</AtelierTypography>
           </TouchableOpacity>
         </View>
         
         <View className="gap-3">
           {isLoading ? (
-            [1, 2, 3].map(i => <Skeleton key={i} width="100%" height={80} radius={20} />)
+            [1, 2, 3].map(i => <SkeletonBox key={i} height={80} radius={20} className="mb-3" />)
           ) : (
             dashboard?.transactions?.map((item: any, idx: number) => (
               <MotiView
@@ -312,26 +297,29 @@ export default function HomeScreen() {
                 from={{ opacity: 0, translateY: 10 }}
                 animate={{ opacity: 1, translateY: 0 }}
                 transition={{ type: "timing", delay: 100 * idx }}
-                className="flex-row items-center justify-between p-4 bg-white rounded-[20px] shadow-sm border border-outline/5"
               >
-                <View className="flex-1 flex-row items-center gap-4 mr-3">
-                  <View className="w-12 h-12 rounded-full bg-surface-container-low items-center justify-center">
-                    {item.type === 'INCOME' ? <TrendingUp size={20} color="#00C853" /> : <Wallet size={20} color="#414753" />}
+                <AtelierCard elevation="lowest" padding="sm" className="bg-white border border-neutral-100">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1 flex-row items-center gap-4 mr-3">
+                      <View className="w-12 h-12 rounded-2xl bg-surface-container-low items-center justify-center">
+                        {item.type === 'INCOME' ? <TrendingUp size={20} color="#22c55e" /> : <Wallet size={20} color="#74777f" />}
+                      </View>
+                      <View className="flex-1">
+                        <AtelierTypography variant="h3" className="text-[15px]" numberOfLines={1}>
+                          {item.categoryName || 'Chung'}
+                        </AtelierTypography>
+                        <AtelierTypography variant="caption" className="text-neutral-400" numberOfLines={1}>
+                          {item.description || 'Không có mô tả'}
+                        </AtelierTypography>
+                      </View>
+                    </View>
+                    <View className="items-end">
+                      <AtelierTypography variant="h3" className={`text-[15px] ${item.type === 'INCOME' ? 'text-green-600' : 'text-error'}`}>
+                        {item.type === 'INCOME' ? '+' : '-'}{formatCurrency(item.amount)}
+                      </AtelierTypography>
+                    </View>
                   </View>
-                  <View className="flex-1">
-                    <Text className="font-bold text-on-surface text-[15px]" numberOfLines={1} ellipsizeMode="tail">
-                      {item.categoryName || 'General'}
-                    </Text>
-                    <Text className="text-[10px] text-on-surface-variant font-medium uppercase tracking-wide" numberOfLines={1}>
-                      {item.description || 'No description'}
-                    </Text>
-                  </View>
-                </View>
-                <View className="items-end" style={{ flexShrink: 0, minWidth: 80 }}>
-                  <Text className={`font-headline font-bold text-[15px] ${item.type === 'INCOME' ? 'text-secondary' : 'text-error'}`}>
-                    {item.type === 'INCOME' ? '+' : '-'}{formatCurrency(item.amount)}
-                  </Text>
-                </View>
+                </AtelierCard>
               </MotiView>
             ))
           )}
@@ -339,8 +327,7 @@ export default function HomeScreen() {
       </View>
     </ScrollView>
 
-    {/* Modals and Overlays MUST be outside ScrollView for absolute placement to work correctly */}
-    {/* Gamification Alert Modal */}
+    {/* Modals and Overlays */}
     {alertData && (
       <BudgetAlertModal
         visible={alertVisible}
@@ -352,20 +339,17 @@ export default function HomeScreen() {
       />
     )}
 
-    {/* Manual Entry Modal */}
     <ManualTransactionModal 
       isVisible={manualEntryVisible} 
       onClose={() => setManualEntryVisible(false)} 
     />
 
-    {/* Wallet Management Modal */}
     <WalletModal
       isVisible={walletModalVisible}
       onClose={() => setWalletModalVisible(false)}
       walletToEdit={editingWallet}
     />
 
-    {/* Wallet Selection Modal */}
     <WalletSelectionModal
       isVisible={selectionModalVisible}
       onClose={() => setSelectionModalVisible(false)}
@@ -391,11 +375,6 @@ export default function HomeScreen() {
         position: "absolute",
         bottom: 30,
         right: 24,
-        shadowColor: "#005ab4",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 15,
-        elevation: 10,
         zIndex: 50,
       }}
     >
@@ -405,10 +384,11 @@ export default function HomeScreen() {
           setManualEntryVisible(true);
         }}
         activeOpacity={0.9}
+        className="w-16 h-16 rounded-full shadow-lg shadow-primary/30"
       >
         <LinearGradient
-          colors={["#005ab4", "#0873df"]}
-          className="w-16 h-16 rounded-full items-center justify-center border-2 border-white/20"
+          colors={["#1275e2", "#0b4f9e"]}
+          className="w-full h-full rounded-full items-center justify-center border-2 border-white/20"
         >
           <Plus size={32} color="white" strokeWidth={2.5} />
         </LinearGradient>
