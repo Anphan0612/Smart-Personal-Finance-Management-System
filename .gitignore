@@ -5,8 +5,9 @@ node_modules/
 dist/
 tmp/
 
+# Keep docs in Git (do not ignore docs/)
+
 # ==========================================
-# Java / Maven (backend/)
 # Java / Maven (backend/)
 # ==========================================
 HELP.md
