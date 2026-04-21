@@ -39,7 +39,7 @@ export function AtelierInput({
         </AtelierTypography>
       )}
       <View
-        className={`flex-row items-center rounded-atelier-sm border-2 bg-surface-elevated dark:bg-surface-elevated-dark px-4 min-h-[48px] ${borderColor}`}
+        className={`flex-row items-center rounded-atelier-sm border-2 bg-surface-container-low dark:bg-surface-card/5 px-4 min-h-[48px] ${borderColor}`}
       >
         {leftIcon && <View className="mr-3">{leftIcon}</View>}
         {isCurrency && (

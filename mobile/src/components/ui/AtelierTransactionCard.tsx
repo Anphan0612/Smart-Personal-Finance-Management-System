@@ -1,6 +1,6 @@
 import React from "react";
 import { View, TouchableOpacity } from "react-native";
-import { Coffee, Tag, Calendar, Check, Edit3, CreditCard, ShoppingBag, Utensils, Home, Car, Zap, Heart, MoreHorizontal } from "lucide-react-native";
+import { Coffee, Tag, ShoppingBag, Utensils, Home, Car, Zap, Heart, Edit3 } from "lucide-react-native";
 import { AtelierTypography } from "./AtelierTypography";
 import { AtelierCard } from "./AtelierCard";
 import { formatCurrency } from "../../utils/format";
@@ -46,22 +46,21 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
     : { 
         elevation: "lowest" as const, 
         padding: "md" as const, 
-        className: "mt-4 bg-surface-container/30 border border-surface-container/50" 
+        className: "mt-4 bg-surface-card/30 border border-surface-elevated/50" 
       };
 
   return (
     <Container {...containerProps}>
-      {/* Header Info */}
       <View className="flex-row items-center justify-between mb-5">
         <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 rounded-2xl bg-tertiary-fixed flex items-center justify-center shadow-sm">
-            <Icon size={22} color="#3c1400" />
+          <View className="w-12 h-12 rounded-2xl bg-tertiary-50 flex items-center justify-center shadow-sm">
+            <Icon size={22} color="#c55b00" />
           </View>
           <View>
-            <AtelierTypography variant="h3" className="text-[15px] font-bold text-surface-on">
+            <AtelierTypography variant="h3" className="text-[15px] font-bold">
               {data.note || "Giao dịch mới"}
             </AtelierTypography>
-            <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant/70 uppercase tracking-widest font-bold">
+            <AtelierTypography variant="label" className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
               {data.type === "EXPENSE" ? "Khoản chi" : "Khoản thu"}
             </AtelierTypography>
           </View>
@@ -70,20 +69,19 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
           <AtelierTypography variant="h3" className="text-[17px] font-black text-primary">
             {formattedAmount}
           </AtelierTypography>
-          <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant font-semibold">
+          <AtelierTypography variant="label" className="text-[10px] text-neutral-400 font-semibold">
             Đang chờ
           </AtelierTypography>
         </View>
       </View>
 
-      {/* Details Row */}
-      <View className="flex-row justify-between py-4 border-y border-surface-container/40">
+      <View className="flex-row justify-between py-4 border-y border-neutral-100 dark:border-neutral-800">
         <TouchableOpacity 
           className="flex-1" 
           onPress={onEdit} 
           activeOpacity={0.7}
         >
-          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-outline tracking-widest">
+          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-neutral-400 tracking-widest">
             Danh mục
           </AtelierTypography>
           <View className="flex-row items-center gap-1.5 mt-0.5">
@@ -93,26 +91,25 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
             >
               {data.category || "Cần chọn"}
             </AtelierTypography>
-            <Edit3 size={10} color={!data.categoryId ? "#dd3544" : "#005ab4"} />
+            <Edit3 size={10} color={!data.categoryId ? "#ef4444" : "#1275e2"} />
           </View>
         </TouchableOpacity>
 
         <View className="flex-1 items-end">
-          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-outline tracking-widest">
+          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-neutral-400 tracking-widest">
             Ngày giao dịch
           </AtelierTypography>
-          <AtelierTypography variant="body" className="text-[13px] font-bold text-surface-on mt-0.5">
+          <AtelierTypography variant="body" className="text-[13px] font-bold mt-0.5">
             {data.date}
           </AtelierTypography>
         </View>
       </View>
 
-      {/* Action Buttons */}
       <View className="flex-row gap-3 mt-5">
         <TouchableOpacity 
           onPress={onConfirm}
           activeOpacity={0.8}
-          className="flex-1 py-4 bg-primary rounded-2xl items-center justify-center shadow-lg shadow-primary/20"
+          className="flex-1 py-4 bg-primary rounded-2xl items-center justify-center shadow-lg"
         >
           <AtelierTypography variant="label" className="text-white text-[13px] font-black normal-case">
             Xác nhận
@@ -121,9 +118,9 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
         <TouchableOpacity 
           onPress={onEdit}
           activeOpacity={0.7}
-          className="flex-1 py-4 bg-white border border-surface-container/80 rounded-2xl items-center justify-center"
+          className="flex-1 py-4 bg-white border border-neutral-200 rounded-2xl items-center justify-center"
         >
-          <AtelierTypography variant="label" className="text-surface-on text-[13px] font-bold normal-case">
+          <AtelierTypography variant="label" className="text-neutral-900 text-[13px] font-bold normal-case">
             Sửa chi tiết
           </AtelierTypography>
         </TouchableOpacity>

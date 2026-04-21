@@ -31,17 +31,15 @@ export function BudgetAlertModal({ visible, onDismiss, categoryName, percentageU
             colors={["#fef2f2", "#ffffff"]}
             className="rounded-t-[32px] px-6 pt-6 pb-10"
           >
-            {/* Close Button */}
             <View className="flex-row justify-end mb-2">
               <TouchableOpacity
                 onPress={onDismiss}
-                className="w-8 h-8 rounded-full bg-surface-container items-center justify-center"
+                className="w-8 h-8 rounded-full bg-neutral-100 items-center justify-center"
               >
-                <X size={16} color="#717785" />
+                <X size={16} color="#74777f" />
               </TouchableOpacity>
             </View>
 
-            {/* Icon + Title */}
             <View className="items-center mb-6">
               <MotiView
                 from={{ scale: 0 }}
@@ -52,27 +50,25 @@ export function BudgetAlertModal({ visible, onDismiss, categoryName, percentageU
                   <AlertTriangle size={40} color="#ef4444" />
                 </View>
               </MotiView>
-              <Text className="font-headline font-extrabold text-2xl text-error text-center">
-                Budget Alert!
+              <Text className="font-manrope font-extrabold text-2xl text-error text-center">
+                Cảnh báo ngân sách!
               </Text>
-              <Text className="text-on-surface-variant font-medium text-sm text-center mt-1">
-                {categoryName} • {percentageUsed.toFixed(0)}% used
+              <Text className="text-neutral-500 font-medium text-sm text-center mt-1">
+                {categoryName} • Đã dùng {percentageUsed.toFixed(0)}%
               </Text>
             </View>
 
-            {/* AI Insight */}
             <View className="bg-error/5 border border-error/10 rounded-[20px] p-5 mb-6">
-              <Text className="text-on-surface font-medium text-[14px] leading-6 text-center">
+              <Text className="text-neutral-900 font-medium text-[14px] leading-6 text-center">
                 {aiInsight}
               </Text>
             </View>
 
-            {/* Action */}
             <TouchableOpacity
               onPress={onDismiss}
               className="bg-error py-4 rounded-full items-center"
             >
-              <Text className="text-white font-bold text-base">I'll Be Careful</Text>
+              <Text className="text-white font-bold text-base">Tôi đã hiểu</Text>
             </TouchableOpacity>
           </LinearGradient>
         </MotiView>

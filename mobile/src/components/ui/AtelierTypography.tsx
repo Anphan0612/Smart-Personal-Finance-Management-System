@@ -4,7 +4,7 @@ import type { TypographyVariant } from "../../types";
 
 interface AtelierTypographyProps extends TextProps {
   variant?: TypographyVariant;
-  color?: string;
+  color?: string | any;
   children: React.ReactNode;
 }
 
@@ -25,10 +25,15 @@ export function AtelierTypography({
   children,
   ...props
 }: AtelierTypographyProps) {
+  const resolvedColor =
+    typeof color === "object" && color !== null && "DEFAULT" in color
+      ? color.DEFAULT
+      : color;
+
   return (
     <Text
       className={`${variantStyles[variant]} ${className ?? ""}`}
-      style={[color ? { color } : undefined, style]}
+      style={[resolvedColor ? { color: resolvedColor } : undefined, style]}
       {...props}
     >
       {children}
