@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tabs } from "expo-router";
-import { useColorScheme, Platform, View, StyleSheet } from "react-native";
+import { Platform, View, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Home,
@@ -8,13 +8,13 @@ import {
   PiggyBank,
   Receipt,
   User,
+  Sparkles
 } from "lucide-react-native";
 import { AtelierAI } from "../../src/components/ui/AtelierAI";
 import { TopBar } from "../../src/components/atelier/TopBar";
 import { useAppStore } from "../../src/store/useAppStore";
-import { Sparkles } from "lucide-react-native";
 import { MotiView } from "moti";
-import { TouchableOpacity } from "react-native";
+import { Colors } from "../../src/constants/tokens";
 
 export default function TabLayout() {
   const [isAIOpen, setIsAIOpen] = useState(false);
@@ -26,7 +26,7 @@ export default function TabLayout() {
   const tabBarHeight = 64 + bottomPadding;
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: Colors.surface.containerLowest }]}>
       {/* 1. Atelier TopBar */}
       <TopBar title={user?.name || "Atelier Finance"} />
 
@@ -34,13 +34,13 @@ export default function TabLayout() {
       <View style={styles.content}>
         <Tabs
           screenOptions={{
-            tabBarActiveTintColor: "#005ab4", // primary
-            tabBarInactiveTintColor: "#717785", // neutral
+            tabBarActiveTintColor: Colors.primary.DEFAULT,
+            tabBarInactiveTintColor: Colors.neutral[400], 
             headerShown: false,
             tabBarStyle: {
-              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              backgroundColor: "rgba(255, 255, 255, 0.98)",
               borderTopWidth: 1,
-              borderTopColor: "rgba(113, 119, 133, 0.08)",
+              borderTopColor: Colors.neutral[100],
               elevation: 0,
               height: tabBarHeight,
               paddingBottom: bottomPadding,
@@ -49,7 +49,7 @@ export default function TabLayout() {
               bottom: 0,
               left: 0,
               right: 0,
-              shadowColor: "#000",
+              shadowColor: Colors.neutral[900],
               shadowOffset: { width: 0, height: -4 },
               shadowOpacity: 0.05,
               shadowRadius: 10,
@@ -141,7 +141,7 @@ const AIAssistantFAB = ({ onPress, offset }: { onPress: () => void, offset: numb
         <TouchableOpacity
           onPress={onPress}
           activeOpacity={0.9}
-          style={styles.fabButton}
+          style={[styles.fabButton, { backgroundColor: Colors.primary.DEFAULT, shadowColor: Colors.primary.DEFAULT }]}
         >
           <Sparkles color="white" size={26} fill="white" />
         </TouchableOpacity>
@@ -153,7 +153,6 @@ const AIAssistantFAB = ({ onPress, offset }: { onPress: () => void, offset: numb
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#f9f9ff", // bg-surface
   },
   content: {
     flex: 1,
@@ -167,10 +166,8 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "#005ab4", // primary
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#005ab4",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
