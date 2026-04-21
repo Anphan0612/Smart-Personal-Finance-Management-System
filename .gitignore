@@ -5,9 +5,8 @@ node_modules/
 dist/
 tmp/
 
-# Keep docs in Git (do not ignore docs/)
-
 # ==========================================
+# Java / Maven (backend/)
 # Java / Maven (backend/)
 # ==========================================
 HELP.md
@@ -68,6 +67,6 @@ mobile/android/build/
 # ==========================================
 uploads/
 scratch/
-
+docs/
 # Optional local model store (large)
 ml-models/
