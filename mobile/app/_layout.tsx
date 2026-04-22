@@ -22,6 +22,12 @@ import { useColorScheme, LogBox, View } from "react-native";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
+// Ignore specific warning from third-party libraries
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated and will be removed in a future release.",
+]);
 import "react-native-reanimated";
 import "../global.css";
 import { useAppStore } from "../src/store/useAppStore";
@@ -165,24 +171,26 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            value={colorScheme === "dark" ? AtelierDarkTheme : AtelierLightTheme}
-          >
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="+not-found"
-                options={{ title: "Not Found" }}
-              />
-              <Stack.Screen
-                name="receipt"
-                options={{ headerShown: false }}
-              />
-            </Stack>
-          </ThemeProvider>
-        </QueryClientProvider>
+        <BottomSheetModalProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider
+              value={colorScheme === "dark" ? AtelierDarkTheme : AtelierLightTheme}
+            >
+              <Stack>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="+not-found"
+                  options={{ title: "Not Found" }}
+                />
+                <Stack.Screen
+                  name="receipt"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+            </ThemeProvider>
+          </QueryClientProvider>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

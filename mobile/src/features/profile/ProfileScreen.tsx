@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { View, ScrollView, TouchableOpacity, Switch, Platform, Alert } from "react-native";
 import { MotiView } from "moti";
-import { 
-  Bell, 
-  Moon, 
-  DollarSign, 
-  ChevronRight, 
-  Lock, 
-  Fingerprint, 
+import {
+  Bell,
+  Moon,
+  DollarSign,
+  ChevronRight,
+  Lock,
+  Fingerprint,
   LogOut,
   User,
   ShieldCheck,
@@ -22,12 +22,16 @@ import {
   AtelierButton
 } from "@/components/ui";
 import { Colors } from "@/constants/tokens";
+import { useBiometricAuth } from "../../hooks/useBiometricAuth";
+import { ChangePasswordSheet, ChangePasswordSheetRef } from "./ChangePasswordSheet";
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, logout } = useAppStore();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
+  const { authenticate } = useBiometricAuth();
+  const changePasswordSheetRef = useRef<ChangePasswordSheetRef>(null);
 
   const handleLogout = () => {
     Alert.alert(
@@ -35,8 +39,8 @@ export default function ProfileScreen() {
       "Bạn có chắc chắn muốn đăng xuất khỏi Atelier Finance?",
       [
         { text: "Hủy", style: "cancel" },
-        { 
-          text: "Đăng xuất", 
+        {
+          text: "Đăng xuất",
           style: "destructive",
           onPress: async () => {
             await logout();
@@ -45,6 +49,16 @@ export default function ProfileScreen() {
         }
       ]
     );
+  };
+
+  const handleChangePassword = async () => {
+    const result = await authenticate("Xác thực để thay đổi mật khẩu");
+    
+    if (result.success) {
+      changePasswordSheetRef.current?.open();
+    } else if (result.error) {
+      Alert.alert("Xác thực thất bại", result.error);
+    }
   };
 
   return (
@@ -145,13 +159,13 @@ export default function ProfileScreen() {
           </View>
           
           <View className="gap-4">
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity activeOpacity={0.7} onPress={handleChangePassword}>
               <AtelierCard padding="md" className="bg-white flex-row items-center justify-between shadow-atelier-low">
                 <View className="flex-row items-center gap-4">
-                  <View className="w-10 h-10 bg-amber-50 rounded-2xl items-center justify-center">
-                    <Lock size={20} color="#f59e0b" />
+                  <View className="w-10 h-10 bg-orange-50 rounded-2xl items-center justify-center">
+                    <Lock size={20} color="#f97316" />
                   </View>
-                  <AtelierTypography variant="h3">Thay đổi mã PIN</AtelierTypography>
+                  <AtelierTypography variant="h3">Thay đổi mật khẩu</AtelierTypography>
                 </View>
                 <ChevronRight size={16} color={Colors.neutral[300]} />
               </AtelierCard>
@@ -187,6 +201,9 @@ export default function ProfileScreen() {
           <AtelierTypography variant="caption" className="text-neutral-300">Phiên bản 1.0.0 (Build 2026)</AtelierTypography>
         </View>
       </ScrollView>
+
+      {/* Change Password Bottom Sheet */}
+      <ChangePasswordSheet ref={changePasswordSheetRef} />
     </View>
   );
 }

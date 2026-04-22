@@ -45,7 +45,9 @@ apiClient.interceptors.request.use(async (config) => {
   const token = state.token;
   
   // Không gửi token cho các endpoint auth (Login/Register) để tránh Token nhiễu
-  const isAuthPath = config.url?.includes("/auth/login") || config.url?.includes("/auth/register");
+  const isAuthPath = config.url?.includes("/auth/login") || 
+                     config.url?.includes("/auth/register") || 
+                     config.url?.includes("/auth/refresh-token");
 
   if (token && !isAuthPath) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -174,6 +176,18 @@ export const poster = async <T, D>(url: string, data: D): Promise<T> => {
     return response.data.data;
   } catch (error) {
     console.error(`[POSTER] Error: ${url}`, error);
+    throw error;
+  }
+};
+
+export const putter = async <T, D>(url: string, data: D): Promise<T> => {
+  console.log(`[PUTTER] Calling: ${url}`);
+  try {
+    const response = await apiClient.put<ApiResponse<T>>(url, data);
+    console.log(`[PUTTER] Success: ${url}, Data keys:`, Object.keys(response.data.data || {}));
+    return response.data.data;
+  } catch (error) {
+    console.error(`[PUTTER] Error: ${url}`, error);
     throw error;
   }
 };
