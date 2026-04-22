@@ -13,5 +13,13 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-native": "^5.0.0",
     "prettier": "^3.8.3"
+  },
+  "scripts": {
+    "sync-env": "powershell ./infrastructure/scripts/sync-env.ps1",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "clean:mobile": "powershell ./mobile/clean-android-build.ps1"
   }
 }
