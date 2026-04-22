@@ -3,6 +3,7 @@ package com.example.smartmoneytracking.domain.entities.wallet;
 import com.example.smartmoneytracking.domain.entities.wallet.valueobject.*;
 import com.example.smartmoneytracking.domain.exception.BusinessException;
 import com.example.smartmoneytracking.domain.exception.ErrorCode;
+import com.example.smartmoneytracking.domain.exception.InsufficientBalanceException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -106,7 +107,7 @@ public class Wallet {
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
         if (this.balance.compareTo(amount) < 0) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE, "Insufficient balance in wallet: " + this.name);
+            throw new InsufficientBalanceException("Insufficient balance in wallet: " + this.name);
         }
         this.balance = this.balance.subtract(amount);
     }
