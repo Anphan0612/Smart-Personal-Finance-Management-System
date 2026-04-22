@@ -9,14 +9,18 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
+    "chalk": "^4.1.2",
     "eslint": "^9.39.4",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-native": "^5.0.0",
     "prettier": "^3.8.3"
   },
   "scripts": {
+    "setup": "npm install && npm run sync-env",
     "sync-env": "powershell ./infrastructure/scripts/sync-env.ps1",
-    "docker:up": "docker compose up -d",
+    "dev": "node scripts/dev-setup.js",
+    "dev:docker": "docker compose up -d",
+    "dev:tunnel": "docker compose --profile tunnel up -d",
     "docker:down": "docker compose down",
     "lint": "eslint .",
     "format": "prettier --write .",
