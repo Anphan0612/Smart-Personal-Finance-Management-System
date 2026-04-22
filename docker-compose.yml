@@ -6,17 +6,17 @@ services:
     container_name: smart-finance-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-smart_money_tracking}
       MYSQL_USER: ${MYSQL_USER:-smartuser}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-smartpass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpass}
     ports:
       - "${DB_PORT:-3307}:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./backend/src/main/resources/data-seed.sql:/docker-entrypoint-initdb.d/10-data-seed.sql:ro
+      - ./infrastructure/database/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,6 +25,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     container_name: smart-finance-backend
     restart: unless-stopped
     depends_on:
@@ -34,16 +35,31 @@ services:
         condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      DB_URL: ${DB_URL:-jdbc:mysql://db:3306/smart_money_tracking?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+      DB_URL: ${DB_URL:-jdbc:mysql://db:3306/smart_money_tracking}
       DB_USERNAME: ${DB_USERNAME:-smartuser}
       DB_PASSWORD: ${DB_PASSWORD:-smartpass}
       JWT_SECRET: ${JWT_SECRET:-replace-with-strong-secret-at-least-32-bytes}
       NLP_SERVICE_URL: ${NLP_SERVICE_URL:-http://ai-service:8000}
       NlpServiceUrl: ${NLP_SERVICE_URL:-http://ai-service:8000}
       "nlp.service.url": ${NLP_SERVICE_URL:-http://ai-service:8000}
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
     ports:
       - "8080:8080"
       - "${BACKEND_DEBUG_PORT:-5005}:5005"
+    volumes:
+      - ./backend/src:/app/src:ro
+      - backend_m2_cache:/root/.m2
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/8080' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
 
   ai-service:
     build:
@@ -51,7 +67,7 @@ services:
       dockerfile: Dockerfile
     container_name: smart-finance-ai
     restart: unless-stopped
-    command: ${AI_SERVICE_COMMAND:-python3.10 -m uvicorn main:app --host 0.0.0.0 --port 8000}
+    command: ${AI_SERVICE_COMMAND:-python3.10 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload}
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
@@ -84,6 +100,21 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: smart-finance-tunnel
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    command: tunnel --no-autoupdate --url http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - default
 
   mobile-builder:
     build:
@@ -124,3 +155,4 @@ volumes:
   mobile_android_cache:
   mobile_gradle_cache:
   mobile_npm_cache:
+  backend_m2_cache:
