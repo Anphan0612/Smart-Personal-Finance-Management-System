@@ -25,6 +25,7 @@
         "backgroundColor": "#1275e2"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.smartfinance.app"
     },
     "web": {

@@ -17,10 +17,11 @@ function Write-Step {
 }
 
 function Get-ComposeFiles {
-    if ($NoOverride) {
-        return @("-f", "docker-compose.yml")
+    $files = @("-f", "docker-compose.yml")
+    if (-not $NoOverride -and (Test-Path "docker-compose.override.yml")) {
+        $files += @("-f", "docker-compose.override.yml")
     }
-    return @("-f", "docker-compose.yml", "-f", "docker-compose.override.yml")
+    return $files
 }
 
 function Get-EnvFilePath {
@@ -85,8 +86,12 @@ if ($ResetDB) {
     $projectName = "smart-finance"
     $dbVolume = "${projectName}_db_data"
 
-    & docker volume rm $dbVolume 2>$null | Out-Null
-    Write-Step "Removed volume $dbVolume (if existed)"
+    if (& docker volume ls -q -f name=$dbVolume) {
+        & docker volume rm $dbVolume 2>$null | Out-Null
+        Write-Step "Removed volume $dbVolume"
+    } else {
+        Write-Step "Volume $dbVolume already removed"
+    }
 
     Write-Step "Bringing DB back up to trigger /docker-entrypoint-initdb.d seed scripts"
     Invoke-Compose -ComposeArgs @("up", "-d", "db")
