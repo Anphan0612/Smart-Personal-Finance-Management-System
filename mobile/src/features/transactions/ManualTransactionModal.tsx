@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -10,7 +10,8 @@ import {
   ScrollView,
   Alert,
   StatusBar,
-  Modal
+  Modal,
+  TextInput as RNTextInput
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import {
@@ -24,10 +25,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { AtelierTypography, SkeletonBox } from '@/components/ui';
 import { QuickCategorySelect, Category } from './components/QuickCategorySelect';
+import { CategoryCreationModal } from './components/CategoryCreationModal';
 import { CustomKeypad } from './components/CustomKeypad';
 import { WalletPicker } from './components/WalletPicker';
 import { formatLiveCurrency, parseCurrency } from '@/utils/format';
 import { useWallets } from '@/hooks/useWallets';
+import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import { useAddTransaction } from '@/hooks/useTransactions';
 import { useAppStore } from '@/store/useAppStore';
 import { Colors } from '@/constants/tokens';
@@ -48,10 +51,13 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [sourceWalletId, setSourceWalletId] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const amountInputRef = useRef<RNTextInput>(null);
 
   const { data: wallets = [] } = useWallets();
-  const { categories } = useAppStore();
+  const { data: categories = [], isLoading: isCategoriesLoading } = useCategories();
   const addTransaction = useAddTransaction();
+  const createCategory = useCreateCategory();
 
   // Filter categories based on active tab
   const filteredCategories = useMemo(() => {
@@ -83,28 +89,29 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
     setSelectedCategory(null);
   };
 
-  const handleKeypadPress = (value: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAmount((prev) => {
-      const newValue = prev + value;
-      return formatLiveCurrency(newValue);
-    });
-  };
-
-  const handleKeypadDelete = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setAmount((prev) => {
-      if (prev.length === 0) return prev;
-      const withoutFormatting = prev.replace(/\./g, '');
-      const newValue = withoutFormatting.slice(0, -1);
-      return formatLiveCurrency(newValue);
-    });
+  const handleAmountChange = (text: string) => {
+    // Remove formatting to get raw number
+    const cleanValue = text.replace(/[^0-9]/g, '');
+    if (cleanValue === '') {
+      setAmount('');
+      return;
+    }
+    setAmount(formatLiveCurrency(cleanValue));
   };
 
   const handleSave = async () => {
     if (!amount || !sourceWalletId) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Thiếu thông tin', 'Vui lòng nhập số tiền và chọn ví');
+      return;
+    }
+
+    const amountValue = parseCurrency(amount);
+
+    // Validate amount is positive
+    if (amountValue <= 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert('Số tiền không hợp lệ', 'Số tiền phải lớn hơn 0');
       return;
     }
 
@@ -116,7 +123,7 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
 
     try {
       const payload: any = {
-        amount: parseCurrency(amount),
+        amount: amountValue,
         type: activeTab,
         walletId: sourceWalletId,
         categoryId: selectedCategory?.id || null,
@@ -143,6 +150,11 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
   useEffect(() => {
     if (isVisible) {
       setIsModalMounted(true);
+      // UX Opt: Focus after sheet animation
+      const timer = setTimeout(() => {
+        amountInputRef.current?.focus();
+      }, 600); // Wait for spring animation
+      return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => setIsModalMounted(false), 300);
       return () => clearTimeout(timer);
@@ -243,11 +255,16 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
                       <AtelierTypography variant="h2" className="text-4xl mr-2" style={{ color: themeColor }}>
                         {activeTab === 'EXPENSE' ? '-' : '+'}
                       </AtelierTypography>
-                      <TextInput
+                      <RNTextInput
+                        ref={amountInputRef}
                         className="text-6xl font-headline font-extrabold text-neutral-900 text-center p-0 m-0"
                         style={{ minWidth: 120 }}
-                        value={amount || '0'}
-                        editable={false}
+                        value={amount}
+                        placeholder="0"
+                        placeholderTextColor={Colors.neutral[300]}
+                        keyboardType="numeric"
+                        onChangeText={handleAmountChange}
+                        selectionColor={themeColor}
                       />
                       <AtelierTypography variant="h3" className="text-3xl text-neutral-400 ml-2">
                         đ
@@ -308,16 +325,13 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
                     selectedId={selectedCategory?.id || null}
                     categories={filteredCategories}
                     onSelect={setSelectedCategory}
+                    isLoading={isCategoriesLoading}
+                    onAddPress={() => setIsCategoryModalVisible(true)}
                   />
                 </View>
 
-                {/* Integrated Design Keypad */}
-                <View className="bg-surface-container-low/50 rounded-t-[40px] pt-4">
-                  <CustomKeypad
-                    onPress={handleKeypadPress}
-                    onDelete={handleKeypadDelete}
-                  />
-                </View>
+                 {/* Spacer for system keyboard */}
+                 <View style={{ height: 100 }} />
               </ScrollView>
 
               {/* Fixed Footer Actions */}
@@ -336,9 +350,9 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
 
                   <TouchableOpacity
                     onPress={handleSave}
-                    disabled={addTransaction.isPending}
+                    disabled={addTransaction.isPending || isInsufficientBalance}
                     activeOpacity={0.9}
-                    className="flex-[2]"
+                    className={`flex-[2] ${isInsufficientBalance ? 'opacity-50' : 'opacity-100'}`}
                   >
                     <LinearGradient
                       colors={[themeColor, themeColor + 'EE']}
@@ -359,6 +373,16 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
         </View>
       )}
     </AnimatePresence>
+
+    {/* Category Creation Modal */}
+    <CategoryCreationModal
+      isVisible={isCategoryModalVisible}
+      onClose={() => setIsCategoryModalVisible(false)}
+      transactionType={activeTab}
+      onSubmit={async (name, iconName, type) => {
+        await createCategory.mutateAsync({ name, iconName, type });
+      }}
+    />
     </Modal>
   );
 };

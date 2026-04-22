@@ -16,9 +16,11 @@ interface QuickCategorySelectProps {
   selectedId: string | null;
   categories: Category[];
   onSelect: (category: Category) => void;
+  isLoading?: boolean;
+  onAddPress?: () => void;
 }
 
-export const QuickCategorySelect = ({ selectedId, categories, onSelect }: QuickCategorySelectProps) => {
+export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoading, onAddPress }: QuickCategorySelectProps) => {
   const handleSelect = (category: Category) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSelect(category);
@@ -26,6 +28,24 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect }: QuickC
 
   // Show top categories for quick access
   const quickCategories = categories.slice(0, 10);
+
+  if (isLoading) {
+    return (
+      <View className="px-8 mt-6">
+        <View className="flex-row justify-between items-center mb-6">
+          <View className="w-24 h-4 bg-neutral-100 rounded-md" />
+        </View>
+        <View className="flex-row flex-wrap gap-y-6">
+          {[1, 2, 3, 4].map((i) => (
+            <View key={i} style={{ width: '25%', alignItems: 'center' }}>
+              <View className="w-14 h-14 rounded-[20px] bg-neutral-50 shadow-sm" />
+              <View className="w-10 h-2 bg-neutral-50 mt-2 rounded-sm" />
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   if (categories.length === 0) {
     return (
@@ -113,6 +133,27 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect }: QuickC
             </TouchableOpacity>
           );
         })}
+
+        {/* Add New Category Button */}
+        <TouchableOpacity
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onAddPress?.();
+          }}
+          activeOpacity={0.8}
+          style={{ width: '25%', alignItems: 'center' }}
+        >
+          <View className="w-14 h-14 rounded-[20px] bg-primary/5 border border-dashed border-primary/30 items-center justify-center shadow-sm">
+             <AtelierTypography variant="h2" className="text-primary text-2xl">+</AtelierTypography>
+          </View>
+          <AtelierTypography
+            variant="label"
+            className="text-[9px] mt-2 text-center tracking-normal font-manrope-bold text-primary"
+            numberOfLines={1}
+          >
+            THÊM MỚI
+          </AtelierTypography>
+        </TouchableOpacity>
       </View>
     </View>
   );
