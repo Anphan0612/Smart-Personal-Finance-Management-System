@@ -52,7 +52,8 @@ export function AtelierInput({
         )}
         <TextInput
           className="flex-1 text-base text-neutral-900 dark:text-neutral-50 font-inter-regular"
-          placeholderTextColor="#abacb2"
+          placeholderTextColor="#74777f"
+          style={{ color: '#181c22' }}
           onFocus={(e) => {
             setIsFocused(true);
             onFocus?.(e);

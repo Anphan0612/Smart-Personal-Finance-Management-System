@@ -51,16 +51,16 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
 
   return (
     <Container {...containerProps}>
-      <View className="flex-row items-center justify-between mb-5">
-        <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 rounded-2xl bg-tertiary-50 flex items-center justify-center shadow-sm">
-            <Icon size={22} color="#c55b00" />
+      <View className="flex-row items-center justify-between mb-5 gap-3">
+        <View className="flex-1 flex-row items-center gap-3">
+          <View className="w-12 h-12 rounded-2xl bg-tertiary-container/20 flex items-center justify-center">
+            <Icon size={22} color="#860842" />
           </View>
-          <View>
-            <AtelierTypography variant="h3" className="text-[15px] font-bold">
+          <View className="flex-1">
+            <AtelierTypography variant="h3" className="text-[15px] font-bold" numberOfLines={1}>
               {data.note || "Giao dịch mới"}
             </AtelierTypography>
-            <AtelierTypography variant="label" className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+            <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant uppercase tracking-widest opacity-60">
               {data.type === "EXPENSE" ? "Khoản chi" : "Khoản thu"}
             </AtelierTypography>
           </View>
@@ -69,34 +69,35 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
           <AtelierTypography variant="h3" className="text-[17px] font-black text-primary">
             {formattedAmount}
           </AtelierTypography>
-          <AtelierTypography variant="label" className="text-[10px] text-neutral-400 font-semibold">
+          <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant opacity-50 font-semibold">
             Đang chờ
           </AtelierTypography>
         </View>
       </View>
 
-      <View className="flex-row justify-between py-4 border-y border-neutral-100 dark:border-neutral-800">
+      <View className="flex-row justify-between py-4 bg-surface-container-low/30 rounded-xl px-2">
         <TouchableOpacity 
           className="flex-1" 
           onPress={onEdit} 
           activeOpacity={0.7}
         >
-          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-neutral-400 tracking-widest">
+          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-surface-on-variant opacity-50 tracking-widest">
             Danh mục
           </AtelierTypography>
           <View className="flex-row items-center gap-1.5 mt-0.5">
             <AtelierTypography 
               variant="body" 
               className={`text-[13px] font-bold ${!data.categoryId ? "text-error" : "text-primary"}`}
+              numberOfLines={1}
             >
               {data.category || "Cần chọn"}
             </AtelierTypography>
-            <Edit3 size={10} color={!data.categoryId ? "#ef4444" : "#1275e2"} />
+            <Edit3 size={10} color={!data.categoryId ? "#ba1a1a" : "#003d9b"} />
           </View>
         </TouchableOpacity>
 
         <View className="flex-1 items-end">
-          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-neutral-400 tracking-widest">
+          <AtelierTypography variant="label" className="text-[9px] uppercase font-bold text-surface-on-variant opacity-50 tracking-widest">
             Ngày giao dịch
           </AtelierTypography>
           <AtelierTypography variant="body" className="text-[13px] font-bold mt-0.5">
@@ -109,7 +110,7 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
         <TouchableOpacity 
           onPress={onConfirm}
           activeOpacity={0.8}
-          className="flex-1 py-4 bg-primary rounded-2xl items-center justify-center shadow-lg"
+          className="flex-1 py-4 bg-primary rounded-2xl items-center justify-center"
         >
           <AtelierTypography variant="label" className="text-white text-[13px] font-black normal-case">
             Xác nhận
@@ -118,9 +119,9 @@ export const AtelierTransactionCard = ({ data, onConfirm, onEdit, variant = "def
         <TouchableOpacity 
           onPress={onEdit}
           activeOpacity={0.7}
-          className="flex-1 py-4 bg-white border border-neutral-200 rounded-2xl items-center justify-center"
+          className="flex-1 py-4 bg-surface-container-high rounded-2xl items-center justify-center"
         >
-          <AtelierTypography variant="label" className="text-neutral-900 text-[13px] font-bold normal-case">
+          <AtelierTypography variant="label" className="text-surface-on text-[13px] font-bold normal-case">
             Sửa chi tiết
           </AtelierTypography>
         </TouchableOpacity>

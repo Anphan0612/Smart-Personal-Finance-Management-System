@@ -8,17 +8,22 @@ import {
   PiggyBank,
   Receipt,
   User,
-  Sparkles
+  Plus
 } from "lucide-react-native";
 import { AtelierAI } from "../../src/components/ui/AtelierAI";
+import { ActionHub } from "../../src/components/ui/ActionHub";
 import { TopBar } from "../../src/components/atelier/TopBar";
 import { useAppStore } from "../../src/store/useAppStore";
 import { MotiView } from "moti";
 import { Colors } from "../../src/constants/tokens";
+import { AtelierTokens } from "../../src/constants/AtelierTokens";
+
+import { ManualTransactionModal } from "../../src/features/transactions/ManualTransactionModal";
 
 export default function TabLayout() {
   const [isAIOpen, setIsAIOpen] = useState(false);
-  const { user } = useAppStore();
+  const [isActionHubOpen, setIsActionHubOpen] = useState(false);
+  const { user, isTransactionModalOpen, setTransactionModalOpen } = useAppStore();
   const insets = useSafeAreaInsets();
 
   // Dynamic values
@@ -111,21 +116,46 @@ export default function TabLayout() {
         </Tabs>
       </View>
 
-      {/* 3. Global Floating AI Button */}
-      {!isAIOpen && (
-        <AIAssistantFAB offset={tabBarHeight + 20} onPress={() => setIsAIOpen(true)} />
+      {/* 3. Action Hub FAB */}
+      {!isActionHubOpen && (
+        <ActionHubFAB
+          offset={tabBarHeight + 20}
+          onPress={() => setIsActionHubOpen(true)}
+        />
       )}
 
-      {/* 4. Global AI Assistant Drawer */}
-      <AtelierAI 
-        isOpen={isAIOpen} 
-        onClose={() => setIsAIOpen(false)} 
+      {/* 4. Action Hub Bottom Sheet */}
+      <ActionHub
+        isOpen={isActionHubOpen}
+        onClose={() => setIsActionHubOpen(false)}
+        onAddTransaction={() => {
+          setIsActionHubOpen(false);
+          setTransactionModalOpen(true);
+        }}
+        onAskAI={() => setIsAIOpen(true)}
+        onManage={() => {
+          // Navigate to settings
+          console.log("Manage settings");
+        }}
+        tabBarHeight={tabBarHeight}
+      />
+
+      {/* 5. Global AI Assistant Drawer */}
+      <AtelierAI
+        isOpen={isAIOpen}
+        onClose={() => setIsAIOpen(false)}
+      />
+
+      {/* 6. Global Manual Transaction Modal */}
+      <ManualTransactionModal 
+        isVisible={isTransactionModalOpen}
+        onClose={() => setTransactionModalOpen(false)}
       />
     </View>
   );
 }
 
-const AIAssistantFAB = ({ onPress, offset }: { onPress: () => void, offset: number }) => {
+const ActionHubFAB = ({ onPress, offset }: { onPress: () => void, offset: number }) => {
   return (
     <MotiView
       from={{ scale: 0, opacity: 0 }}
@@ -135,15 +165,15 @@ const AIAssistantFAB = ({ onPress, offset }: { onPress: () => void, offset: numb
     >
       <MotiView
         from={{ scale: 1 }}
-        animate={{ scale: [1, 1.08, 1] }}
-        transition={{ loop: true, duration: 3000, type: "timing" }}
+        animate={{ scale: [1, 1.05, 1] }}
+        transition={{ loop: true, duration: 2500, type: "timing" }}
       >
         <TouchableOpacity
           onPress={onPress}
           activeOpacity={0.9}
           style={[styles.fabButton, { backgroundColor: Colors.primary.DEFAULT, shadowColor: Colors.primary.DEFAULT }]}
         >
-          <Sparkles color="white" size={26} fill="white" />
+          <Plus color="white" size={28} strokeWidth={2.5} />
         </TouchableOpacity>
       </MotiView>
     </MotiView>

@@ -194,7 +194,7 @@ export default function ReceiptReviewForm() {
 
   const getConfidenceColor = (conf: number) => {
     if (conf >= 0.85) return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' };
-    if (conf >= 0.65) return { bg: 'bg-amber-500/10', text: 'text-amber-500', border: 'border-amber-500/20' };
+    if (conf >= 0.65) return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' };
     return { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' };
   };
 
@@ -277,8 +277,8 @@ export default function ReceiptReviewForm() {
                   <AtelierTypography variant="h2" className="ml-2 text-primary opacity-50">đ</AtelierTypography>
                 </View>
                 {!fieldEdited.amount && (
-                  <MotiView from={{ scale: 0 }} animate={{ scale: 1 }} className="mt-2 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
-                    <AtelierTypography variant="label" className="text-amber-600 font-bold">✨ AI TRÍCH XUẤT</AtelierTypography>
+                  <MotiView from={{ scale: 0 }} animate={{ scale: 1 }} className="mt-2 bg-warning/10 px-3 py-1 rounded-full border border-warning/20">
+                    <AtelierTypography variant="label" className="text-warning font-bold">✨ AI TRÍCH XUẤT</AtelierTypography>
                   </MotiView>
                 )}
               </View>
@@ -297,7 +297,7 @@ export default function ReceiptReviewForm() {
                     className="flex-1 text-lg font-bold text-neutral-800"
                   />
                   {!fieldEdited.storeName && (
-                    <AtelierTypography variant="label" className="text-amber-500 font-bold ml-2">AI✨</AtelierTypography>
+                    <AtelierTypography variant="label" className="text-warning font-bold ml-2">AI✨</AtelierTypography>
                   )}
                 </View>
 
@@ -368,7 +368,7 @@ export default function ReceiptReviewForm() {
             </View>
 
             {/* Action Buttons */}
-            <View className="gap-4" style={{ transform: [{ translateX: shakeAnimation }] }}>
+            <Animated.View className="gap-4" style={{ transform: [{ translateX: shakeAnimation }] }}>
               <TouchableOpacity
                 onPress={handleConfirm}
                 disabled={submitting || wallets.length === 0 || isMetadataLoading}
@@ -392,11 +392,11 @@ export default function ReceiptReviewForm() {
               >
                 <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">Hủy bỏ</AtelierTypography>
               </TouchableOpacity>
-            </View>
+            </Animated.View>
 
-            <View className="mt-10 flex-row items-center justify-center px-6 py-4 bg-amber-500/5 rounded-3xl border border-amber-500/10 mb-20">
+            <View className="mt-10 flex-row items-center justify-center px-6 py-4 bg-warning/5 rounded-3xl border border-warning/10 mb-20">
               <AlertCircle size={16} color={Colors.warning} className="mr-3" />
-              <AtelierTypography variant="caption" className="text-amber-600 flex-1 leading-4">
+              <AtelierTypography variant="caption" className="text-warning flex-1 leading-4">
                 AI có thể nhận diện chưa chính xác, nhất là với chữ viết tay. Vui lòng kiểm tra lại trước khi lưu.
               </AtelierTypography>
             </View>

@@ -1,9 +1,7 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+﻿import React, { useState, useCallback, useRef, useEffect } from "react";
 import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text, Modal } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Mic, Search, TrendingUp, AlertTriangle } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
 import { AtelierTypography } from "./AtelierTypography";
 import { AtelierCard } from "./AtelierCard";
 import { useAppStore, ChatMessage } from "../../store/useAppStore";
@@ -12,6 +10,7 @@ import { AtelierTransactionCard } from "./AtelierTransactionCard";
 import { formatCurrency } from "../../utils/format";
 import { AtelierActionSheet } from "./AtelierActionSheet";
 import { router } from "expo-router";
+import { ManualTransactionModal } from "../../features/transactions/ManualTransactionModal";
 import { CompactReviewSheet } from "./CompactReviewSheet";
 
 const { height: screenHeight } = Dimensions.get("window");
@@ -34,7 +33,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
 
   // Fetch proactive insights when opened
   useEffect(() => {
-    // Luôn fetch insight khi mở modal nếu chưa có tin nhắn nào hoặc tin nhắn cuối không phải là insight gần đây
+    // Lu├┤n fetch insight khi mß╗ƒ modal nß║┐u ch╞░a c├│ tin nhß║»n n├áo hoß║╖c tin nhß║»n cuß╗æi kh├┤ng phß║úi l├á insight gß║ºn ─æ├óy
     const shouldFetch = isOpen && activeWalletId && (
       messages.length === 0 || 
       !messages.some(m => m.id.startsWith("proactive-insight"))
@@ -54,7 +53,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
       addMessage({
         id: "proactive-insight-" + Date.now(),
         role: "assistant",
-        content: aiResponse.insight || "Chào bạn! Tôi đã sẵn sàng giúp bạn quản lý tài chính. Bạn có muốn xem phân tích chi tiêu tuần này không?",
+        content: aiResponse.insight || "Ch├áo bß║ín! T├┤i ─æ├ú sß║╡n s├áng gi├║p bß║ín quß║ún l├╜ t├ái ch├¡nh. Bß║ín c├│ muß╗æn xem ph├ón t├¡ch chi ti├¬u tuß║ºn n├áy kh├┤ng?",
         timestamp: Date.now(),
       });
     } catch (error) {
@@ -91,7 +90,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: queryResponse.answer || "Đây là kết quả phân tích của bạn.",
+          content: queryResponse.answer || "─É├óy l├á kß║┐t quß║ú ph├ón t├¡ch cß╗ºa bß║ín.",
           timestamp: Date.now(),
           hasQueryResult: true,
           queryData: {
@@ -113,8 +112,8 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content: hasData
-            ? `Đã xong! Tôi đã phân tích yêu cầu của bạn: "${userText}". Vui lòng xác nhận thông tin bên dưới.`
-            : response?.message || "Tôi đã phân tích xong. Tôi có thể giúp gì thêm cho bạn?",
+            ? `─É├ú xong! T├┤i ─æ├ú ph├ón t├¡ch y├¬u cß║ºu cß╗ºa bß║ín: "${userText}". Vui l├▓ng x├íc nhß║¡n th├┤ng tin b├¬n d╞░ß╗¢i.`
+            : response?.message || "T├┤i ─æ├ú ph├ón t├¡ch xong. T├┤i c├│ thß╗â gi├║p g├¼ th├¬m cho bß║ín?",
           timestamp: Date.now(),
           hasCard: hasData,
           transactionData: hasData
@@ -134,13 +133,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     } catch (error: any) {
       const apiError = error.response?.data;
       const errorMessage =
-        apiError?.message || "Xin lỗi, tôi đang gặp khó khăn khi xử lý yêu cầu này.";
+        apiError?.message || "Xin lß╗ùi, t├┤i ─æang gß║╖p kh├│ kh─ân khi xß╗¡ l├╜ y├¬u cß║ºu n├áy.";
       const suggestion = apiError?.suggestion;
 
       addMessage({
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: suggestion ? `${errorMessage}\n\n💡 Gợi ý: ${suggestion}` : errorMessage,
+        content: suggestion ? `${errorMessage}\n\n≡ƒÆí Gß╗úi ├╜: ${suggestion}` : errorMessage,
         timestamp: Date.now(),
       });
     } finally {
@@ -163,28 +162,28 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   const onSaveReview = async (formData: any) => {
     try {
       if (!activeWalletId) {
-        Alert.alert("Lỗi", "Vui lòng chọn ví trước khi lưu.");
+        Alert.alert("Lß╗ùi", "Vui l├▓ng chß╗ìn v├¡ tr╞░ß╗¢c khi l╞░u.");
         return;
       }
 
       await poster("/transactions", {
         ...formData,
         walletId: activeWalletId,
-        description: formData.note || "Trích xuất bởi AI",
+        description: formData.note || "Tr├¡ch xuß║Ñt bß╗ƒi AI",
       });
 
-      // Thêm tin nhắn xác nhận vào chat
+      // Th├¬m tin nhß║»n x├íc nhß║¡n v├áo chat
       addMessage({
         id: "confirm-" + Date.now(),
         role: "assistant",
-        content: `✅ Đã lưu giao dịch: ${formData.note || "Giao dịch mới"} (${formatCurrency(formData.amount)}) vào ví của bạn.`,
+        content: `Γ£à ─É├ú l╞░u giao dß╗ïch: ${formData.note || "Giao dß╗ïch mß╗¢i"} (${formatCurrency(formData.amount)}) v├áo v├¡ cß╗ºa bß║ín.`,
         timestamp: Date.now(),
       });
       
       setIsReviewModalVisible(false);
     } catch (error: any) {
       const apiError = error.response?.data;
-      Alert.alert("Lỗi Giao dịch", apiError?.message || "Không thể lưu giao dịch.");
+      Alert.alert("Lß╗ùi Giao dß╗ïch", apiError?.message || "Kh├┤ng thß╗â l╞░u giao dß╗ïch.");
     }
   };
 
@@ -220,21 +219,21 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         {/* Summary Stats */}
         <View style={styles.queryStatsRow}>
           <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Tổng chi</Text>
+            <Text style={styles.queryStatLabel}>Tß╗òng chi</Text>
             <Text style={[styles.queryStatValue, { color: "#D32F2F" }]}>
               {formatCurrency(totalExpense)}
             </Text>
           </View>
           <View style={styles.queryStatDivider} />
           <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Tổng thu</Text>
+            <Text style={styles.queryStatLabel}>Tß╗òng thu</Text>
             <Text style={[styles.queryStatValue, { color: "#2E7D32" }]}>
               {formatCurrency(totalIncome)}
             </Text>
           </View>
           <View style={styles.queryStatDivider} />
           <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Giao dịch</Text>
+            <Text style={styles.queryStatLabel}>Giao dß╗ïch</Text>
             <Text style={[styles.queryStatValue, { color: "#005ab4" }]}>{count}</Text>
           </View>
         </View>
@@ -242,7 +241,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         {/* Top Categories */}
         {topCats.length > 0 && (
           <View style={styles.topCategoriesSection}>
-            <Text style={styles.topCatTitle}>Danh mục chi tiêu cao nhất</Text>
+            <Text style={styles.topCatTitle}>Danh mß╗Ñc chi ti├¬u cao nhß║Ñt</Text>
             {topCats.slice(0, 3).map((cat: any, i: number) => (
               <View key={i} style={styles.topCatRow}>
                 <View style={styles.topCatDot} />
@@ -257,13 +256,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         {matchedTransactions && matchedTransactions.length > 0 && (
           <View style={styles.matchedSection}>
             <Text style={styles.matchedTitle}>
-              Giao dịch gần đây ({matchedTransactions.length})
+              Giao dß╗ïch gß║ºn ─æ├óy ({matchedTransactions.length})
             </Text>
             {matchedTransactions.slice(0, 3).map((txn: any, i: number) => (
               <View key={txn.id || i} style={styles.miniTxnRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.miniTxnDesc} numberOfLines={1}>
-                    {txn.categoryName || txn.description || "Giao dịch"}
+                    {txn.categoryName || txn.description || "Giao dß╗ïch"}
                   </Text>
                   <Text style={styles.miniTxnDate}>
                     {txn.transactionDate?.split("T")[0] || ""}
@@ -327,20 +326,16 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
             </View>
 
             {/* Header */}
-            <View className="px-8 pb-4 pt-2 flex-row justify-between items-center">
+            <View className="px-8 pb-4 flex-row justify-between items-center border-b border-surface-container/50">
               <View className="flex-row items-center gap-4">
-                <View className="w-12 h-12 rounded-3xl bg-primary items-center justify-center shadow-2xl shadow-primary/40">
+                <View className="w-12 h-12 rounded-2xl bg-primary items-center justify-center shadow-lg shadow-primary/20">
                   <Bolt size={24} color="white" fill="white" />
                 </View>
                 <View>
-                  <AtelierTypography variant="h3" className="text-xl tracking-tight">Atelier AI</AtelierTypography>
-                  <AtelierTypography variant="label" className="text-[10px] text-primary lowercase mt-[-2px]">Pro Advisor</AtelierTypography>
+                  <AtelierTypography variant="h3" className="text-xl">Atelier AI</AtelierTypography>
                 </View>
               </View>
-              <TouchableOpacity 
-                onPress={handleClose} 
-                className="w-10 h-10 rounded-full bg-surface-container-high items-center justify-center"
-              >
+              <TouchableOpacity onPress={handleClose} className="w-10 h-10 rounded-full bg-surface-container/50 items-center justify-center">
                 <X size={20} color="#717785" />
               </TouchableOpacity>
             </View>
@@ -361,7 +356,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                 {messages.length === 0 && isProcessing && (
                   <View className="items-center py-12">
                     <ActivityIndicator size="large" color="#005ab4" />
-                    <AtelierTypography variant="label" className="mt-4">Đang phân tích dữ liệu chi tiêu...</AtelierTypography>
+                    <AtelierTypography variant="label" className="mt-4">─Éang ph├ón t├¡ch dß╗» liß╗çu chi ti├¬u...</AtelierTypography>
                   </View>
                 )}
                 {messages.length === 0 && !isProcessing && (
@@ -386,13 +381,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                         </View>
                       )}
                       <View className={`flex-shrink ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                        <View className={`px-5 py-4 rounded-[32px] ${msg.role === "user"
-                          ? "bg-primary rounded-br-[4px]"
-                          : "bg-surface-container-low rounded-tl-[4px]"
+                        <View className={`px-5 py-4 rounded-[24px] ${msg.role === "user"
+                          ? "bg-primary rounded-br-none"
+                          : "bg-surface-container-lowest border border-surface-container rounded-tl-none"
                           }`}>
                           <AtelierTypography
                             variant="body"
-                            className={`${msg.role === "user" ? "text-white" : "text-surface-on"} leading-6`}
+                            className={msg.role === "user" ? "text-white" : "text-surface-on"}
                           >
                             {msg.content}
                           </AtelierTypography>
@@ -410,7 +405,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
 
                                 const walletId = useAppStore.getState().activeWalletId;
                                 if (!walletId) {
-                                  Alert.alert("Yêu cầu chọn Ví", "Vui lòng chọn một ví từ màn hình chính trước khi xác nhận.");
+                                  Alert.alert("Y├¬u cß║ºu chß╗ìn V├¡", "Vui l├▓ng chß╗ìn mß╗Öt v├¡ tß╗½ m├án h├¼nh ch├¡nh tr╞░ß╗¢c khi x├íc nhß║¡n.");
                                   return;
                                 }
 
@@ -418,16 +413,16 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                                   await poster("/transactions", {
                                     walletId: walletId,
                                     amount: data.amount,
-                                    description: data.note || "Trích xuất bởi AI",
+                                    description: data.note || "Tr├¡ch xuß║Ñt bß╗ƒi AI",
                                     type: data.type,
                                     transactionDate: new Date().toISOString().split('.')[0],
                                     categoryId: data.categoryId || null
                                   });
-                                  Alert.alert("Thành công", "Giao dịch đã được ghi lại!");
+                                  Alert.alert("Th├ánh c├┤ng", "Giao dß╗ïch ─æ├ú ─æ╞░ß╗úc ghi lß║íi!");
                                 } catch (error: any) {
                                   const apiError = error.response?.data;
-                                  const errorMessage = apiError?.message || "Không thể lưu giao dịch. Vui lòng thử lại.";
-                                  Alert.alert("Lỗi Giao dịch", errorMessage);
+                                  const errorMessage = apiError?.message || "Kh├┤ng thß╗â l╞░u giao dß╗ïch. Vui l├▓ng thß╗¡ lß║íi.";
+                                  Alert.alert("Lß╗ùi Giao dß╗ïch", errorMessage);
                                 }
                               }}
                               onEdit={() => handleEdit(msg.transactionData)}
@@ -445,55 +440,40 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
 
               <View className="px-6 pb-12 pt-4 bg-white/80 border-t border-surface-container">
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-                  {["Phân tích xu hướng", "Tháng này chi bao nhiêu?", "Giao dịch lớn nhất?"].map((chip, i) => (
+                  {["Ph├ón t├¡ch xu h╞░ß╗¢ng", "Th├íng n├áy chi bao nhi├¬u?", "Giao dß╗ïch lß╗¢n nhß║Ñt?"].map((chip, i) => (
                     <TouchableOpacity
                       key={i}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setInputText(chip);
-                      }}
-                      className="px-5 py-2.5 bg-surface-container-high rounded-full mr-2"
+                      onPress={() => setInputText(chip)}
+                      className="px-5 py-2.5 bg-white border border-surface-container rounded-full mr-2 shadow-sm"
                     >
-                      <AtelierTypography variant="label" className="text-[11px] normal-case text-surface-on">{chip}</AtelierTypography>
+                      <AtelierTypography variant="label" className="text-[11px] normal-case">{chip}</AtelierTypography>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
                 <View className="flex-row items-center gap-3">
                   <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      handleCameraPress();
-                    }}
-                    className="w-12 h-12 bg-surface-container-high rounded-2xl items-center justify-center"
+                    onPress={handleCameraPress}
+                    className="w-12 h-12 bg-white border border-surface-container rounded-2xl items-center justify-center shadow-sm"
                   >
-                    <Camera size={20} color="#003d9b" />
+                    <Camera size={20} color="#005ab4" />
                   </TouchableOpacity>
                   <View className="flex-1 relative">
                     <TextInput
-                      placeholder="Hỏi về tài chính của bạn..."
+                      placeholder="Hß╗Åi vß╗ü t├ái ch├¡nh cß╗ºa bß║ín..."
                       value={inputText}
                       onChangeText={setInputText}
                       onSubmitEditing={handleSend}
-                      className="bg-surface-container-low/80 py-4 pl-5 pr-14 rounded-2xl text-surface-on font-inter"
+                      className="bg-surface-container/30 py-4 pl-5 pr-12 rounded-2xl text-surface-on font-inter"
                     />
                     <TouchableOpacity
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        handleSend();
-                      }}
+                      onPress={handleSend}
                       disabled={isProcessing}
-                      className="absolute right-1.5 top-1.5 w-9 h-9 rounded-xl overflow-hidden items-center justify-center"
+                      className="absolute right-2 top-2 w-8 h-8 bg-primary rounded-xl items-center justify-center shadow-lg"
                     >
-                      <LinearGradient
-                        colors={['#005ab4', '#003d9b']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        className="absolute inset-0"
-                      />
                       {isProcessing ? (
                         <ActivityIndicator size="small" color="white" />
                       ) : (
-                        <ArrowUp size={18} color="white" strokeWidth={2.5} />
+                        <ArrowUp size={16} color="white" />
                       )}
                     </TouchableOpacity>
                   </View>
@@ -533,97 +513,95 @@ const styles = StyleSheet.create({
   // Query Result Card styles
   queryCard: {
     marginTop: 12,
-    backgroundColor: "rgba(248, 250, 254, 0.8)",
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 0,
+    backgroundColor: "#F8FAFE",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0, 90, 180, 0.1)",
   },
   queryStatsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    padding: 12,
-    borderRadius: 16,
   },
   queryStat: {
     flex: 1,
     alignItems: "center",
   },
   queryStatLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "700",
     color: "#717785",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   queryStatValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#003d9b",
+    fontSize: 15,
+    fontWeight: "800",
   },
   queryStatDivider: {
     width: 1,
-    height: 24,
+    height: 32,
     backgroundColor: "rgba(0, 90, 180, 0.1)",
   },
   topCategoriesSection: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 90, 180, 0.08)",
     paddingTop: 12,
     marginBottom: 12,
   },
   topCatTitle: {
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#414753",
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   topCatRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 14,
+    marginBottom: 6,
   },
   topCatDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: "#005ab4",
-    marginRight: 10,
+    marginRight: 8,
   },
   topCatName: {
     flex: 1,
     fontSize: 13,
     color: "#414753",
-    fontWeight: "600",
+    fontWeight: "500",
   },
   topCatAmount: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#ba1a1a",
+    fontWeight: "700",
+    color: "#D32F2F",
   },
   matchedSection: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 90, 180, 0.08)",
     paddingTop: 12,
   },
   matchedTitle: {
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#414753",
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   miniTxnRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderBottomWidth: 0,
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   miniTxnDesc: {
     fontSize: 13,

@@ -176,7 +176,7 @@ export default function BudgetScreen() {
     <View className="flex-1 bg-surface-lowest">
       <ScrollView 
         className="flex-1"
-        contentContainerStyle={{ paddingTop: insets.top + 88, paddingHorizontal: 24, paddingBottom: 160 }}
+        contentContainerStyle={{ paddingTop: insets.top + 88, paddingHorizontal: 24, paddingBottom: 220 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 
@@ -227,7 +227,7 @@ export default function BudgetScreen() {
               exit={{ opacity: 0, height: 0, scale: 0.8 }}
               className="mb-8 overflow-hidden"
             >
-              <AtelierCard variant="elevated" padding="md" className="bg-red-50 border border-red-100">
+              <AtelierCard variant="elevated" padding="md" className="bg-red-50">
                 <View className="flex-row items-center gap-2 mb-2">
                   <AlertTriangle size={20} color={Colors.error} />
                   <AtelierTypography variant="h3" className="text-red-700">Xung đột ngân sách</AtelierTypography>
@@ -262,7 +262,7 @@ export default function BudgetScreen() {
           className="mb-8"
         >
           <LinearGradient
-            colors={[Colors.primary.DEFAULT, "#0072e5"]}
+            colors={["#1275e2", "#0d5bb8"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             className="p-8 rounded-[40px] shadow-2xl shadow-primary/20"
@@ -276,16 +276,16 @@ export default function BudgetScreen() {
               <>
                 <View className="flex-row justify-between items-start mb-6">
                   <View className="flex-1">
-                    <AtelierTypography variant="label" color="white" className="opacity-80 mb-2">MỤC TIÊU CHI TIÊU THÁNG</AtelierTypography>
+                    <AtelierTypography variant="label" color="white" className="opacity-90 mb-2 font-semibold">MỤC TIÊU CHI TIÊU THÁNG</AtelierTypography>
                     <TouchableOpacity onPress={() => { setTempTarget(planning?.targetSpending?.toString() || ""); setTargetModalVisible(true); }}>
-                      <AtelierTypography variant="h1" color="white" className="text-4xl tracking-tighter">
+                      <AtelierTypography variant="h1" color="white" className="text-4xl tracking-tighter font-bold">
                         {planning?.targetSpending ? formatCurrency(planning.targetSpending) : "Đặt mục tiêu"}
                       </AtelierTypography>
                     </TouchableOpacity>
                   </View>
-                  <View className="bg-white/20 px-3 py-1 rounded-2xl">
-                    <AtelierTypography variant="label" color="white" className="text-[10px] opacity-80 uppercase">CHƯA PHÂN BỔ</AtelierTypography>
-                    <AtelierTypography variant="h3" color="white">
+                  <View className="bg-white/25 px-3 py-1 rounded-2xl">
+                    <AtelierTypography variant="label" color="white" className="text-[10px] opacity-90 uppercase font-semibold">CHƯA PHÂN BỔ</AtelierTypography>
+                    <AtelierTypography variant="h3" color="white" className="font-bold">
                       {formatCurrency(planning?.remainingAmount ?? 0)}
                     </AtelierTypography>
                   </View>
@@ -324,11 +324,11 @@ export default function BudgetScreen() {
                 <View className="flex-row justify-between mt-4">
                   <View className="flex-row items-center gap-2">
                     <Sparkles size={14} color="white" />
-                    <AtelierTypography variant="label" color="white" className="opacity-80">
+                    <AtelierTypography variant="label" color="white" className="opacity-90 font-semibold">
                       Đã chi {formatCurrency(totalSpent)}
                     </AtelierTypography>
                   </View>
-                  <AtelierTypography variant="label" color="white" className="opacity-80">
+                  <AtelierTypography variant="label" color="white" className="opacity-90 font-semibold">
                     {targetSpentPct.toFixed(0)}% Đạt được
                   </AtelierTypography>
                 </View>
@@ -364,7 +364,7 @@ export default function BudgetScreen() {
             {isLoading ? (
               [1, 2, 3].map(i => <SkeletonBox key={i} width="100%" height={90} radius={28} className="mb-2" />)
             ) : !budgets || budgets.filter(b => b.categoryId != null).length === 0 ? (
-              <AtelierCard variant="elevated" className="p-10 bg-white border border-dashed border-neutral-200 items-center justify-center">
+              <AtelierCard variant="elevated" className="p-10 bg-white items-center justify-center">
                 <View className="w-16 h-16 bg-neutral-50 rounded-full items-center justify-center mb-4">
                   <Target size={32} color={Colors.neutral[300]} />
                 </View>
@@ -388,7 +388,7 @@ export default function BudgetScreen() {
                       setCategoryModalVisible(true);
                     }}
                   >
-                    <AtelierCard padding="md" className="bg-white border border-neutral-100 shadow-atelier-low">
+                    <AtelierCard padding="md" className="bg-white shadow-atelier-low">
                       <View className="flex-row justify-between items-center mb-4">
                         <View className="flex-row items-center gap-4">
                           <View 
@@ -465,7 +465,7 @@ export default function BudgetScreen() {
         </View>
 
         {/* Tips Section */}
-        <AtelierCard padding="md" className="bg-primary/5 border border-primary/10">
+        <AtelierCard padding="md" className="bg-primary/5">
           <View className="flex-row items-center gap-3 mb-2">
             <Info size={18} color={Colors.primary.DEFAULT} />
             <AtelierTypography variant="h3" className="text-primary text-sm">Mẹo thông minh</AtelierTypography>

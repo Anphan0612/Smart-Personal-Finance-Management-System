@@ -207,14 +207,14 @@ export const CompactReviewSheet = ({
             transition={{ type: "spring", damping: 20, stiffness: 150 }}
             style={{
               backgroundColor: "white",
-              borderTopLeftRadius: 32,
-              borderTopRightRadius: 32,
+              borderTopLeftRadius: 40,
+              borderTopRightRadius: 40,
               paddingBottom: Platform.OS === "ios" ? 40 : 24,
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: -10 },
-              shadowOpacity: 0.1,
-              shadowRadius: 20,
-              elevation: 20,
+              shadowOffset: { width: 0, height: -20 },
+              shadowOpacity: 0.15,
+              shadowRadius: 30,
+              elevation: 25,
             }}
           >
             {/* Header */}
@@ -272,7 +272,7 @@ export const CompactReviewSheet = ({
                   >
                     <View className="flex-row gap-4 mb-4">
                       {/* Store Name */}
-                      <View className="flex-1 p-4 bg-surface-container/30 rounded-2xl border border-surface-container/50">
+                      <View className="flex-1 p-4 bg-surface-container-low/50 rounded-2xl">
                         <View className="flex-row items-center gap-2 mb-1">
                           <Store size={14} color="#717785" />
                           <AtelierTypography variant="label" className="text-[9px] text-outline">
@@ -287,12 +287,15 @@ export const CompactReviewSheet = ({
                           placeholder="..."
                         />
                       </View>
-
+ 
                       {/* Date */}
                       <TouchableOpacity 
-                        onPress={() => setActivePicker("date")}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setActivePicker("date");
+                        }}
                         disabled={isSkeleton}
-                        className="flex-1 p-4 bg-surface-container/30 rounded-2xl border border-surface-container/50"
+                        className="flex-1 p-4 bg-surface-container-low/50 rounded-2xl"
                       >
                         <View className="flex-row items-center gap-2 mb-1">
                           <CalendarIcon size={14} color="#717785" />
@@ -314,7 +317,7 @@ export const CompactReviewSheet = ({
                       <TouchableOpacity 
                         activeOpacity={0.7}
                         disabled={isSkeleton}
-                        className="flex-1 p-4 bg-surface-container/30 rounded-2xl border border-surface-container/50"
+                        className="flex-1 p-4 bg-surface-container-low/50 rounded-2xl"
                         onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           setActivePicker("category");
@@ -333,12 +336,12 @@ export const CompactReviewSheet = ({
                           <Edit2 size={10} color="#005ab4" />
                         </View>
                       </TouchableOpacity>
-
+ 
                       {/* Wallet Picker */}
                       <TouchableOpacity 
                         activeOpacity={0.7}
                         disabled={isSkeleton}
-                        className="flex-1 p-4 bg-surface-container/30 rounded-2xl border border-surface-container/50"
+                        className="flex-1 p-4 bg-surface-container-low/50 rounded-2xl"
                         onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           setActivePicker("wallet");
@@ -419,10 +422,10 @@ export const CompactReviewSheet = ({
                                   }
                                   setActivePicker("none");
                                 }}
-                                className={`px-4 py-3 rounded-2xl border ${
+                                className={`px-4 py-3 rounded-2xl ${
                                   isSelected 
-                                    ? "bg-primary border-primary" 
-                                    : "bg-surface-container/20 border-surface-container/40"
+                                    ? "bg-primary" 
+                                    : "bg-surface-container-low"
                                 }`}
                                 style={{ width: '48.5%' }}
                               >
@@ -468,10 +471,11 @@ export const CompactReviewSheet = ({
               <AtelierButton
                 label="Xác nhận & Lưu"
                 onPress={handleSave}
+                variant="gradient"
                 fullWidth
                 size="lg"
                 disabled={isSkeleton}
-                className="shadow-xl shadow-primary/30"
+                className="shadow-2xl shadow-primary/40"
               />
               <TouchableOpacity
                 onPress={handleCancel}
