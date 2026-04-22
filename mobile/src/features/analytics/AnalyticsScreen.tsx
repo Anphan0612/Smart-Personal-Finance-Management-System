@@ -123,7 +123,7 @@ export default function AnalyticsScreen() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "timing", duration: 800 }}
         >
-          <AtelierCard padding="md" className="mb-6 bg-white border border-neutral-100">
+          <AtelierCard padding="md" className="mb-6 bg-white">
             <View className="flex-row justify-between items-start mb-8">
               <View>
                 <AtelierTypography variant="h3">Xu hướng chi tiêu</AtelierTypography>
@@ -179,7 +179,7 @@ export default function AnalyticsScreen() {
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", delay: 200 }}
         >
-          <AtelierCard padding="md" className="mb-6 bg-white border border-neutral-100">
+          <AtelierCard padding="md" className="mb-6 bg-white">
             <AtelierTypography variant="h3" className="mb-8">Phân bổ danh mục</AtelierTypography>
             <View className="flex-row items-center justify-between">
               <View className="items-center justify-center relative">
@@ -225,7 +225,7 @@ export default function AnalyticsScreen() {
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: "timing", delay: 400 }}
         >
-          <AtelierCard padding="md" className="mb-10 bg-white border border-neutral-100">
+          <AtelierCard padding="md" className="mb-10 bg-white">
             <View className="flex-row justify-between items-center mb-8">
               <AtelierTypography variant="h3">Dòng tiền</AtelierTypography>
               <View className="flex-row gap-3">

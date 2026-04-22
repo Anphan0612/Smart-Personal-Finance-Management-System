@@ -54,6 +54,8 @@ export const getIconFromName = (iconName: string) => {
   return ICON_MAP[iconName] || MoreHorizontal;
 };
 
+export const CATEGORY_ICONS = Object.keys(ICON_MAP);
+
 export const getColorForCategory = (categoryId: string): string => {
   const colors = ['#FF9500', '#34C759', '#007AFF', '#5856D6', '#FF2D55', '#FFCC00', '#FF3B30', '#8E8E93'];
   let hash = 0;

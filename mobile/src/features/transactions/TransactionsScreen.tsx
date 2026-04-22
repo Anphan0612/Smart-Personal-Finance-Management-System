@@ -22,7 +22,7 @@ import {
 import { Colors } from "@/constants/tokens";
 
 const TransactionSkeleton = () => (
-  <AtelierCard elevation="lowest" padding="sm" className="mb-3 border border-neutral-100">
+  <AtelierCard elevation="lowest" padding="sm" className="mb-3">
     <View className="flex-row items-center justify-between">
       <View className="flex-row items-center gap-4 flex-1">
         <SkeletonBox width={48} height={48} radius={16} />
@@ -136,7 +136,7 @@ export default function TransactionsScreen() {
       <AtelierTypography variant="h1" className="text-neutral-900 mb-4">
         Hoạt động.
       </AtelierTypography>
-      <View className="relative flex-row items-center bg-white rounded-[24px] px-5 py-4 shadow-atelier-low border border-neutral-100">
+      <View className="relative flex-row items-center bg-white rounded-[24px] px-5 py-4 shadow-atelier-low">
         <Search size={20} color={Colors.neutral[400]} />
         <TextInput
           placeholder="Tìm kiếm giao dịch..."
@@ -167,7 +167,7 @@ export default function TransactionsScreen() {
             activeOpacity={0.7}
             onPress={() => handleTransactionPress(transaction)}
           >
-            <AtelierCard elevation="lowest" padding="sm" className="bg-white border border-neutral-100">
+            <AtelierCard elevation="lowest" padding="sm" className="bg-white">
               <View className="flex-row items-center justify-between">
                 <View className="flex-1 flex-row items-center gap-4 mr-3">
                   <View className={`w-12 h-12 rounded-2xl items-center justify-center ${
@@ -242,7 +242,7 @@ export default function TransactionsScreen() {
         ListEmptyComponent={renderEmpty}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5} 
-        contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 160 }}
+        contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 220 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl 

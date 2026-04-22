@@ -2,8 +2,6 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text, Modal } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
 import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Mic, Search, TrendingUp, AlertTriangle } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
 import { AtelierTypography } from "./AtelierTypography";
 import { AtelierCard } from "./AtelierCard";
 import { useAppStore, ChatMessage } from "../../store/useAppStore";
@@ -12,6 +10,7 @@ import { AtelierTransactionCard } from "./AtelierTransactionCard";
 import { formatCurrency } from "../../utils/format";
 import { AtelierActionSheet } from "./AtelierActionSheet";
 import { router } from "expo-router";
+import { ManualTransactionModal } from "../../features/transactions/ManualTransactionModal";
 import { CompactReviewSheet } from "./CompactReviewSheet";
 
 const { height: screenHeight } = Dimensions.get("window");
@@ -36,7 +35,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   useEffect(() => {
     // Luôn fetch insight khi mở modal nếu chưa có tin nhắn nào hoặc tin nhắn cuối không phải là insight gần đây
     const shouldFetch = isOpen && activeWalletId && (
-      messages.length === 0 || 
+      messages.length === 0 ||
       !messages.some(m => m.id.startsWith("proactive-insight"))
     );
 
@@ -177,10 +176,10 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
       addMessage({
         id: "confirm-" + Date.now(),
         role: "assistant",
-        content: `✅ Đã lưu giao dịch: ${formData.note || "Giao dịch mới"} (${formatCurrency(formData.amount)}) vào ví của bạn.`,
+        content: `✓ Đã lưu giao dịch: ${formData.note || "Giao dịch mới"} (${formatCurrency(formData.amount)}) vào ví của bạn.`,
         timestamp: Date.now(),
       });
-      
+
       setIsReviewModalVisible(false);
     } catch (error: any) {
       const apiError = error.response?.data;
@@ -327,20 +326,16 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
             </View>
 
             {/* Header */}
-            <View className="px-8 pb-4 pt-2 flex-row justify-between items-center">
+            <View className="px-8 pb-4 flex-row justify-between items-center border-b border-surface-container/50">
               <View className="flex-row items-center gap-4">
-                <View className="w-12 h-12 rounded-3xl bg-primary items-center justify-center shadow-2xl shadow-primary/40">
+                <View className="w-12 h-12 rounded-2xl bg-primary items-center justify-center shadow-lg shadow-primary/20">
                   <Bolt size={24} color="white" fill="white" />
                 </View>
                 <View>
-                  <AtelierTypography variant="h3" className="text-xl tracking-tight">Atelier AI</AtelierTypography>
-                  <AtelierTypography variant="label" className="text-[10px] text-primary lowercase mt-[-2px]">Pro Advisor</AtelierTypography>
+                  <AtelierTypography variant="h3" className="text-xl">Atelier AI</AtelierTypography>
                 </View>
               </View>
-              <TouchableOpacity 
-                onPress={handleClose} 
-                className="w-10 h-10 rounded-full bg-surface-container-high items-center justify-center"
-              >
+              <TouchableOpacity onPress={handleClose} className="w-10 h-10 rounded-full bg-surface-container/50 items-center justify-center">
                 <X size={20} color="#717785" />
               </TouchableOpacity>
             </View>
@@ -386,13 +381,13 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                         </View>
                       )}
                       <View className={`flex-shrink ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                        <View className={`px-5 py-4 rounded-[32px] ${msg.role === "user"
-                          ? "bg-primary rounded-br-[4px]"
-                          : "bg-surface-container-low rounded-tl-[4px]"
+                        <View className={`px-5 py-4 rounded-[24px] ${msg.role === "user"
+                          ? "bg-primary rounded-br-none"
+                          : "bg-surface-container-lowest border border-surface-container rounded-tl-none"
                           }`}>
                           <AtelierTypography
                             variant="body"
-                            className={`${msg.role === "user" ? "text-white" : "text-surface-on"} leading-6`}
+                            className={msg.role === "user" ? "text-white" : "text-surface-on"}
                           >
                             {msg.content}
                           </AtelierTypography>
@@ -448,25 +443,19 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                   {["Phân tích xu hướng", "Tháng này chi bao nhiêu?", "Giao dịch lớn nhất?"].map((chip, i) => (
                     <TouchableOpacity
                       key={i}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setInputText(chip);
-                      }}
-                      className="px-5 py-2.5 bg-surface-container-high rounded-full mr-2"
+                      onPress={() => setInputText(chip)}
+                      className="px-5 py-2.5 bg-white border border-surface-container rounded-full mr-2 shadow-sm"
                     >
-                      <AtelierTypography variant="label" className="text-[11px] normal-case text-surface-on">{chip}</AtelierTypography>
+                      <AtelierTypography variant="label" className="text-[11px] normal-case">{chip}</AtelierTypography>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
                 <View className="flex-row items-center gap-3">
                   <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      handleCameraPress();
-                    }}
-                    className="w-12 h-12 bg-surface-container-high rounded-2xl items-center justify-center"
+                    onPress={handleCameraPress}
+                    className="w-12 h-12 bg-white border border-surface-container rounded-2xl items-center justify-center shadow-sm"
                   >
-                    <Camera size={20} color="#003d9b" />
+                    <Camera size={20} color="#005ab4" />
                   </TouchableOpacity>
                   <View className="flex-1 relative">
                     <TextInput
@@ -474,26 +463,17 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                       value={inputText}
                       onChangeText={setInputText}
                       onSubmitEditing={handleSend}
-                      className="bg-surface-container-low/80 py-4 pl-5 pr-14 rounded-2xl text-surface-on font-inter"
+                      className="bg-surface-container/30 py-4 pl-5 pr-12 rounded-2xl text-surface-on font-inter"
                     />
                     <TouchableOpacity
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        handleSend();
-                      }}
+                      onPress={handleSend}
                       disabled={isProcessing}
-                      className="absolute right-1.5 top-1.5 w-9 h-9 rounded-xl overflow-hidden items-center justify-center"
+                      className="absolute right-2 top-2 w-8 h-8 bg-primary rounded-xl items-center justify-center shadow-lg"
                     >
-                      <LinearGradient
-                        colors={['#005ab4', '#003d9b']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        className="absolute inset-0"
-                      />
                       {isProcessing ? (
                         <ActivityIndicator size="small" color="white" />
                       ) : (
-                        <ArrowUp size={18} color="white" strokeWidth={2.5} />
+                        <ArrowUp size={16} color="white" />
                       )}
                     </TouchableOpacity>
                   </View>
@@ -533,97 +513,95 @@ const styles = StyleSheet.create({
   // Query Result Card styles
   queryCard: {
     marginTop: 12,
-    backgroundColor: "rgba(248, 250, 254, 0.8)",
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 0,
+    backgroundColor: "#F8FAFE",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0, 90, 180, 0.1)",
   },
   queryStatsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    padding: 12,
-    borderRadius: 16,
   },
   queryStat: {
     flex: 1,
     alignItems: "center",
   },
   queryStatLabel: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "700",
     color: "#717785",
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginBottom: 4,
   },
   queryStatValue: {
-    fontSize: 16,
-    fontWeight: "900",
-    color: "#003d9b",
+    fontSize: 15,
+    fontWeight: "800",
   },
   queryStatDivider: {
     width: 1,
-    height: 24,
+    height: 32,
     backgroundColor: "rgba(0, 90, 180, 0.1)",
   },
   topCategoriesSection: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 90, 180, 0.08)",
     paddingTop: 12,
     marginBottom: 12,
   },
   topCatTitle: {
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#414753",
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   topCatRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 14,
+    marginBottom: 6,
   },
   topCatDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: "#005ab4",
-    marginRight: 10,
+    marginRight: 8,
   },
   topCatName: {
     flex: 1,
     fontSize: 13,
     color: "#414753",
-    fontWeight: "600",
+    fontWeight: "500",
   },
   topCatAmount: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#ba1a1a",
+    fontWeight: "700",
+    color: "#D32F2F",
   },
   matchedSection: {
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0, 90, 180, 0.08)",
     paddingTop: 12,
   },
   matchedTitle: {
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     color: "#414753",
-    marginBottom: 10,
+    marginBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   miniTxnRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderBottomWidth: 0,
+    paddingVertical: 6,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   miniTxnDesc: {
     fontSize: 13,

@@ -16,9 +16,10 @@ import {
 import { useAppStore } from "../../store/useAppStore";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { 
-  AtelierTypography, 
-  AtelierCard 
+import {
+  AtelierTypography,
+  AtelierCard,
+  AtelierButton
 } from "@/components/ui";
 import { Colors } from "@/constants/tokens";
 
@@ -50,7 +51,7 @@ export default function ProfileScreen() {
     <View className="flex-1 bg-surface-lowest">
       <ScrollView 
         className="flex-1"
-        contentContainerStyle={{ paddingTop: insets.top + 88, paddingHorizontal: 24, paddingBottom: 160 }}
+        contentContainerStyle={{ paddingTop: insets.top + 88, paddingHorizontal: 24, paddingBottom: 200 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Header Section */}
@@ -59,8 +60,8 @@ export default function ProfileScreen() {
           animate={{ opacity: 1, translateY: 0 }}
           className="items-center mb-12"
         >
-          <View 
-            className="w-28 h-28 rounded-[40px] items-center justify-center mb-5 border border-neutral-100 shadow-atelier-low bg-white"
+          <View
+            className="w-28 h-28 rounded-[40px] items-center justify-center mb-5 shadow-atelier-low bg-white"
           >
             <View className="w-24 h-24 bg-primary/5 rounded-[36px] items-center justify-center">
               <AtelierTypography variant="h1" className="text-4xl text-primary">
@@ -75,8 +76,8 @@ export default function ProfileScreen() {
             {user.email || "user@atelier.finance"}
           </AtelierTypography>
           
-          <TouchableOpacity 
-            className="mt-6 bg-white border border-neutral-100 px-6 py-2.5 rounded-2xl shadow-atelier-low"
+          <TouchableOpacity
+            className="mt-6 bg-white px-6 py-2.5 rounded-2xl shadow-atelier-low"
             activeOpacity={0.7}
           >
             <AtelierTypography variant="label" className="text-primary font-bold">CHỈNH SỬA HỒ SƠ</AtelierTypography>
@@ -90,8 +91,8 @@ export default function ProfileScreen() {
             <AtelierTypography variant="h2" className="text-lg">Ứng dụng</AtelierTypography>
           </View>
           
-          <AtelierCard padding="none" className="bg-white border border-neutral-100 shadow-atelier-low overflow-hidden">
-            <View className="flex-row items-center justify-between p-5 border-b border-neutral-50">
+          <AtelierCard padding="none" className="bg-white shadow-atelier-low overflow-hidden">
+            <View className="flex-row items-center justify-between p-5">
               <View className="flex-row items-center gap-4">
                 <View className="w-10 h-10 bg-blue-50 rounded-2xl items-center justify-center">
                   <Bell size={20} color={Colors.primary.DEFAULT} />
@@ -105,8 +106,8 @@ export default function ProfileScreen() {
                 thumbColor={Platform.OS === "ios" ? "#ffffff" : "#ffffff"}
               />
             </View>
-            
-            <View className="flex-row items-center justify-between p-5 border-b border-neutral-50">
+
+            <View className="flex-row items-center justify-between p-5">
               <View className="flex-row items-center gap-4">
                 <View className="w-10 h-10 bg-indigo-50 rounded-2xl items-center justify-center">
                   <Moon size={20} color="#6366f1" />
@@ -145,7 +146,7 @@ export default function ProfileScreen() {
           
           <View className="gap-4">
             <TouchableOpacity activeOpacity={0.7}>
-              <AtelierCard padding="md" className="bg-white border border-neutral-100 flex-row items-center justify-between shadow-atelier-low">
+              <AtelierCard padding="md" className="bg-white flex-row items-center justify-between shadow-atelier-low">
                 <View className="flex-row items-center gap-4">
                   <View className="w-10 h-10 bg-amber-50 rounded-2xl items-center justify-center">
                     <Lock size={20} color="#f59e0b" />
@@ -155,9 +156,9 @@ export default function ProfileScreen() {
                 <ChevronRight size={16} color={Colors.neutral[300]} />
               </AtelierCard>
             </TouchableOpacity>
-            
+
             <TouchableOpacity activeOpacity={0.7}>
-              <AtelierCard padding="md" className="bg-white border border-neutral-100 flex-row items-center justify-between shadow-atelier-low">
+              <AtelierCard padding="md" className="bg-white flex-row items-center justify-between shadow-atelier-low">
                 <View className="flex-row items-center gap-4">
                   <View className="w-10 h-10 bg-purple-50 rounded-2xl items-center justify-center">
                     <Fingerprint size={20} color="#8b5cf6" />
@@ -174,14 +175,13 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout Action */}
-        <TouchableOpacity 
+        <AtelierButton
+          variant="error"
+          label="ĐĂNG XUẤT KHỎI ATELIER"
           onPress={handleLogout}
-          activeOpacity={0.8}
-          className="w-full py-5 border border-red-100 bg-red-50/50 rounded-[28px] flex-row items-center justify-center gap-2 shadow-sm"
-        >
-          <LogOut size={20} color={Colors.error} />
-          <AtelierTypography variant="h3" className="text-red-600">Đăng xuất khỏi Atelier</AtelierTypography>
-        </TouchableOpacity>
+          fullWidth
+          className="rounded-[24px]"
+        />
         
         <View className="mt-10 items-center">
           <AtelierTypography variant="caption" className="text-neutral-300">Phiên bản 1.0.0 (Build 2026)</AtelierTypography>
