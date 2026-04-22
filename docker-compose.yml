@@ -33,6 +33,7 @@ services:
       ai-service:
         condition: service_started
     environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_URL: ${DB_URL:-jdbc:mysql://db:3306/smart_money_tracking?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
       DB_USERNAME: ${DB_USERNAME:-smartuser}
       DB_PASSWORD: ${DB_PASSWORD:-smartpass}
@@ -42,6 +43,7 @@ services:
       "nlp.service.url": ${NLP_SERVICE_URL:-http://ai-service:8000}
     ports:
       - "8080:8080"
+      - "${BACKEND_DEBUG_PORT:-5005}:5005"
 
   ai-service:
     build:
@@ -49,6 +51,7 @@ services:
       dockerfile: Dockerfile
     container_name: smart-finance-ai
     restart: unless-stopped
+    command: ${AI_SERVICE_COMMAND:-python3.10 -m uvicorn main:app --host 0.0.0.0 --port 8000}
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
@@ -63,7 +66,9 @@ services:
       OMP_NUM_THREADS: "1"
     ports:
       - "8000:8000"
+      - "${AI_DEBUG_PORT:-5678}:5678"
     volumes:
+      - ./ai-service:/app
       - ./ml-models:/app/ml-models:ro
       - ai_model_cache:/app/models/cache
       - ai_uploads:/app/uploads
