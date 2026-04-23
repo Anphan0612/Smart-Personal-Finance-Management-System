@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { View, ScrollView, TextInput, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Alert, Text, Modal } from "react-native";
 import { MotiView, AnimatePresence } from "moti";
-import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Mic, Search, TrendingUp, AlertTriangle } from "lucide-react-native";
+import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Plus, Edit3 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import { AtelierTypography } from "./AtelierTypography";
@@ -9,10 +9,19 @@ import { AtelierCard } from "./AtelierCard";
 import { useAppStore, ChatMessage } from "../../store/useAppStore";
 import { fetcher, poster } from "../../services/api";
 import { AtelierTransactionCard } from "./AtelierTransactionCard";
-import { formatCurrency } from "../../utils/format";
+import { formatCurrency, parseCurrency } from "../../utils/format";
+import {
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
 import { AtelierActionSheet } from "./AtelierActionSheet";
 import { router } from "expo-router";
-import { CompactReviewSheet } from "./CompactReviewSheet";
+import { EditTransactionSheet } from "./EditTransactionSheet";
+import { AtelierGlassView } from "./AtelierGlassView";
+import { AtelierInsightChart } from "./AtelierInsightChart";
+import { AtelierTokens } from "../../constants/AtelierTokens";
+import { AtelierSpendingSummary } from "./AtelierSpendingSummary";
+import { useAddTransaction, CreateTransactionRequest } from "../../hooks/useTransactions";
+import { TransactionType } from "../../types/api";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -22,30 +31,38 @@ interface AtelierAIProps {
 }
 
 export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
-  const { messages, addMessage, updateLastMessage, activeWalletId } = useAppStore();
-  const [inputText, setInputText] = useState("");
+  const { messages, addMessage, activeWalletId } = useAppStore();
+  const addTransactionMutation = useAddTransaction();
+  const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
-  const [editData, setEditData] = useState<any>(null);
-  const [selectedTxData, setSelectedTxData] = useState<any>(null);
+  const editSheetRef = useRef<any>(null);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [messages]);
 
   // Fetch proactive insights when opened
   useEffect(() => {
-    // Luôn fetch insight khi mở modal nếu chưa có tin nhắn nào hoặc tin nhắn cuối không phải là insight gần đây
-    const shouldFetch = isOpen && activeWalletId && (
-      messages.length === 0 || 
-      !messages.some(m => m.id.startsWith("proactive-insight"))
+    if (!isOpen || !activeWalletId) return;
+
+    const hasRecentInsight = messages.some(m =>
+      m.id.startsWith("proactive-insight") &&
+      Date.now() - m.timestamp < 300000 // 5 minutes
     );
 
-    if (shouldFetch) {
+    if (messages.length === 0 || !hasRecentInsight) {
       fetchProactiveInsight();
     }
   }, [isOpen, activeWalletId]);
 
   const fetchProactiveInsight = async () => {
+    if (!activeWalletId) return;
+
     setIsProcessing(true);
     try {
       const comparison = await fetcher<any>(`/transactions/comparison?walletId=${activeWalletId}`);
@@ -56,6 +73,14 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         role: "assistant",
         content: aiResponse.insight || "Chào bạn! Tôi đã sẵn sàng giúp bạn quản lý tài chính. Bạn có muốn xem phân tích chi tiêu tuần này không?",
         timestamp: Date.now(),
+        hasSpendingSummary: !!aiResponse.summary,
+        spendingData: aiResponse.summary ? {
+          totalSpent: aiResponse.summary.total_expense || 0,
+          budgetLimit: aiResponse.summary.budget_limit || 15000000,
+          percentage: aiResponse.summary.percentage || 0,
+        } : undefined,
+        hasInsightChart: !!aiResponse.top_categories,
+        insightData: aiResponse.top_categories || []
       });
     } catch (error) {
       console.error("Failed to fetch proactive insight", error);
@@ -65,9 +90,9 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   };
 
   const handleSend = async () => {
-    if (!inputText.trim() || isProcessing) return;
+    if (!input.trim() || isProcessing) return;
 
-    const userText = inputText.trim();
+    const userText = input.trim();
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -76,18 +101,16 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     };
 
     addMessage(userMessage);
-    setInputText("");
+    setInput("");
     setIsProcessing(true);
 
     try {
-      // First, try the smart query endpoint to classify intent
       const queryResponse = await poster<any, any>("/ai/query-history", {
         text: userText,
         walletId: activeWalletId,
       });
 
       if (queryResponse.intent === "QUERY") {
-        // --- QUERY INTENT: Show history analysis ---
         const aiMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
@@ -102,7 +125,6 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
         };
         addMessage(aiMessage);
       } else {
-        // --- COMMAND INTENT: Existing extraction flow ---
         const response = await poster<any, any>("/ai/extract-transaction", {
           text: userText,
         });
@@ -116,7 +138,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
             ? `Đã xong! Tôi đã phân tích yêu cầu của bạn: "${userText}". Vui lòng xác nhận thông tin bên dưới.`
             : response?.message || "Tôi đã phân tích xong. Tôi có thể giúp gì thêm cho bạn?",
           timestamp: Date.now(),
-          hasCard: hasData,
+          hasTransactionMatch: hasData,
           transactionData: hasData
             ? {
               amount: response.amount,
@@ -133,63 +155,76 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
       }
     } catch (error: any) {
       const apiError = error.response?.data;
-      const errorMessage =
-        apiError?.message || "Xin lỗi, tôi đang gặp khó khăn khi xử lý yêu cầu này.";
-      const suggestion = apiError?.suggestion;
-
+      const errorMessage = apiError?.message || "Xin lỗi, tôi đang gặp khó khăn khi xử lý yêu cầu này.";
+      
       addMessage({
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: suggestion ? `${errorMessage}\n\n💡 Gợi ý: ${suggestion}` : errorMessage,
+        content: errorMessage,
         timestamp: Date.now(),
       });
     } finally {
       setIsProcessing(false);
-      scrollViewRef.current?.scrollToEnd({ animated: true });
     }
   };
 
-  // Phase 1.3: ActionSheet handlers
-  const handleClose = () => {
-    setIsSheetVisible(false);
-    onClose();
-  };
-
-  const handleEdit = (data: any) => {
-    setSelectedTxData(data);
-    setIsReviewModalVisible(true);
+  const handleEdit = (data: any, messageId?: string) => {
+    if (editSheetRef.current && 'open' in editSheetRef.current) {
+      // Đính kèm messageId để biết Card nào cần cập nhật sau khi lưu
+      (editSheetRef.current as any).open({ ...data, originalMessageId: messageId });
+    }
   };
 
   const onSaveReview = async (formData: any) => {
     try {
-      if (!activeWalletId) {
+      if (!formData.walletId && !activeWalletId) {
         Alert.alert("Lỗi", "Vui lòng chọn ví trước khi lưu.");
         return;
       }
 
-      await poster("/transactions", {
-        ...formData,
-        walletId: activeWalletId,
-        description: formData.note || "Trích xuất bởi AI",
-      });
+      if (!formData.categoryId) {
+        Alert.alert("Lỗi", "Vui lòng chọn danh mục cho giao dịch.");
+        return;
+      }
 
-      // Thêm tin nhắn xác nhận vào chat
+      const payload: CreateTransactionRequest = {
+        walletId: formData.walletId || activeWalletId!,
+        categoryId: formData.categoryId,
+        amount: typeof formData.amount === 'string' ? parseCurrency(formData.amount) : Number(formData.amount),
+        description: formData.description || formData.note || "Trích xuất bởi AI",
+        type: formData.type as TransactionType,
+        transactionDate: formData.transactionDate || new Date().toISOString(),
+      };
+
+      await addTransactionMutation.mutateAsync(payload);
+
+      if (formData.originalMessageId) {
+        const originalMsg = messages.find(m => m.id === formData.originalMessageId);
+        if (originalMsg) {
+          addMessage({
+            ...originalMsg,
+            isConfirmed: true,
+            transactionData: {
+              ...originalMsg.transactionData!,
+              amount: payload.amount,
+              categoryId: payload.categoryId,
+              note: payload.description,
+            }
+          });
+        }
+      }
+
       addMessage({
         id: "confirm-" + Date.now(),
         role: "assistant",
-        content: `✅ Đã lưu giao dịch: ${formData.note || "Giao dịch mới"} (${formatCurrency(formData.amount)}) vào ví của bạn.`,
+        content: `✅ Đã lưu giao dịch: ${payload.description} (${formatCurrency(payload.amount)}) vào ví của bạn.`,
         timestamp: Date.now(),
       });
-      
-      setIsReviewModalVisible(false);
     } catch (error: any) {
       const apiError = error.response?.data;
       Alert.alert("Lỗi Giao dịch", apiError?.message || "Không thể lưu giao dịch.");
+      throw error;
     }
-  };
-
-  const handleCameraPress = () => {
-    setIsSheetVisible(true);
   };
 
   const handleSelectSource = (source: 'camera' | 'library') => {
@@ -214,71 +249,61 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
       <MotiView
         from={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: "spring", delay: 200, damping: 20 }}
         style={styles.queryCard}
       >
-        {/* Summary Stats */}
         <View style={styles.queryStatsRow}>
           <View style={styles.queryStat}>
             <Text style={styles.queryStatLabel}>Tổng chi</Text>
-            <Text style={[styles.queryStatValue, { color: "#D32F2F" }]}>
-              {formatCurrency(totalExpense)}
-            </Text>
+            <Text style={[styles.queryStatValue, { color: "#D32F2F" }]}>{formatCurrency(totalExpense)}</Text>
           </View>
           <View style={styles.queryStatDivider} />
           <View style={styles.queryStat}>
             <Text style={styles.queryStatLabel}>Tổng thu</Text>
-            <Text style={[styles.queryStatValue, { color: "#2E7D32" }]}>
-              {formatCurrency(totalIncome)}
-            </Text>
+            <Text style={[styles.queryStatValue, { color: "#2E7D32" }]}>{formatCurrency(totalIncome)}</Text>
           </View>
           <View style={styles.queryStatDivider} />
           <View style={styles.queryStat}>
             <Text style={styles.queryStatLabel}>Giao dịch</Text>
-            <Text style={[styles.queryStatValue, { color: "#005ab4" }]}>{count}</Text>
+            <Text style={[styles.queryStatValue, { color: "#003d9b" }]}>{count}</Text>
           </View>
         </View>
 
-        {/* Top Categories */}
         {topCats.length > 0 && (
           <View style={styles.topCategoriesSection}>
             <Text style={styles.topCatTitle}>Danh mục chi tiêu cao nhất</Text>
-            {topCats.slice(0, 3).map((cat: any, i: number) => (
-              <View key={i} style={styles.topCatRow}>
-                <View style={styles.topCatDot} />
-                <Text style={styles.topCatName}>{cat.category}</Text>
-                <Text style={styles.topCatAmount}>{formatCurrency(cat.amount)}</Text>
-              </View>
-            ))}
+            <AtelierInsightChart type="pie" data={topCats} />
           </View>
         )}
 
-        {/* Matched Transactions preview */}
         {matchedTransactions && matchedTransactions.length > 0 && (
           <View style={styles.matchedSection}>
-            <Text style={styles.matchedTitle}>
-              Giao dịch gần đây ({matchedTransactions.length})
-            </Text>
+            <Text style={styles.matchedTitle}>Giao dịch gần đây</Text>
             {matchedTransactions.slice(0, 3).map((txn: any, i: number) => (
-              <View key={txn.id || i} style={styles.miniTxnRow}>
+              <TouchableOpacity 
+                key={txn.id || i} 
+                style={styles.miniTxnRow}
+                onPress={() => handleEdit({
+                  id: txn.id,
+                  amount: txn.amount,
+                  category: txn.categoryName,
+                  categoryId: txn.categoryId,
+                  type: txn.type,
+                  date: txn.transactionDate,
+                  note: txn.description,
+                  walletId: txn.walletId
+                })}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.miniTxnDesc} numberOfLines={1}>
-                    {txn.categoryName || txn.description || "Giao dịch"}
-                  </Text>
-                  <Text style={styles.miniTxnDate}>
-                    {txn.transactionDate?.split("T")[0] || ""}
-                  </Text>
+                  <Text style={styles.miniTxnDesc} numberOfLines={1}>{txn.description || "Giao dịch"}</Text>
+                  <Text style={styles.miniTxnDate}>{txn.transactionDate?.split("T")[0]}</Text>
                 </View>
-                <Text
-                  style={[
-                    styles.miniTxnAmount,
-                    { color: txn.type === "INCOME" ? "#2E7D32" : "#D32F2F" },
-                  ]}
-                >
-                  {txn.type === "INCOME" ? "+" : "-"}
-                  {formatCurrency(txn.amount)}
-                </Text>
-              </View>
+                <View className="flex-row items-center gap-2">
+                  <Text style={[styles.miniTxnAmount, { color: txn.type === "INCOME" ? "#2E7D32" : "#D32F2F" }]}>
+                    {txn.type === "INCOME" ? "+" : "-"}{formatCurrency(txn.amount)}
+                  </Text>
+                  <Edit3 size={12} color="#717785" />
+                </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -286,266 +311,249 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     );
   };
 
-  const [isModalMounted, setIsModalMounted] = React.useState(isOpen);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      setIsModalMounted(true);
-    } else {
-      const timer = setTimeout(() => setIsModalMounted(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
   return (
-    <>
-    <Modal transparent visible={isModalMounted} animationType="none" onRequestClose={handleClose}>
-    <AnimatePresence>
-      {isOpen && (
-        <View key="atelier-ai-modal" style={styles.absoluteLayer} pointerEvents="box-none">
-          {/* Backdrop */}
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={styles.backdrop}
-            onTouchStart={handleClose}
-          />
-
-          {/* Bottom Sheet */}
-          <MotiView
-            from={{ translateY: screenHeight }}
-            animate={{ translateY: 0 }}
-            exit={{ translateY: screenHeight }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-[40px] shadow-2xl"
-            style={{ height: screenHeight * 0.85 }}
-          >
-            {/* Handle */}
-            <View className="items-center py-4">
-              <View className="w-12 h-1.5 bg-surface-container rounded-full opacity-30" />
-            </View>
-
-            {/* Header */}
-            <View className="px-8 pb-4 pt-2 flex-row justify-between items-center">
-              <View className="flex-row items-center gap-4">
-                <View className="w-12 h-12 rounded-3xl bg-primary items-center justify-center shadow-2xl shadow-primary/40">
-                  <Bolt size={24} color="white" fill="white" />
-                </View>
-                <View>
-                  <AtelierTypography variant="h3" className="text-xl tracking-tight">Atelier AI</AtelierTypography>
-                  <AtelierTypography variant="label" className="text-[10px] text-primary lowercase mt-[-2px]">Pro Advisor</AtelierTypography>
-                </View>
-              </View>
-              <TouchableOpacity 
-                onPress={handleClose} 
-                className="w-10 h-10 rounded-full bg-surface-container-high items-center justify-center"
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={isOpen}
+      onRequestClose={onClose}
+    >
+      <BottomSheetModalProvider>
+        <View style={styles.modalContainer}>
+          <AnimatePresence>
+            {isOpen && (
+              <MotiView
+                from={{ opacity: 0, translateY: 50 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                exit={{ opacity: 0, translateY: 50 }}
+                className="flex-1"
               >
-                <X size={20} color="#717785" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Chat Content */}
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              className="flex-1"
-              keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-            >
-              <ScrollView
-                ref={scrollViewRef}
-                className="flex-1 px-6 pt-6"
-                contentContainerStyle={{ paddingBottom: 40 }}
-                onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-                showsVerticalScrollIndicator={false}
-              >
-                {messages.length === 0 && isProcessing && (
-                  <View className="items-center py-12">
-                    <ActivityIndicator size="large" color="#005ab4" />
-                    <AtelierTypography variant="label" className="mt-4">Đang phân tích dữ liệu chi tiêu...</AtelierTypography>
+                {/* Header */}
+                <View className="flex-row items-center justify-between px-6 pt-14 pb-4">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-10 h-10 rounded-2xl bg-ai-primary items-center justify-center shadow-lg shadow-ai-primary/30">
+                      <Sparkles size={20} color="white" />
+                    </View>
+                    <View>
+                      <AtelierTypography variant="h3" className="text-white">Atelier AI</AtelierTypography>
+                      <AtelierTypography variant="caption" className="text-white/60">Assistant thông minh</AtelierTypography>
+                    </View>
                   </View>
-                )}
-                {messages.length === 0 && !isProcessing && (
-                  <View className="items-center py-12 opacity-50">
-                    <Sparkles size={40} color="#005ab4" />
-                    <AtelierTypography variant="body" className="mt-4 text-center">
-                      Welcome! I'm your Financial Atelier AI.{"\n"}Ask me anything about your money.
-                    </AtelierTypography>
-                  </View>
-                )}
-                {messages.map((msg, index) => (
-                  <MotiView
-                    key={`msg-${msg.id}-${index}`}
-                    from={{ opacity: 0, translateY: 10 }}
-                    animate={{ opacity: 1, translateY: 0 }}
-                    className={`mb-6 ${msg.role === "user" ? "items-end" : "items-start"}`}
+                  <TouchableOpacity 
+                    onPress={onClose}
+                    className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
                   >
-                    <View className={`flex-row gap-3 max-w-[90%] ${msg.role === "user" ? "flex-row-reverse self-end" : "self-start"}`}>
-                      {msg.role === "assistant" && (
-                        <View className="w-8 h-8 rounded-xl bg-primary-container items-center justify-center self-start mt-1">
-                          <Sparkles size={14} color="white" fill="white" />
-                        </View>
+                    <X size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Chat Content */}
+                <ScrollView 
+                  ref={scrollViewRef}
+                  className="flex-1 px-4"
+                  contentContainerStyle={{ paddingBottom: 100 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {messages.map((msg, index) => (
+                    <MotiView
+                      key={msg.id}
+                      from={{ opacity: 0, translateX: msg.role === 'user' ? 20 : -20 }}
+                      animate={{ opacity: 1, translateX: 0 }}
+                      transition={{ delay: index * 100 }}
+                      className={`mb-6 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                    >
+                      <View 
+                        className={`max-w-[85%] px-4 py-3 rounded-3xl ${
+                          msg.role === 'user' 
+                            ? 'bg-ai-primary rounded-tr-none shadow-sm shadow-ai-primary/20' 
+                            : 'bg-white rounded-tl-none shadow-sm shadow-black/5'
+                        }`}
+                      >
+                        <AtelierTypography 
+                          variant="body" 
+                          className={msg.role === 'user' ? 'text-white' : 'text-surface-on'}
+                        >
+                          {msg.content}
+                        </AtelierTypography>
+                      </View>
+                      
+                      {msg.hasSpendingSummary && msg.spendingData && (
+                        <AtelierSpendingSummary 
+                          totalSpent={msg.spendingData.totalSpent}
+                          budgetLimit={msg.spendingData.budgetLimit}
+                          percentage={msg.spendingData.percentage}
+                        />
                       )}
-                      <View className={`flex-shrink ${msg.role === "user" ? "items-end" : "items-start"}`}>
-                        <View className={`px-5 py-4 rounded-[32px] ${msg.role === "user"
-                          ? "bg-primary rounded-br-[4px]"
-                          : "bg-surface-container-low rounded-tl-[4px]"
-                          }`}>
-                          <AtelierTypography
-                            variant="body"
-                            className={`${msg.role === "user" ? "text-white" : "text-surface-on"} leading-6`}
-                          >
-                            {msg.content}
-                          </AtelierTypography>
-                        </View>
+                      
+                      {msg.hasInsightChart && msg.insightData && (
+                        <AtelierInsightChart type="pie" data={msg.insightData} />
+                      )}
 
-                        {/* Transaction extraction card */}
-                        {msg.hasCard && msg.transactionData && (
-                          <MotiView from={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 300 }}>
-                            <AtelierTransactionCard
-                              variant="bubble"
-                              data={msg.transactionData}
-                              onConfirm={async () => {
-                                const data = msg.transactionData;
-                                if (!data) return;
+                      {msg.hasQueryResult && msg.queryData && renderQueryResultCard(msg.queryData)}
 
-                                const walletId = useAppStore.getState().activeWalletId;
-                                if (!walletId) {
-                                  Alert.alert("Yêu cầu chọn Ví", "Vui lòng chọn một ví từ màn hình chính trước khi xác nhận.");
-                                  return;
-                                }
+                      {msg.hasTransactionMatch && msg.transactionData && (
+                        <MotiView
+                          from={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="w-full mt-4"
+                        >
+                          <AtelierTransactionCard
+                            variant="bubble"
+                            data={msg.transactionData}
+                            onConfirm={async () => {
+                              const data = msg.transactionData;
+                              if (!data) return;
 
-                                try {
-                                  await poster("/transactions", {
-                                    walletId: walletId,
-                                    amount: data.amount,
-                                    description: data.note || "Trích xuất bởi AI",
-                                    type: data.type,
-                                    transactionDate: new Date().toISOString().split('.')[0],
-                                    categoryId: data.categoryId || null
-                                  });
-                                  Alert.alert("Thành công", "Giao dịch đã được ghi lại!");
-                                } catch (error: any) {
-                                  const apiError = error.response?.data;
-                                  const errorMessage = apiError?.message || "Không thể lưu giao dịch. Vui lòng thử lại.";
-                                  Alert.alert("Lỗi Giao dịch", errorMessage);
-                                }
-                              }}
-                              onEdit={() => handleEdit(msg.transactionData)}
-                            />
-                          </MotiView>
-                        )}
+                              const walletId = useAppStore.getState().activeWalletId;
+                              if (!walletId) {
+                                Alert.alert("Yêu cầu chọn Ví", "Vui lòng chọn một ví từ màn hình chính trước khi xác nhận.");
+                                return;
+                              }
 
-                        {/* Query result card (NEW) */}
-                        {msg.hasQueryResult && msg.queryData && renderQueryResultCard(msg.queryData)}
+                              if (!data.categoryId) {
+                                Alert.alert("Thiếu thông tin", "Giao dịch này chưa có danh mục. Vui lòng nhấn 'Sửa chi tiết' để chọn danh mục.");
+                                return;
+                              }
+
+                              if (addTransactionMutation.isPending) return;
+
+                              try {
+                                const payload: CreateTransactionRequest = {
+                                  walletId: walletId,
+                                  categoryId: data.categoryId!,
+                                  amount: typeof data.amount === 'string' ? parseCurrency(data.amount) : Number(data.amount),
+                                  description: data.note || "Trích xuất bởi AI",
+                                  type: data.type as TransactionType,
+                                  transactionDate: new Date().toISOString(),
+                                };
+
+                                await addTransactionMutation.mutateAsync(payload);
+
+                                addMessage({
+                                  ...msg,
+                                  isConfirmed: true
+                                });
+
+                                addMessage({
+                                  id: "confirm-" + Date.now(),
+                                  role: "assistant",
+                                  content: `✅ Đã lưu giao dịch: ${payload.description} (${formatCurrency(payload.amount)}) vào ví của bạn.`,
+                                  timestamp: Date.now(),
+                                });
+
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                              } catch (error: any) {
+                                const apiError = error.response?.data;
+                                const errorMessage = apiError?.message || "Không thể lưu giao dịch. Vui lòng thử lại.";
+                                Alert.alert("Lỗi Giao dịch", errorMessage);
+                              }
+                            }}
+                            onEdit={() => handleEdit(msg.transactionData, msg.id)}
+                            isPending={addTransactionMutation.isPending}
+                            isConfirmed={msg.isConfirmed}
+                          />
+                        </MotiView>
+                      )}
+                    </MotiView>
+                  ))}
+                  
+                  {isProcessing && (
+                    <MotiView 
+                      from={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex-row items-center gap-2 px-4 py-2"
+                    >
+                      <ActivityIndicator size="small" color="white" />
+                      <AtelierTypography variant="caption" className="text-white/60">Atelier đang xử lý...</AtelierTypography>
+                    </MotiView>
+                  )}
+                </ScrollView>
+
+                {/* Input Area */}
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+                  className="p-4"
+                >
+                  <AtelierGlassView 
+                    intensity={20}
+                    className="rounded-[32px] overflow-hidden border border-white/20"
+                  >
+                    <View className="flex-row items-center px-2 py-2">
+                      <TouchableOpacity 
+                        onPress={() => setIsSheetVisible(true)}
+                        className="w-10 h-10 rounded-2xl bg-white/10 items-center justify-center ml-1"
+                      >
+                        <Plus size={20} color="white" />
+                      </TouchableOpacity>
+                      
+                      <View className="flex-1 px-3">
+                        <TextInput
+                          value={input}
+                          onChangeText={setInput}
+                          placeholder="Nhập yêu cầu của bạn..."
+                          placeholderTextColor="rgba(255,255,255,0.5)"
+                          className="text-white font-inter font-medium text-[15px] py-2"
+                          multiline
+                        />
+                        <TouchableOpacity 
+                          onPress={handleSend}
+                          disabled={isProcessing}
+                          className="absolute right-1.5 top-1.5 w-9 h-9 rounded-xl overflow-hidden items-center justify-center"
+                        >
+                          <LinearGradient
+                            colors={['#005ab4', '#003d9b']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            className="absolute inset-0"
+                          />
+                          {isProcessing ? (
+                            <ActivityIndicator size="small" color="white" />
+                          ) : (
+                            <ArrowUp size={18} color="white" strokeWidth={2.5} />
+                          )}
+                        </TouchableOpacity>
                       </View>
                     </View>
-                  </MotiView>
-                ))}
-              </ScrollView>
+                  </AtelierGlassView>
+                </KeyboardAvoidingView>
+              </MotiView>
+            )}
+          </AnimatePresence>
 
-              <View className="px-6 pb-12 pt-4 bg-white/80 border-t border-surface-container">
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-                  {["Phân tích xu hướng", "Tháng này chi bao nhiêu?", "Giao dịch lớn nhất?"].map((chip, i) => (
-                    <TouchableOpacity
-                      key={i}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setInputText(chip);
-                      }}
-                      className="px-5 py-2.5 bg-surface-container-high rounded-full mr-2"
-                    >
-                      <AtelierTypography variant="label" className="text-[11px] normal-case text-surface-on">{chip}</AtelierTypography>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                <View className="flex-row items-center gap-3">
-                  <TouchableOpacity
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                      handleCameraPress();
-                    }}
-                    className="w-12 h-12 bg-surface-container-high rounded-2xl items-center justify-center"
-                  >
-                    <Camera size={20} color="#003d9b" />
-                  </TouchableOpacity>
-                  <View className="flex-1 relative">
-                    <TextInput
-                      placeholder="Hỏi về tài chính của bạn..."
-                      value={inputText}
-                      onChangeText={setInputText}
-                      onSubmitEditing={handleSend}
-                      className="bg-surface-container-low/80 py-4 pl-5 pr-14 rounded-2xl text-surface-on font-inter"
-                    />
-                    <TouchableOpacity
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        handleSend();
-                      }}
-                      disabled={isProcessing}
-                      className="absolute right-1.5 top-1.5 w-9 h-9 rounded-xl overflow-hidden items-center justify-center"
-                    >
-                      <LinearGradient
-                        colors={['#005ab4', '#003d9b']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        className="absolute inset-0"
-                      />
-                      {isProcessing ? (
-                        <ActivityIndicator size="small" color="white" />
-                      ) : (
-                        <ArrowUp size={18} color="white" strokeWidth={2.5} />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </KeyboardAvoidingView>
-          </MotiView>
+          <EditTransactionSheet
+            ref={editSheetRef}
+            onSave={onSaveReview}
+          />
+          <AtelierActionSheet
+            isVisible={isSheetVisible}
+            onClose={() => setIsSheetVisible(false)}
+            onSelectCamera={() => handleSelectSource('camera')}
+            onSelectGallery={() => handleSelectSource('library')}
+          />
         </View>
-      )}
-    </AnimatePresence>
+      </BottomSheetModalProvider>
     </Modal>
-    <CompactReviewSheet
-      isVisible={isReviewModalVisible}
-      onClose={() => setIsReviewModalVisible(false)}
-      onSave={onSaveReview}
-      initialData={selectedTxData}
-    />
-    <AtelierActionSheet
-      isVisible={isSheetVisible}
-      onClose={() => setIsSheetVisible(false)}
-      onSelectCamera={() => handleSelectSource('camera')}
-      onSelectGallery={() => handleSelectSource('library')}
-    />
-    </>
   );
 };
 
 const styles = StyleSheet.create({
-  absoluteLayer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 10000,
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 10, 10, 0.95)',
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  // Query Result Card styles
   queryCard: {
     marginTop: 12,
-    backgroundColor: "rgba(248, 250, 254, 0.8)",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderRadius: 24,
     padding: 20,
-    borderWidth: 0,
+    width: '100%',
   },
   queryStatsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    padding: 12,
-    borderRadius: 16,
   },
   queryStat: {
     flex: 1,
@@ -562,12 +570,11 @@ const styles = StyleSheet.create({
   queryStatValue: {
     fontSize: 16,
     fontWeight: "900",
-    color: "#003d9b",
   },
   queryStatDivider: {
     width: 1,
     height: 24,
-    backgroundColor: "rgba(0, 90, 180, 0.1)",
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   topCategoriesSection: {
     paddingTop: 12,
@@ -580,32 +587,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 1,
-  },
-  topCatRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 14,
-  },
-  topCatDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#005ab4",
-    marginRight: 10,
-  },
-  topCatName: {
-    flex: 1,
-    fontSize: 13,
-    color: "#414753",
-    fontWeight: "600",
-  },
-  topCatAmount: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#ba1a1a",
   },
   matchedSection: {
     paddingTop: 12,
@@ -622,8 +603,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderBottomWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.03)',
   },
   miniTxnDesc: {
     fontSize: 13,
@@ -638,6 +619,5 @@ const styles = StyleSheet.create({
   miniTxnAmount: {
     fontSize: 14,
     fontWeight: "800",
-    marginLeft: 12,
   },
 });

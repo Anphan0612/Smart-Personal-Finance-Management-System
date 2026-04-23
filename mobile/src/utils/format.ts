@@ -70,3 +70,55 @@ export const parseCurrency = (value: string): number => {
   const numericString = value.replace(/\D/g, "");
   return parseInt(numericString, 10) || 0;
 };
+
+/**
+ * Formats a date string (ISO 8601) into a localized Vietnamese format.
+ * Uses 24h format and vi-VN locale.
+ * e.g., "2026-04-23T14:30:00+07:00" -> "14:30, 23/04/2026"
+ */
+export const formatDateTime = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return '';
+  
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour12: false,
+  }).format(date).replace(',', ''); // Standardize format
+};
+
+/**
+ * Formats a date string into a time-only string (24h).
+ * e.g., "14:30"
+ */
+export const formatTime = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return '';
+  
+  return new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+};
+
+/**
+ * Formats a date string into a date-only string.
+ * e.g., "23/04/2026"
+ */
+export const formatDate = (dateString: string | Date | null | undefined): string => {
+  if (!dateString) return '';
+  const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+  if (isNaN(date.getTime())) return '';
+  
+  return new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+};
