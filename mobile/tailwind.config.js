@@ -28,23 +28,26 @@ module.exports = {
           DEFAULT: "var(--color-neutral)",
           variant: "var(--color-neutral-variant)",
         },
+        outline: {
+          DEFAULT: "var(--color-outline)",
+          variant: "var(--color-outline-variant)",
+        },
+        ai: {
+          primary: "var(--color-ai-primary)",
+          "gradient-start": "var(--color-ai-gradient-start)",
+          "gradient-end": "var(--color-ai-gradient-end)",
+        },
         surface: {
           DEFAULT: "var(--color-surface)",
           container: "var(--color-surface-container)",
           "container-low": "var(--color-surface-container-low)",
           "container-lowest": "var(--color-surface-container-lowest)",
+          "container-high": "var(--color-surface-container-high)",
           lowest: "var(--color-surface-container-lowest)",
           low: "var(--color-surface-container-low)",
+          high: "var(--color-surface-container-high)",
           on: "var(--color-surface-on)",
           "on-variant": "var(--color-surface-on-variant)",
-        },
-        error: {
-          DEFAULT: "var(--color-error)",
-          on: "var(--color-error-on)",
-        },
-        outline: {
-          DEFAULT: "var(--color-outline)",
-          variant: "var(--color-outline-variant)",
         },
       },
       fontFamily: {
