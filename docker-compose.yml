@@ -11,14 +11,14 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
-      - "${DB_PORT}:3306"
+      - '${DB_PORT}:3306'
     volumes:
       - db_data:/var/lib/mysql
       - ./infrastructure/database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - smart-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,11 +40,11 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NLP_SERVICE_URL: http://ai-service:${AI_PORT}
     ports:
-      - "8080:8080"
+      - '8080:8080'
     networks:
       - smart-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:8080/actuator/health']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -68,7 +68,7 @@ services:
       ENABLE_LLM_REPAIR: ${ENABLE_LLM_REPAIR}
       LLM_CONFIDENCE_THRESHOLD: ${LLM_CONFIDENCE_THRESHOLD}
     ports:
-      - "${AI_PORT}:8000"
+      - '${AI_PORT}:8000'
     volumes:
       - ai_model_cache:/app/models/cache
       - ai_uploads:/app/uploads
@@ -76,7 +76,13 @@ services:
     networks:
       - smart-network
     healthcheck:
-      test: ["CMD", "python3.10", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      test:
+        [
+          'CMD',
+          'python3.10',
+          '-c',
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)",
+        ]
       interval: 20s
       timeout: 5s
       retries: 5
