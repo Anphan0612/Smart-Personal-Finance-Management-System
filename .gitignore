@@ -68,6 +68,6 @@ mobile/android/build/
 # ==========================================
 uploads/
 scratch/
-docs/
+
 # Optional local model store (large)
 ml-models/
