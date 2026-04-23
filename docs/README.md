@@ -17,7 +17,6 @@
 | [`FEATURES.md`](./FEATURES.md) | Đặc tả tính năng theo module, input/output, constraints, endpoint | Product, BA, Backend, Mobile |
 | [`USE_CASES.md`](./USE_CASES.md) | Kịch bản người dùng, luồng chính/phụ, điều kiện trước/sau | Product, BA, QA, Dev |
 | [`WORKFLOWS.md`](./WORKFLOWS.md) | Mermaid diagrams: ERD, Sequence, State, AI flow | Backend, Mobile, AI, QA |
-| [`PLAN-standard-docs.md`](./PLAN-standard-docs.md) | Kế hoạch triển khai tài liệu theo phase | PM, Tech Lead |
 
 ## Quy ước chung
 
@@ -70,4 +69,3 @@
 ## Tài liệu liên quan
 
 - Project overview: [`../README.md`](../README.md)
-- Planning file: [`PLAN-standard-docs.md`](./PLAN-standard-docs.md)
