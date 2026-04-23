@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @AllArgsConstructor
@@ -37,14 +37,14 @@ public class Category {
     private String nlpLabel;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null)
             id = java.util.UUID.randomUUID().toString();
         if (createdAt == null)
-            createdAt = LocalDateTime.now();
+            createdAt = OffsetDateTime.now();
     }
 
     // Business Methods

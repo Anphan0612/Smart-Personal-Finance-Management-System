@@ -1,5 +1,6 @@
 package com.example.smartmoneytracking.domain.entities.transaction;
 
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.Setter;
 import lombok.AccessLevel;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -32,7 +33,7 @@ public class Transaction {
 
     @Column(nullable = true)
     @Setter(AccessLevel.PRIVATE) // Date usually fixed at creation, but maybe editable?
-    private LocalDateTime transactionDate;
+    private OffsetDateTime transactionDate;
 
     @Column(nullable = false)
     @Setter(AccessLevel.PRIVATE) // Amount shouldn't change easily without affecting wallet balance. Better to
@@ -51,20 +52,20 @@ public class Transaction {
     private String receiptImageUrl;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null)
             id = UUID.randomUUID().toString();
         if (createdAt == null)
-            createdAt = LocalDateTime.now();
+            createdAt = DateUtils.nowUtc();
         if (transactionDate == null)
-            transactionDate = LocalDateTime.now();
+            transactionDate = DateUtils.nowUtc();
     }
 
     public static Transaction create(String walletId, String categoryId, BigDecimal amount, TransactionType type,
-                                     String description, LocalDateTime date) {
+                                     String description, OffsetDateTime date) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Transaction amount must be positive");
         }
@@ -75,7 +76,7 @@ public class Transaction {
         tx.amount = amount;
         tx.type = type;
         tx.description = description;
-        tx.transactionDate = date != null ? date : LocalDateTime.now();
+        tx.transactionDate = date != null ? DateUtils.normalize(date) : DateUtils.nowUtc();
         return tx;
     }
 
@@ -115,8 +116,8 @@ public class Transaction {
         this.type = type;
     }
 
-    public void updateDate(LocalDateTime date) {
-        this.transactionDate = date != null ? date : LocalDateTime.now();
+    public void updateDate(OffsetDateTime date) {
+        this.transactionDate = date != null ? DateUtils.normalize(date) : DateUtils.nowUtc();
     }
 
     public void updateReceiptImageUrl(String url) {
