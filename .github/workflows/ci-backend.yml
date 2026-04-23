@@ -2,11 +2,11 @@ name: Backend CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
     paths:
       - 'backend/**'
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
     paths:
       - 'backend/**'
 
@@ -18,17 +18,17 @@ jobs:
         working-directory: ./backend
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-    - name: Run Tests
-      run: mvn test
+      - name: Run Tests
+        run: mvn test
 
-    - name: Test Docker Build (Verify Dockerfile)
-      run: docker build -t smart-finance-backend:test .
+      - name: Test Docker Build (Verify Dockerfile)
+        run: docker build -t smart-finance-backend:test .

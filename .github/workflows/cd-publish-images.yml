@@ -2,7 +2,7 @@ name: Publish Docker Images to GHCR
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ['main']
     # Also trigger on version tags
     tags:
       - 'v*.*.*'
@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,7 +49,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
