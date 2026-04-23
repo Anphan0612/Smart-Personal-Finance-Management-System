@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, TouchableOpacity, Modal, TextInput, ScrollView, Alert } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
 import { X } from 'lucide-react-native';
 import { AtelierTypography } from '@/components/ui/AtelierTypography';

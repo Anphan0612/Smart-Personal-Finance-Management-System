@@ -1,8 +1,8 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { MotiView } from "moti";
-import { AlertTriangle, ChevronRight } from "lucide-react-native";
-import { formatCurrency } from "../../utils/format";
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { MotiView } from 'moti';
+import { AlertTriangle, ChevronRight } from 'lucide-react-native';
+import { formatCurrency } from '../../utils/format';
 
 interface AnomalyAlertProps {
   anomalies: Array<{
@@ -17,11 +17,12 @@ interface AnomalyAlertProps {
   onPress?: () => void;
 }
 
-const SEVERITY_CONFIG: Record<string, { bg: string; border: string; icon: string; label: string }> = {
-  CRITICAL: { bg: "#FDE8E8", border: "#ef4444", icon: "#ef4444", label: "Nghiêm trọng" },
-  HIGH: { bg: "#FFF3E0", border: "#f59e0b", icon: "#f59e0b", label: "Cao" },
-  MEDIUM: { bg: "#FFF8E1", border: "#d97706", icon: "#d97706", label: "Trung bình" },
-};
+const SEVERITY_CONFIG: Record<string, { bg: string; border: string; icon: string; label: string }> =
+  {
+    CRITICAL: { bg: '#FDE8E8', border: '#ef4444', icon: '#ef4444', label: 'Nghiêm trọng' },
+    HIGH: { bg: '#FFF3E0', border: '#f59e0b', icon: '#f59e0b', label: 'Cao' },
+    MEDIUM: { bg: '#FFF8E1', border: '#d97706', icon: '#d97706', label: 'Trung bình' },
+  };
 
 export const AnomalyAlert = ({ anomalies, onPress }: AnomalyAlertProps) => {
   if (!anomalies || anomalies.length === 0) return null;
@@ -33,7 +34,7 @@ export const AnomalyAlert = ({ anomalies, onPress }: AnomalyAlertProps) => {
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "spring", damping: 18, delay: 600 }}
+      transition={{ type: 'spring', damping: 18, delay: 600 }}
     >
       <TouchableOpacity
         activeOpacity={0.8}
@@ -47,13 +48,11 @@ export const AnomalyAlert = ({ anomalies, onPress }: AnomalyAlertProps) => {
         ]}
       >
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: config.border + "20" }]}>
+          <View style={[styles.iconContainer, { backgroundColor: config.border + '20' }]}>
             <AlertTriangle size={18} color={config.border} />
           </View>
           <View style={styles.headerText}>
-            <Text style={[styles.title, { color: config.border }]}>
-              Chi tiêu bất thường
-            </Text>
+            <Text style={[styles.title, { color: config.border }]}>Chi tiêu bất thường</Text>
             <Text style={styles.subtitle}>
               {anomalies.length} cảnh báo • {config.label}
             </Text>
@@ -70,16 +69,14 @@ export const AnomalyAlert = ({ anomalies, onPress }: AnomalyAlertProps) => {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Số tiền</Text>
-            <Text style={[styles.statValue, { color: "#ef4444" }]}>
+            <Text style={[styles.statValue, { color: '#ef4444' }]}>
               {formatCurrency(topAnomaly.amount)}
             </Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.stat}>
             <Text style={styles.statLabel}>Trung bình</Text>
-            <Text style={styles.statValue}>
-              {formatCurrency(topAnomaly.mean)}
-            </Text>
+            <Text style={styles.statValue}>{formatCurrency(topAnomaly.mean)}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -95,16 +92,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   headerText: {
@@ -112,11 +109,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   subtitle: {
     fontSize: 11,
-    color: "#74777f",
+    color: '#74777f',
     marginTop: 2,
   },
   detail: {
@@ -124,31 +121,31 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 13,
-    color: "#32343a",
+    color: '#32343a',
     lineHeight: 18,
   },
   statsRow: {
-    flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.5)",
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.5)',
     borderRadius: 16,
     padding: 12,
   },
   stat: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   statLabel: {
     fontSize: 10,
-    color: "#74777f",
+    color: '#74777f',
     marginBottom: 4,
   },
   statValue: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   statDivider: {
     width: 1,
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.05)",
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
 });

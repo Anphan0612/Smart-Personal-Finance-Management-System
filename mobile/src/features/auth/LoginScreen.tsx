@@ -1,26 +1,34 @@
-import React, { useState } from "react";
-import { View, ScrollView, Platform, Image, Alert, TouchableOpacity, KeyboardAvoidingView } from "react-native";
-import { MotiView } from "moti";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
-import { useAppStore } from "../../store/useAppStore";
-import { poster } from "../../services/api";
-import { AuthenticationResponse } from "../../types/api";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AtelierTypography, AtelierInput, AtelierButton } from "../../components/ui";
+import React, { useState } from 'react';
+import {
+  View,
+  ScrollView,
+  Platform,
+  Image,
+  Alert,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+} from 'react-native';
+import { MotiView } from 'moti';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import { useAppStore } from '../../store/useAppStore';
+import { poster } from '../../services/api';
+import { AuthenticationResponse } from '../../types/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AtelierTypography, AtelierInput, AtelierButton } from '../../components/ui';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const setTokens = useAppStore((state) => state.setTokens);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ email và mật khẩu");
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
 
@@ -28,7 +36,7 @@ export default function LoginScreen() {
       setIsLoading(true);
       console.log(`[AUTH] Đang đăng nhập cho ${email}...`);
 
-      const response = await poster<AuthenticationResponse, any>("/auth/login", {
+      const response = await poster<AuthenticationResponse, any>('/auth/login', {
         username: email,
         password: password,
       });
@@ -38,30 +46,30 @@ export default function LoginScreen() {
           name: response.name,
           email: response.email,
         });
-        router.replace("/(tabs)");
+        router.replace('/(tabs)');
       }
     } catch (error: any) {
-      console.error("[AUTH ERROR]", error);
-      const message = error.response?.data?.message || "Thông tin đăng nhập không chính xác.";
-      Alert.alert("Đăng nhập thất bại", message);
+      console.error('[AUTH ERROR]', error);
+      const message = error.response?.data?.message || 'Thông tin đăng nhập không chính xác.';
+      Alert.alert('Đăng nhập thất bại', message);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1"
     >
       <ScrollView
         className="flex-1 bg-surface-container-lowest"
         contentContainerStyle={{
           flexGrow: 1,
-          justifyContent: "center",
+          justifyContent: 'center',
           paddingHorizontal: 24,
           paddingTop: insets.top + 24,
-          paddingBottom: insets.bottom + 24
+          paddingBottom: insets.bottom + 24,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -75,13 +83,13 @@ export default function LoginScreen() {
             className="items-center"
           >
             <LinearGradient
-              colors={["#1275e2", "#0b4f9e"]}
+              colors={['#1275e2', '#0b4f9e']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className="w-16 h-16 rounded-[20px] items-center justify-center shadow-lg mb-4"
             >
               <Image
-                source={require("../../../assets/images/icon.png")}
+                source={require('../../../assets/images/icon.png')}
                 className="w-10 h-10"
                 style={{ tintColor: 'white' }}
               />
@@ -95,7 +103,7 @@ export default function LoginScreen() {
               </AtelierTypography>
             </View>
           </MotiView>
-  
+
           {/* Main Form Canvas */}
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
@@ -113,7 +121,7 @@ export default function LoginScreen() {
               autoCapitalize="none"
               leftIcon={<Mail size={18} color="#74777f" />}
             />
-  
+
             {/* Password Field */}
             <View className="gap-y-2">
               <AtelierInput
@@ -125,7 +133,11 @@ export default function LoginScreen() {
                 leftIcon={<Lock size={18} color="#74777f" />}
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff size={18} color="#74777f" /> : <Eye size={18} color="#74777f" />}
+                    {showPassword ? (
+                      <EyeOff size={18} color="#74777f" />
+                    ) : (
+                      <Eye size={18} color="#74777f" />
+                    )}
                   </TouchableOpacity>
                 }
               />
@@ -135,7 +147,7 @@ export default function LoginScreen() {
                 </AtelierTypography>
               </TouchableOpacity>
             </View>
-  
+
             {/* Sign In Button */}
             <AtelierButton
               label="Đăng nhập"
@@ -144,7 +156,7 @@ export default function LoginScreen() {
               fullWidth
               className="mt-2"
             />
-  
+
             {/* Divider */}
             <View className="flex-row items-center py-2">
               <View className="flex-1 h-[1.5px] bg-neutral-100" />
@@ -153,22 +165,26 @@ export default function LoginScreen() {
               </AtelierTypography>
               <View className="flex-1 h-[1.5px] bg-neutral-100" />
             </View>
-  
+
             {/* Social Logins */}
             <View className="flex-row gap-4">
               <TouchableOpacity className="flex-1 flex-row items-center justify-center py-4 bg-surface-container-low rounded-[16px] border border-neutral-100">
                 <Image
-                  source={{ uri: "https://www.google.com/favicon.ico" }}
+                  source={{ uri: 'https://www.google.com/favicon.ico' }}
                   className="w-5 h-5 mr-3"
                 />
-                <AtelierTypography variant="label" className="text-neutral-900 border-none">Google</AtelierTypography>
+                <AtelierTypography variant="label" className="text-neutral-900 border-none">
+                  Google
+                </AtelierTypography>
               </TouchableOpacity>
               <TouchableOpacity className="flex-1 flex-row items-center justify-center py-4 bg-surface-container-low rounded-[16px] border border-neutral-100">
-                <AtelierTypography variant="label" className="text-neutral-900 border-none">Apple ID</AtelierTypography>
+                <AtelierTypography variant="label" className="text-neutral-900 border-none">
+                  Apple ID
+                </AtelierTypography>
               </TouchableOpacity>
             </View>
           </MotiView>
-  
+
           {/* Footer Call to Action */}
           <MotiView
             from={{ opacity: 0 }}
@@ -177,11 +193,11 @@ export default function LoginScreen() {
             className="items-center"
           >
             <AtelierTypography variant="body" className="text-neutral-500">
-              Chưa có tài khoản?{" "}
+              Chưa có tài khoản?{' '}
               <AtelierTypography
                 variant="body"
                 className="text-primary font-bold"
-                onPress={() => router.push("/register" as any)}
+                onPress={() => router.push('/register' as any)}
               >
                 Đăng ký ngay
               </AtelierTypography>

@@ -5,17 +5,20 @@
 /**
  * Formats a number as VNĐ (Vietnamese Đồng).
  * Handles rounding to integers and provides consistent separators.
- * 
+ *
  * @param amount - The numerical value to format.
  * @param options - Formatting options.
  * @returns A formatted string e.g., "1.500.000đ"
  */
-export const formatVND = (amount: number = 0, options: { 
-  shorten?: boolean, 
-  withSymbol?: boolean 
-} = { shorten: false, withSymbol: true }) => {
+export const formatVND = (
+  amount: number = 0,
+  options: {
+    shorten?: boolean;
+    withSymbol?: boolean;
+  } = { shorten: false, withSymbol: true },
+) => {
   const absAmount = Math.abs(amount);
-  
+
   // Logic for intelligent shortening (only for very large numbers if enabled)
   if (options.shorten) {
     if (absAmount >= 1_000_000_000) {
@@ -56,10 +59,10 @@ export const formatCurrency = (amount: number = 0) => formatVND(amount);
  * e.g., "100000" -> "100.000"
  */
 export const formatLiveCurrency = (value: string): string => {
-  if (!value) return "";
-  const numericValue = value.replace(/\D/g, "");
-  if (!numericValue) return "";
-  return new Intl.NumberFormat("vi-VN").format(parseInt(numericValue, 10));
+  if (!value) return '';
+  const numericValue = value.replace(/\D/g, '');
+  if (!numericValue) return '';
+  return new Intl.NumberFormat('vi-VN').format(parseInt(numericValue, 10));
 };
 
 /**
@@ -67,7 +70,7 @@ export const formatLiveCurrency = (value: string): string => {
  */
 export const parseCurrency = (value: string): number => {
   if (!value) return 0;
-  const numericString = value.replace(/\D/g, "");
+  const numericString = value.replace(/\D/g, '');
   return parseInt(numericString, 10) || 0;
 };
 
@@ -80,7 +83,7 @@ export const formatDateTime = (dateString: string | Date | null | undefined): st
   if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return '';
-  
+
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
@@ -88,7 +91,9 @@ export const formatDateTime = (dateString: string | Date | null | undefined): st
     month: '2-digit',
     year: 'numeric',
     hour12: false,
-  }).format(date).replace(',', ''); // Standardize format
+  })
+    .format(date)
+    .replace(',', ''); // Standardize format
 };
 
 /**
@@ -99,7 +104,7 @@ export const formatTime = (dateString: string | Date | null | undefined): string
   if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return '';
-  
+
   return new Intl.DateTimeFormat('vi-VN', {
     hour: '2-digit',
     minute: '2-digit',
@@ -115,7 +120,7 @@ export const formatDate = (dateString: string | Date | null | undefined): string
   if (!dateString) return '';
   const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
   if (isNaN(date.getTime())) return '';
-  
+
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',

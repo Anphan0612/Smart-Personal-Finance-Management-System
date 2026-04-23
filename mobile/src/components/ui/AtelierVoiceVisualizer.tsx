@@ -10,11 +10,14 @@ interface AtelierVoiceVisualizerProps {
   onClose: () => void;
 }
 
-export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: AtelierVoiceVisualizerProps) => {
+export const AtelierVoiceVisualizer = ({
+  onTranscriptionResult,
+  onClose,
+}: AtelierVoiceVisualizerProps) => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState('');
-  
+
   // Simulated waves
   const [waves] = useState([1, 2, 3, 4, 5, 6, 7]);
 
@@ -31,30 +34,30 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
   const startRecording = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsRecording(true);
-    
+
     // Simulate real-time transcription
-    let currentText = "Đang nghe";
-    setTranscription(currentText + "...");
-    
-    setTimeout(() => setTranscription("Thêm giao dịch..."), 1500);
-    setTimeout(() => setTranscription("Thêm giao dịch ăn trưa..."), 2500);
-    setTimeout(() => setTranscription("Thêm giao dịch ăn trưa 50 ngàn..."), 3500);
+    let currentText = 'Đang nghe';
+    setTranscription(currentText + '...');
+
+    setTimeout(() => setTranscription('Thêm giao dịch...'), 1500);
+    setTimeout(() => setTranscription('Thêm giao dịch ăn trưa...'), 2500);
+    setTimeout(() => setTranscription('Thêm giao dịch ăn trưa 50 ngàn...'), 3500);
   };
 
   const stopRecording = () => {
     if (!isRecording) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setIsRecording(false);
-    
+
     // Send the simulated result
     setTimeout(() => {
-      onTranscriptionResult("Thêm giao dịch ăn trưa 50 ngàn");
+      onTranscriptionResult('Thêm giao dịch ăn trưa 50 ngàn');
       onClose();
     }, 500);
   };
 
   return (
-    <MotiView 
+    <MotiView
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
       exit={{ opacity: 0, translateY: 20 }}
@@ -62,12 +65,12 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
     >
       <View className="flex-row justify-between items-center mb-6">
         <View className="flex-row items-center gap-2">
-          <Mic size={20} color={isRecording ? "#ba1a1a" : "#005ab4"} />
+          <Mic size={20} color={isRecording ? '#ba1a1a' : '#005ab4'} />
           <AtelierTypography variant="h3" className="text-[16px] text-surface-on">
-            {isRecording ? "Đang lắng nghe..." : "Trợ lý giọng nói"}
+            {isRecording ? 'Đang lắng nghe...' : 'Trợ lý giọng nói'}
           </AtelierTypography>
         </View>
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => {
             if (isRecording) stopRecording();
             else onClose();
@@ -86,10 +89,14 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
           <AtelierTypography variant="h3" className="text-center text-[16px] mb-2 text-surface-on">
             Cần quyền Microphone
           </AtelierTypography>
-          <AtelierTypography variant="body" className="text-center text-[13px] text-surface-on-variant px-4 mb-8">
-            Atelier AI cần quyền truy cập microphone để có thể nhận diện giọng nói của bạn. Dữ liệu âm thanh sẽ không được lưu trữ.
+          <AtelierTypography
+            variant="body"
+            className="text-center text-[13px] text-surface-on-variant px-4 mb-8"
+          >
+            Atelier AI cần quyền truy cập microphone để có thể nhận diện giọng nói của bạn. Dữ liệu
+            âm thanh sẽ không được lưu trữ.
           </AtelierTypography>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={requestPermission}
             className="w-full py-4 bg-primary rounded-2xl items-center"
           >
@@ -102,11 +109,11 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
 
       {hasPermission === true && (
         <View className="items-center py-8">
-          <AtelierTypography 
-            variant="h2" 
+          <AtelierTypography
+            variant="h2"
             className={`text-center text-[24px] font-medium mb-12 ${transcription ? 'text-surface-on' : 'text-surface-on-variant opacity-50'}`}
           >
-            {transcription || "Hãy nói gì đó..."}
+            {transcription || 'Hãy nói gì đó...'}
           </AtelierTypography>
 
           <View className="flex-row items-center justify-center gap-2 mb-10 h-16">
@@ -114,9 +121,9 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
               <MotiView
                 key={index}
                 from={{ height: 10, opacity: 0.5 }}
-                animate={{ 
-                  height: isRecording ? 10 + Math.random() * 40 : 10, 
-                  opacity: isRecording ? 1 : 0.5 
+                animate={{
+                  height: isRecording ? 10 + Math.random() * 40 : 10,
+                  opacity: isRecording ? 1 : 0.5,
                 }}
                 transition={{
                   type: 'timing',
@@ -128,7 +135,7 @@ export const AtelierVoiceVisualizer = ({ onTranscriptionResult, onClose }: Ateli
             ))}
           </View>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={isRecording ? stopRecording : startRecording}
             className={`w-20 h-20 rounded-full items-center justify-center shadow-lg ${isRecording ? 'bg-error' : 'bg-primary'}`}
           >

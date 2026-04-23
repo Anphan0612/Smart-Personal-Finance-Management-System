@@ -1,45 +1,41 @@
-import React, { useMemo } from "react";
-import { View, ScrollView, Dimensions, RefreshControl } from "react-native";
-import { MotiView } from "moti";
-import { 
-  TrendingDown, 
-  Sparkles,
-  ChevronRight
-} from "lucide-react-native";
-import { LineChart, PieChart, BarChart } from "react-native-gifted-charts";
-import { useAppStore } from "../../store/useAppStore";
-import { useDashboard } from "../../hooks/useDashboard";
-import { MonthlyTrend, CategoryBreakdown } from "../../types/api";
-import { formatCurrency } from "../../utils/format";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { 
-  AtelierTypography, 
-  AtelierCard, 
-  SkeletonBox 
-} from "@/components/ui";
-import { Colors } from "@/constants/tokens";
+import React, { useMemo } from 'react';
+import { View, ScrollView, Dimensions, RefreshControl } from 'react-native';
+import { MotiView } from 'moti';
+import { TrendingDown, Sparkles, ChevronRight } from 'lucide-react-native';
+import { LineChart, PieChart, BarChart } from 'react-native-gifted-charts';
+import { useAppStore } from '../../store/useAppStore';
+import { useDashboard } from '../../hooks/useDashboard';
+import { MonthlyTrend, CategoryBreakdown } from '../../types/api';
+import { formatCurrency } from '../../utils/format';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AtelierTypography, AtelierCard, SkeletonBox } from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
-  const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard(activeWalletId || "");
+  const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard(activeWalletId || '');
 
   // Transform Trends for Line Chart (Expenses)
   const lineData = useMemo(() => {
     if (!dashboard?.monthlyTrend) return [];
     return dashboard.monthlyTrend.map((t: MonthlyTrend) => ({
       value: Number(t.expenses),
-      label: t.month.substring(0, 3)
+      label: t.month.substring(0, 3),
     }));
   }, [dashboard]);
 
   // Transform Category Breakdown for Pie Chart
   const pieData = useMemo(() => {
     if (!dashboard?.categoryBreakdown) return [];
-    const total = dashboard.categoryBreakdown.reduce((sum: number, c: CategoryBreakdown) => sum + Number(c.amount), 0) || 1;
-    
+    const total =
+      dashboard.categoryBreakdown.reduce(
+        (sum: number, c: CategoryBreakdown) => sum + Number(c.amount),
+        0,
+      ) || 1;
+
     // Modern palette for pie chart
     const chartColors = [
       Colors.primary.DEFAULT,
@@ -54,7 +50,7 @@ export default function AnalyticsScreen() {
       value: Number(c.amount),
       color: chartColors[index % chartColors.length],
       text: `${((Number(c.amount) / total) * 100).toFixed(0)}%`,
-      name: c.category
+      name: c.category,
     }));
   }, [dashboard]);
 
@@ -63,15 +59,15 @@ export default function AnalyticsScreen() {
     if (!dashboard?.monthlyTrend) return [];
     const data: any[] = [];
     dashboard.monthlyTrend.forEach((t: MonthlyTrend) => {
-      data.push({ 
-        value: Number(t.income), 
-        label: t.month.substring(0, 3), 
-        spacing: 4, 
-        frontColor: Colors.primary.DEFAULT
+      data.push({
+        value: Number(t.income),
+        label: t.month.substring(0, 3),
+        spacing: 4,
+        frontColor: Colors.primary.DEFAULT,
       });
       data.push({
         value: Number(t.expenses),
-        frontColor: Colors.secondary.DEFAULT 
+        frontColor: Colors.secondary.DEFAULT,
       });
     });
     return data;
@@ -90,14 +86,18 @@ export default function AnalyticsScreen() {
 
   return (
     <View className="flex-1 bg-surface-lowest">
-      <ScrollView 
+      <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: insets.top + 88, paddingHorizontal: 24, paddingBottom: 160 }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 88,
+          paddingHorizontal: 24,
+          paddingBottom: 160,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={refetch} 
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
             tintColor={Colors.primary.DEFAULT}
             colors={[Colors.primary.DEFAULT]}
           />
@@ -121,13 +121,15 @@ export default function AnalyticsScreen() {
         <MotiView
           from={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "timing", duration: 800 }}
+          transition={{ type: 'timing', duration: 800 }}
         >
           <AtelierCard padding="md" className="mb-6 bg-white">
             <View className="flex-row justify-between items-start mb-8">
               <View>
                 <AtelierTypography variant="h3">Xu hướng chi tiêu</AtelierTypography>
-                <AtelierTypography variant="caption" className="text-neutral-400">Dòng tiền hàng tháng</AtelierTypography>
+                <AtelierTypography variant="caption" className="text-neutral-400">
+                  Dòng tiền hàng tháng
+                </AtelierTypography>
               </View>
               <View className="items-end">
                 <AtelierTypography variant="h2" className="text-primary">
@@ -141,7 +143,7 @@ export default function AnalyticsScreen() {
                 </View>
               </View>
             </View>
-            
+
             <View className="items-center">
               {lineData.length > 0 ? (
                 <LineChart
@@ -161,12 +163,18 @@ export default function AnalyticsScreen() {
                   xAxisThickness={0}
                   hideDataPoints
                   curved
-                  xAxisLabelTextStyle={{ fontSize: 10, color: Colors.neutral[400], fontFamily: 'Inter_600SemiBold' }}
+                  xAxisLabelTextStyle={{
+                    fontSize: 10,
+                    color: Colors.neutral[400],
+                    fontFamily: 'Inter_600SemiBold',
+                  }}
                   yAxisTextStyle={{ fontSize: 10, color: Colors.neutral[400] }}
                 />
               ) : (
                 <View className="h-40 items-center justify-center">
-                  <AtelierTypography variant="body" className="text-neutral-300 italic">Chưa có dữ liệu xu hướng</AtelierTypography>
+                  <AtelierTypography variant="body" className="text-neutral-300 italic">
+                    Chưa có dữ liệu xu hướng
+                  </AtelierTypography>
                 </View>
               )}
             </View>
@@ -177,10 +185,12 @@ export default function AnalyticsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", delay: 200 }}
+          transition={{ type: 'timing', delay: 200 }}
         >
           <AtelierCard padding="md" className="mb-6 bg-white">
-            <AtelierTypography variant="h3" className="mb-8">Phân bổ danh mục</AtelierTypography>
+            <AtelierTypography variant="h3" className="mb-8">
+              Phân bổ danh mục
+            </AtelierTypography>
             <View className="flex-row items-center justify-between">
               <View className="items-center justify-center relative">
                 {pieData.length > 0 ? (
@@ -194,24 +204,42 @@ export default function AnalyticsScreen() {
                     centerLabelComponent={() => (
                       <View className="items-center justify-center">
                         <Sparkles size={20} color={Colors.primary.DEFAULT} opacity={0.5} />
-                        <AtelierTypography variant="label" className="text-neutral-400 text-[10px] mt-1">TOTAL</AtelierTypography>
+                        <AtelierTypography
+                          variant="label"
+                          className="text-neutral-400 text-[10px] mt-1"
+                        >
+                          TOTAL
+                        </AtelierTypography>
                       </View>
                     )}
                   />
                 ) : (
-                   <View className="items-center justify-center h-36">
-                     <AtelierTypography variant="body" className="text-neutral-300 italic">Chưa có dữ liệu danh mục</AtelierTypography>
-                   </View>
+                  <View className="items-center justify-center h-36">
+                    <AtelierTypography variant="body" className="text-neutral-300 italic">
+                      Chưa có dữ liệu danh mục
+                    </AtelierTypography>
+                  </View>
                 )}
               </View>
               <View className="flex-1 ml-6 gap-3">
                 {pieData.slice(0, 5).map((item: any, i: number) => (
                   <View key={i} className="flex-row justify-between items-center">
                     <View className="flex-row items-center gap-2">
-                      <View className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <AtelierTypography variant="body" className="text-xs text-neutral-600" numberOfLines={1}>{item.name}</AtelierTypography>
+                      <View
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <AtelierTypography
+                        variant="body"
+                        className="text-xs text-neutral-600"
+                        numberOfLines={1}
+                      >
+                        {item.name}
+                      </AtelierTypography>
                     </View>
-                    <AtelierTypography variant="h3" className="text-xs">{item.text}</AtelierTypography>
+                    <AtelierTypography variant="h3" className="text-xs">
+                      {item.text}
+                    </AtelierTypography>
                   </View>
                 ))}
               </View>
@@ -223,7 +251,7 @@ export default function AnalyticsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", delay: 400 }}
+          transition={{ type: 'timing', delay: 400 }}
         >
           <AtelierCard padding="md" className="mb-10 bg-white">
             <View className="flex-row justify-between items-center mb-8">
@@ -231,15 +259,19 @@ export default function AnalyticsScreen() {
               <View className="flex-row gap-3">
                 <View className="flex-row items-center gap-1.5">
                   <View className="w-2 h-2 rounded-full bg-primary" />
-                  <AtelierTypography variant="label" className="text-[10px] text-neutral-400">THU</AtelierTypography>
+                  <AtelierTypography variant="label" className="text-[10px] text-neutral-400">
+                    THU
+                  </AtelierTypography>
                 </View>
                 <View className="flex-row items-center gap-1.5">
                   <View className="w-2 h-2 rounded-full bg-secondary" />
-                  <AtelierTypography variant="label" className="text-[10px] text-neutral-400">CHI</AtelierTypography>
+                  <AtelierTypography variant="label" className="text-[10px] text-neutral-400">
+                    CHI
+                  </AtelierTypography>
                 </View>
               </View>
             </View>
-            
+
             <View className="items-center">
               {barData.length > 0 ? (
                 <BarChart
@@ -253,12 +285,18 @@ export default function AnalyticsScreen() {
                   height={150}
                   width={SCREEN_WIDTH - 100}
                   spacing={20}
-                  xAxisLabelTextStyle={{ fontSize: 10, color: Colors.neutral[400], fontFamily: 'Inter_600SemiBold' }}
+                  xAxisLabelTextStyle={{
+                    fontSize: 10,
+                    color: Colors.neutral[400],
+                    fontFamily: 'Inter_600SemiBold',
+                  }}
                   yAxisTextStyle={{ fontSize: 10, color: Colors.neutral[400] }}
                 />
               ) : (
                 <View className="h-40 items-center justify-center">
-                  <AtelierTypography variant="body" className="text-neutral-300 italic">Chưa có dữ liệu dòng tiền</AtelierTypography>
+                  <AtelierTypography variant="body" className="text-neutral-300 italic">
+                    Chưa có dữ liệu dòng tiền
+                  </AtelierTypography>
                 </View>
               )}
             </View>

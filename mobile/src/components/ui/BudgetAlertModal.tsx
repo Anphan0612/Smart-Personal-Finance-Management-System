@@ -1,8 +1,8 @@
-import React from "react";
-import { View, Text, TouchableOpacity, Modal } from "react-native";
-import { MotiView } from "moti";
-import { AlertTriangle, X } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import React from 'react';
+import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { MotiView } from 'moti';
+import { AlertTriangle, X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   visible: boolean;
@@ -13,22 +13,24 @@ interface Props {
   aiInsight: string;
 }
 
-export function BudgetAlertModal({ visible, onDismiss, categoryName, percentageUsed, overspentAmount, aiInsight }: Props) {
+export function BudgetAlertModal({
+  visible,
+  onDismiss,
+  categoryName,
+  percentageUsed,
+  overspentAmount,
+  aiInsight,
+}: Props) {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onDismiss}
-    >
-      <View className="flex-1 justify-end" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onDismiss}>
+      <View className="flex-1 justify-end" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
         <MotiView
           from={{ translateY: 300, opacity: 0 }}
           animate={{ translateY: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 18 }}
+          transition={{ type: 'spring', damping: 18 }}
         >
           <LinearGradient
-            colors={["#fef2f2", "#ffffff"]}
+            colors={['#fef2f2', '#ffffff']}
             className="rounded-t-[32px] px-6 pt-6 pb-10"
           >
             <View className="flex-row justify-end mb-2">
@@ -44,7 +46,7 @@ export function BudgetAlertModal({ visible, onDismiss, categoryName, percentageU
               <MotiView
                 from={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 200 }}
+                transition={{ type: 'spring', delay: 200 }}
               >
                 <View className="w-20 h-20 rounded-full bg-error/10 items-center justify-center mb-4">
                   <AlertTriangle size={40} color="#ef4444" />

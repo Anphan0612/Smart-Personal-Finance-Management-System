@@ -19,12 +19,12 @@ export const ID_PREFIX = {
   ERROR: 'err',
 } as const;
 
-export type IdPrefix = typeof ID_PREFIX[keyof typeof ID_PREFIX];
+export type IdPrefix = (typeof ID_PREFIX)[keyof typeof ID_PREFIX];
 
 /**
  * Generates a collision-resistant unique ID using nanoid.
  * Defaults to 10 characters for a good balance of speed and entropy.
- * 
+ *
  * @param prefix Optional prefix from ID_PREFIX
  * @returns A stable, unique string ID
  */
@@ -36,7 +36,7 @@ export const generateId = (prefix?: string): string => {
 /**
  * Renders a stable key for React components in mapped lists.
  * This is the SOURCE OF TRUTH for keys in the UI.
- * 
+ *
  * @param type The context/entity type (e.g., 'message', 'txn')
  * @param id The unique identifier
  * @param index Optional index as a last-resort fallback
@@ -44,13 +44,14 @@ export const generateId = (prefix?: string): string => {
  */
 export const renderKey = (type: string, id: string | number, index?: number): string => {
   // Backward compatibility: Handle legacy numeric IDs or missing IDs
-  const identifier = (id !== undefined && id !== null && id !== '') 
-    ? id.toString() 
-    : `fallback-${index ?? Math.random().toString(36).slice(2, 5)}`;
-    
+  const identifier =
+    id !== undefined && id !== null && id !== ''
+      ? id.toString()
+      : `fallback-${index ?? Math.random().toString(36).slice(2, 5)}`;
+
   // SAFETY: Always append index if available to guarantee uniqueness in mapped lists
   // This prevents React "Duplicate Key" errors even if two items share the same ID.
   const suffix = index !== undefined ? `-idx-${index}` : '';
-    
+
   return `${type}-${identifier}${suffix}`;
 };

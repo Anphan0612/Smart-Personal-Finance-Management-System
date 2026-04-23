@@ -1,25 +1,21 @@
-import React, { useState, useMemo } from "react";
-import { View, FlatList, TextInput, TouchableOpacity, RefreshControl } from "react-native";
-import { MotiView } from "moti";
+import React, { useState, useMemo } from 'react';
+import { View, FlatList, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
+import { MotiView } from 'moti';
+import { Search, ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
+import { useAppStore } from '@/store/useAppStore';
+import { useTransactions } from '@/hooks/useTransactions';
+import { TransactionResponse } from '@/types/api';
+import { format, isToday, isYesterday, parseISO } from 'date-fns';
+import { formatCurrency, formatTime, formatDate } from '@/utils/format';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TransactionDetailSheet from './components/TransactionDetailSheet';
 import {
-  Search,
-  ArrowDownLeft,
-  ArrowUpRight
-} from "lucide-react-native";
-import { useAppStore } from "@/store/useAppStore";
-import { useTransactions } from "@/hooks/useTransactions";
-import { TransactionResponse } from "@/types/api";
-import { format, isToday, isYesterday, parseISO } from "date-fns";
-import { formatCurrency, formatTime, formatDate } from "@/utils/format";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import TransactionDetailSheet from "./components/TransactionDetailSheet";
-import { 
-  AtelierTypography, 
-  AtelierCard, 
+  AtelierTypography,
+  AtelierCard,
   SkeletonBox,
-  AtelierTransactionCard 
-} from "@/components/ui";
-import { Colors } from "@/constants/tokens";
+  AtelierTransactionCard,
+} from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
 const TransactionSkeleton = () => (
   <AtelierCard elevation="lowest" padding="sm" className="mb-3">
@@ -42,28 +38,21 @@ const TransactionSkeleton = () => (
 export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
-  
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    refetch,
-    isRefetching
-  } = useTransactions(activeWalletId || "");
+
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
+    useTransactions(activeWalletId || '');
 
   // Flatten and Filter Duplicates
   const allTransactions = useMemo(() => {
     if (!data?.pages) return [];
-    
-    const rawItems = data.pages.flatMap(page => page.content || []);
+
+    const rawItems = data.pages.flatMap((page) => page.content || []);
     const uniqueItemsMap = new Map<string, TransactionResponse>();
-    
-    rawItems.forEach(item => {
+
+    rawItems.forEach((item) => {
       if (item && item.id) {
         uniqueItemsMap.set(item.id, item);
       }
@@ -85,9 +74,10 @@ export default function TransactionsScreen() {
   const groupedTransactions = useMemo(() => {
     if (!allTransactions || allTransactions.length === 0) return [];
 
-    const filtered = allTransactions.filter((t: TransactionResponse) =>
-      (t.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (t.categoryName || "").toLowerCase().includes(searchQuery.toLowerCase())
+    const filtered = allTransactions.filter(
+      (t: TransactionResponse) =>
+        (t.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.categoryName || '').toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     const groups: { [key: string]: TransactionResponse[] } = {};
@@ -99,16 +89,16 @@ export default function TransactionsScreen() {
 
     return Object.keys(groups)
       .sort((a, b) => b.localeCompare(a))
-      .map(date => ({
+      .map((date) => ({
         date,
-        items: groups[date]
+        items: groups[date],
       }));
   }, [allTransactions, searchQuery]);
 
   const formatDateLabel = (dateStr: string) => {
     const date = parseISO(dateStr);
-    if (isToday(date)) return "Hôm nay";
-    if (isYesterday(date)) return "Hôm qua";
+    if (isToday(date)) return 'Hôm nay';
+    if (isYesterday(date)) return 'Hôm qua';
     return formatDate(date);
   };
 
@@ -119,10 +109,12 @@ export default function TransactionsScreen() {
   };
 
   const renderFooter = () => {
-    if (!isFetchingNextPage) return <View className="h-20" />; 
+    if (!isFetchingNextPage) return <View className="h-20" />;
     return (
       <View className="py-4 gap-3">
-        {[1, 2, 3].map(i => <TransactionSkeleton key={`footer-skele-${i}`} />)}
+        {[1, 2, 3].map((i) => (
+          <TransactionSkeleton key={`footer-skele-${i}`} />
+        ))}
       </View>
     );
   };
@@ -149,7 +141,13 @@ export default function TransactionsScreen() {
     </MotiView>
   );
 
-  const renderItem = ({ item, index }: { item: { date: string; items: TransactionResponse[] }; index: number }) => (
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: { date: string; items: TransactionResponse[] };
+    index: number;
+  }) => (
     <MotiView
       key={item.date}
       from={{ opacity: 0, translateY: 20 }}
@@ -170,13 +168,16 @@ export default function TransactionsScreen() {
             <AtelierCard elevation="lowest" padding="sm" className="bg-white">
               <View className="flex-row items-center justify-between">
                 <View className="flex-1 flex-row items-center gap-4 mr-3">
-                  <View className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                    transaction.type === 'INCOME' ? 'bg-green-50' : 'bg-red-50'
-                  }`}>
-                    {transaction.type === 'INCOME' ?
-                      <ArrowDownLeft size={20} color={Colors.secondary.DEFAULT} /> :
+                  <View
+                    className={`w-12 h-12 rounded-2xl items-center justify-center ${
+                      transaction.type === 'INCOME' ? 'bg-green-50' : 'bg-red-50'
+                    }`}
+                  >
+                    {transaction.type === 'INCOME' ? (
+                      <ArrowDownLeft size={20} color={Colors.secondary.DEFAULT} />
+                    ) : (
                       <ArrowUpRight size={20} color={Colors.error} />
-                    }
+                    )}
                   </View>
                   <View className="flex-1">
                     <AtelierTypography variant="h3" className="text-[15px]" numberOfLines={1}>
@@ -188,10 +189,14 @@ export default function TransactionsScreen() {
                   </View>
                 </View>
                 <View className="items-end">
-                  <AtelierTypography variant="h3" className={`text-[16px] ${
-                    transaction.type === 'INCOME' ? 'text-green-600' : 'text-error'
-                  }`}>
-                    {transaction.type === 'INCOME' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                  <AtelierTypography
+                    variant="h3"
+                    className={`text-[16px] ${
+                      transaction.type === 'INCOME' ? 'text-green-600' : 'text-error'
+                    }`}
+                  >
+                    {transaction.type === 'INCOME' ? '+' : '-'}
+                    {formatCurrency(transaction.amount)}
                   </AtelierTypography>
                   <AtelierTypography variant="caption" className="text-neutral-400">
                     {formatTime(transaction.transactionDate)}
@@ -209,7 +214,7 @@ export default function TransactionsScreen() {
     if (isLoading) {
       return (
         <View>
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <View key={`loading-skele-${i}`} className="mb-8">
               <View className="mb-3">
                 <SkeletonBox width={120} height={16} radius={4} />
@@ -225,8 +230,12 @@ export default function TransactionsScreen() {
     }
     return (
       <View className="items-center justify-center py-20">
-        <AtelierTypography variant="h3" className="text-neutral-400">Không tìm thấy giao dịch</AtelierTypography>
-        <AtelierTypography variant="body" className="text-neutral-400/60 mt-1">Hãy thử trò chuyện với AI để thêm mới!</AtelierTypography>
+        <AtelierTypography variant="h3" className="text-neutral-400">
+          Không tìm thấy giao dịch
+        </AtelierTypography>
+        <AtelierTypography variant="body" className="text-neutral-400/60 mt-1">
+          Hãy thử trò chuyện với AI để thêm mới!
+        </AtelierTypography>
       </View>
     );
   };
@@ -241,15 +250,19 @@ export default function TransactionsScreen() {
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5} 
-        contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 220 }}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{
+          paddingTop: insets.top + 72,
+          paddingHorizontal: 24,
+          paddingBottom: 220,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={isRefetching} 
-            onRefresh={refetch} 
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
             tintColor={Colors.primary.DEFAULT}
-            colors={[Colors.primary.DEFAULT]} 
+            colors={[Colors.primary.DEFAULT]}
           />
         }
       />

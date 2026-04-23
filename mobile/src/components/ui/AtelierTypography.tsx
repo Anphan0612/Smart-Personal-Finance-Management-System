@@ -1,6 +1,6 @@
-import React from "react";
-import { Text, type TextProps } from "react-native";
-import type { TypographyVariant } from "../../types";
+import React from 'react';
+import { Text, type TextProps } from 'react-native';
+import type { TypographyVariant } from '../../types';
 
 interface AtelierTypographyProps extends TextProps {
   variant?: TypographyVariant;
@@ -9,16 +9,16 @@ interface AtelierTypographyProps extends TextProps {
 }
 
 const variantStyles: Record<TypographyVariant, string> = {
-  h1: "text-4xl font-manrope font-extrabold tracking-tighter",
-  h2: "text-3xl font-manrope font-bold tracking-tight",
-  h3: "text-xl font-manrope font-bold",
-  body: "text-base font-inter font-normal leading-relaxed",
-  caption: "text-sm font-inter text-surface-on-variant",
-  label: "text-xs font-manrope font-bold uppercase tracking-widest",
+  h1: 'text-4xl font-manrope font-extrabold tracking-tighter',
+  h2: 'text-3xl font-manrope font-bold tracking-tight',
+  h3: 'text-xl font-manrope font-bold',
+  body: 'text-base font-inter font-normal leading-relaxed',
+  caption: 'text-sm font-inter text-surface-on-variant',
+  label: 'text-xs font-manrope font-bold uppercase tracking-widest',
 };
 
 export function AtelierTypography({
-  variant = "body",
+  variant = 'body',
   color,
   className,
   style,
@@ -26,13 +26,11 @@ export function AtelierTypography({
   ...props
 }: AtelierTypographyProps) {
   const resolvedColor =
-    typeof color === "object" && color !== null && "DEFAULT" in color
-      ? color.DEFAULT
-      : color;
+    typeof color === 'object' && color !== null && 'DEFAULT' in color ? color.DEFAULT : color;
 
   return (
     <Text
-      className={`${variantStyles[variant]} ${className ?? ""}`}
+      className={`${variantStyles[variant]} ${className ?? ''}`}
       style={[resolvedColor ? { color: resolvedColor } : undefined, style]}
       {...props}
     >

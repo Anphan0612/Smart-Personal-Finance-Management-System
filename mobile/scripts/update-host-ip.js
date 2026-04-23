@@ -26,25 +26,25 @@ const API_PREFIX = '/api/v1';
 
 /** Adapter name patterns that are NOT real LAN connections */
 const VIRTUAL_ADAPTER_PATTERNS = [
-  /^vEthernet/i,          // Hyper-V / WSL
-  /^VirtualBox/i,         // VirtualBox Host-Only
-  /^VMware/i,             // VMware virtual adapters
-  /^docker/i,             // Docker Desktop
-  /^br-/i,                // Docker bridge networks
-  /^vboxnet/i,            // VirtualBox (Linux)
-  /^virbr/i,              // libvirt bridge (Linux)
-  /^ham/i,                // Hamachi VPN
-  /^Tailscale/i,          // Tailscale VPN
-  /^ZeroTier/i,           // ZeroTier VPN
-  /^utun/i,               // macOS VPN tunnels
-  /^tun/i,                // Linux VPN tunnels
-  /^tap/i,                // TAP virtual adapters
+  /^vEthernet/i, // Hyper-V / WSL
+  /^VirtualBox/i, // VirtualBox Host-Only
+  /^VMware/i, // VMware virtual adapters
+  /^docker/i, // Docker Desktop
+  /^br-/i, // Docker bridge networks
+  /^vboxnet/i, // VirtualBox (Linux)
+  /^virbr/i, // libvirt bridge (Linux)
+  /^ham/i, // Hamachi VPN
+  /^Tailscale/i, // Tailscale VPN
+  /^ZeroTier/i, // ZeroTier VPN
+  /^utun/i, // macOS VPN tunnels
+  /^tun/i, // Linux VPN tunnels
+  /^tap/i, // TAP virtual adapters
 ];
 
 /** IP ranges that are typical LAN addresses */
 const LAN_RANGES = [
-  /^192\.168\./,          // Class C private (most home routers)
-  /^10\./,               // Class A private (enterprise / some routers)
+  /^192\.168\./, // Class C private (most home routers)
+  /^10\./, // Class A private (enterprise / some routers)
   /^172\.(1[6-9]|2\d|3[01])\./, // Class B private
 ];
 
@@ -52,14 +52,14 @@ const LAN_RANGES = [
  * Check if an adapter name looks like a virtual/VPN interface
  */
 function isVirtualAdapter(adapterName) {
-  return VIRTUAL_ADAPTER_PATTERNS.some(pattern => pattern.test(adapterName));
+  return VIRTUAL_ADAPTER_PATTERNS.some((pattern) => pattern.test(adapterName));
 }
 
 /**
  * Check if an IP is in a standard LAN range
  */
 function isLanIP(ip) {
-  return LAN_RANGES.some(pattern => pattern.test(ip));
+  return LAN_RANGES.some((pattern) => pattern.test(ip));
 }
 
 // ─── IP Detection ───────────────────────────────────────────────
@@ -87,10 +87,13 @@ function detectBestIP() {
 
       // Priority: lower = better
       let priority;
-      if (!isVirtual && isLan) priority = 1;      // Best: real + LAN
-      else if (!isVirtual && !isLan) priority = 2; // OK: real + unusual range
-      else if (isVirtual && isLan) priority = 3;   // Fallback: virtual + LAN
-      else priority = 4;                            // Last resort
+      if (!isVirtual && isLan)
+        priority = 1; // Best: real + LAN
+      else if (!isVirtual && !isLan)
+        priority = 2; // OK: real + unusual range
+      else if (isVirtual && isLan)
+        priority = 3; // Fallback: virtual + LAN
+      else priority = 4; // Last resort
 
       candidates.push({
         ip: net.address,
@@ -190,7 +193,7 @@ function main() {
   console.log(`✅ Selected IP : ${best.ip} (${best.adapter})`);
   console.log(`🔗 API URL     : ${newUrl}`);
   console.log('');
-  console.log('💡 Can\'t connect? Check Windows Firewall allows port 8080.');
+  console.log("💡 Can't connect? Check Windows Firewall allows port 8080.");
   console.log('──────────────────────────────────────────────────');
   console.log('');
 }

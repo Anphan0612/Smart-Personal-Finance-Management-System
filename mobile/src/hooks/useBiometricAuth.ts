@@ -12,7 +12,9 @@ export interface BiometricAuthResult {
  * Follows PLAN-password-security-upgrade.md
  */
 export const useBiometricAuth = () => {
-  const authenticate = async (reason: string = 'Vui lòng xác thực để tiếp tục'): Promise<BiometricAuthResult> => {
+  const authenticate = async (
+    reason: string = 'Vui lòng xác thực để tiếp tục',
+  ): Promise<BiometricAuthResult> => {
     try {
       // 1. Check if hardware supports biometrics
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
@@ -49,15 +51,15 @@ export const useBiometricAuth = () => {
   };
 
   const authenticateWithPasscode = async (reason: string): Promise<BiometricAuthResult> => {
-    // Note: LocalAuthentication.authenticateAsync with disableDeviceFallback: false 
+    // Note: LocalAuthentication.authenticateAsync with disableDeviceFallback: false
     // already handles passcode fallback on most platforms.
     // This is an explicit fallback check.
     const securityLevel = await LocalAuthentication.getEnrolledLevelAsync();
-    
+
     if (securityLevel === LocalAuthentication.SecurityLevel.NONE) {
       Alert.alert(
         'Bảo mật yếu',
-        'Thiết bị của bạn không có mật khẩu hoặc sinh trắc học. Vui lòng thiết lập khóa màn hình để sử dụng tính năng này.'
+        'Thiết bị của bạn không có mật khẩu hoặc sinh trắc học. Vui lòng thiết lập khóa màn hình để sử dụng tính năng này.',
       );
       return { success: false, error: 'Thiết bị không có bảo mật' };
     }
@@ -66,10 +68,10 @@ export const useBiometricAuth = () => {
       promptMessage: reason,
     });
 
-    return { 
-      success: result.success, 
+    return {
+      success: result.success,
       type: 'passcode',
-      error: result.success ? undefined : 'Xác thực mã PIN thất bại' 
+      error: result.success ? undefined : 'Xác thực mã PIN thất bại',
     };
   };
 

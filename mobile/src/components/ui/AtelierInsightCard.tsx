@@ -1,46 +1,46 @@
-import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { MotiView } from "moti";
-import { LinearGradient } from "expo-linear-gradient";
-import { Sparkles, TrendingUp, TrendingDown, ChevronRight } from "lucide-react-native";
-import { formatCurrency } from "../../utils/format";
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Sparkles, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react-native';
+import { formatCurrency } from '../../utils/format';
 
 interface InsightProps {
-  type: "weekly" | "monthly";
+  type: 'weekly' | 'monthly';
   current: number;
   previous: number;
   aiInsight?: string;
   onPress?: () => void;
 }
 
-export const AtelierInsightCard: React.FC<InsightProps> = ({ 
-  type, 
-  current, 
-  previous, 
+export const AtelierInsightCard: React.FC<InsightProps> = ({
+  type,
+  current,
+  previous,
   aiInsight,
-  onPress 
+  onPress,
 }) => {
   const diff = current - previous;
   const isIncrease = diff > 0;
-  const percentChange = previous > 0 ? Math.abs((diff / previous) * 100).toFixed(1) : "0";
-  
-  const title = type === "weekly" ? "Tóm tắt tuần này" : "Tóm tắt tháng này";
-  const subtitle = type === "weekly" ? "So với tuần trước" : "So với tháng trước";
+  const percentChange = previous > 0 ? Math.abs((diff / previous) * 100).toFixed(1) : '0';
+
+  const title = type === 'weekly' ? 'Tóm tắt tuần này' : 'Tóm tắt tháng này';
+  const subtitle = type === 'weekly' ? 'So với tuần trước' : 'So với tháng trước';
 
   return (
     <MotiView
       from={{ opacity: 0, translateY: 20 }}
       animate={{ opacity: 1, translateY: 0 }}
-      transition={{ type: "timing", duration: 800 }}
+      transition={{ type: 'timing', duration: 800 }}
       className="mb-6"
     >
-      <TouchableOpacity 
-        activeOpacity={0.9} 
+      <TouchableOpacity
+        activeOpacity={0.9}
         onPress={onPress}
         className="overflow-hidden rounded-[24px]"
       >
         <LinearGradient
-          colors={["#f0f4ff", "#ffffff"]}
+          colors={['#f0f4ff', '#ffffff']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           className="p-5 border border-primary/10"
@@ -55,7 +55,9 @@ export const AtelierInsightCard: React.FC<InsightProps> = ({
                 <Text className="font-inter font-medium text-neutral-500 text-xs">{subtitle}</Text>
               </View>
             </View>
-            <View className={`px-3 py-1 rounded-full flex-row items-center gap-1 ${isIncrease ? 'bg-error/10' : 'bg-green-100'}`}>
+            <View
+              className={`px-3 py-1 rounded-full flex-row items-center gap-1 ${isIncrease ? 'bg-error/10' : 'bg-green-100'}`}
+            >
               {isIncrease ? (
                 <TrendingUp size={12} color="#ef4444" />
               ) : (
