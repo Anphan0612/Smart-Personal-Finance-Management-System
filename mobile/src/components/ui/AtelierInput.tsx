@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { TextInput, View, type TextInputProps } from "react-native";
-import { AtelierTypography } from "./AtelierTypography";
+import React, { useState } from 'react';
+import { TextInput, View, type TextInputProps } from 'react-native';
+import { AtelierTypography } from './AtelierTypography';
 
 interface AtelierInputProps extends TextInputProps {
   label?: string;
@@ -15,7 +15,7 @@ export function AtelierInput({
   label,
   error,
   isCurrency = false,
-  currencySymbol = "₫",
+  currencySymbol = '₫',
   leftIcon,
   rightIcon,
   className,
@@ -26,13 +26,13 @@ export function AtelierInput({
   const [isFocused, setIsFocused] = useState(false);
 
   const borderColor = error
-    ? "border-red-500"
+    ? 'border-red-500'
     : isFocused
-      ? "border-primary"
-      : "border-neutral-200 dark:border-neutral-700";
+      ? 'border-primary'
+      : 'border-neutral-200 dark:border-neutral-700';
 
   return (
-    <View className={`gap-1.5 ${className ?? ""}`}>
+    <View className={`gap-1.5 ${className ?? ''}`}>
       {label && (
         <AtelierTypography variant="label" className="ml-1">
           {label}
@@ -43,10 +43,7 @@ export function AtelierInput({
       >
         {leftIcon && <View className="mr-3">{leftIcon}</View>}
         {isCurrency && (
-          <AtelierTypography
-            variant="body"
-            className="mr-2 text-neutral-400"
-          >
+          <AtelierTypography variant="body" className="mr-2 text-neutral-400">
             {currencySymbol}
           </AtelierTypography>
         )}
@@ -67,10 +64,7 @@ export function AtelierInput({
         />
       </View>
       {error && (
-        <AtelierTypography
-          variant="caption"
-          className="text-red-500 ml-1"
-        >
+        <AtelierTypography variant="caption" className="text-red-500 ml-1">
           {error}
         </AtelierTypography>
       )}

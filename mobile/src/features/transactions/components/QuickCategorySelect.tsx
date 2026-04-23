@@ -20,7 +20,13 @@ interface QuickCategorySelectProps {
   onAddPress?: () => void;
 }
 
-export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoading, onAddPress }: QuickCategorySelectProps) => {
+export const QuickCategorySelect = ({
+  selectedId,
+  categories,
+  onSelect,
+  isLoading,
+  onAddPress,
+}: QuickCategorySelectProps) => {
   const handleSelect = (category: Category) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onSelect(category);
@@ -51,10 +57,13 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoadin
     return (
       <View className="mx-6 p-10 bg-surface-container-low rounded-[32px] items-center justify-center">
         <View className="w-16 h-16 bg-white/50 rounded-full items-center justify-center mb-4">
-           {/* Subtle placeholder icon or illustration would go here */}
-           <View className="w-8 h-8 rounded-lg bg-surface-on-variant/10" />
+          {/* Subtle placeholder icon or illustration would go here */}
+          <View className="w-8 h-8 rounded-lg bg-surface-on-variant/10" />
         </View>
-        <AtelierTypography variant="body" className="text-surface-on-variant text-center opacity-70">
+        <AtelierTypography
+          variant="body"
+          className="text-surface-on-variant text-center opacity-70"
+        >
           Phòng triển lãm danh mục còn trống.
         </AtelierTypography>
         <AtelierTypography variant="caption" className="text-primary font-manrope-bold mt-2">
@@ -67,13 +76,19 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoadin
   return (
     <View className="px-8 mt-6">
       <View className="flex-row justify-between items-center mb-6">
-        <AtelierTypography variant="label" className="text-on-surface-variant text-[10px] tracking-[2px]">
+        <AtelierTypography
+          variant="label"
+          className="text-on-surface-variant text-[10px] tracking-[2px]"
+        >
           CATEGORIES
         </AtelierTypography>
         <TouchableOpacity className="flex-row items-center">
-           <AtelierTypography variant="caption" className="text-primary font-manrope-bold text-[11px] mr-1">
-             BROWSE ALL
-           </AtelierTypography>
+          <AtelierTypography
+            variant="caption"
+            className="text-primary font-manrope-bold text-[11px] mr-1"
+          >
+            BROWSE ALL
+          </AtelierTypography>
         </TouchableOpacity>
       </View>
 
@@ -109,7 +124,7 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoadin
                   color={isSelected ? '#FFF' : '#171c1f'}
                   strokeWidth={isSelected ? 2.5 : 2}
                 />
-                
+
                 {isSelected && (
                   <MotiView
                     from={{ scale: 0 }}
@@ -144,7 +159,9 @@ export const QuickCategorySelect = ({ selectedId, categories, onSelect, isLoadin
           style={{ width: '25%', alignItems: 'center' }}
         >
           <View className="w-14 h-14 rounded-[20px] bg-primary/5 border border-dashed border-primary/30 items-center justify-center shadow-sm">
-             <AtelierTypography variant="h2" className="text-primary text-2xl">+</AtelierTypography>
+            <AtelierTypography variant="h2" className="text-primary text-2xl">
+              +
+            </AtelierTypography>
           </View>
           <AtelierTypography
             variant="label"

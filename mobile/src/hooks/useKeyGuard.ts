@@ -3,11 +3,11 @@ import { Alert } from 'react-native';
 
 /**
  * useKeyGuard Hook
- * 
+ *
  * A developer tool to detect and prevent "Duplicate Key" errors in real-time.
- * It monitors a list of data and triggers a visual alert (Alert.alert) 
+ * It monitors a list of data and triggers a visual alert (Alert.alert)
  * in development mode if any key collisions are found.
- * 
+ *
  * @param data Array of items being rendered in a list
  * @param componentName The name of the component (for logging)
  * @param idExtractor Optional function to extract the unique ID (defaults to item.id)
@@ -15,7 +15,7 @@ import { Alert } from 'react-native';
 export const useKeyGuard = (
   data: any[],
   componentName: string,
-  idExtractor: (item: any) => string | number = (item) => item?.id
+  idExtractor: (item: any) => string | number = (item) => item?.id,
 ) => {
   useEffect(() => {
     // Only execute in development mode to avoid any prod performance impact
@@ -25,9 +25,11 @@ export const useKeyGuard = (
 
       data.forEach((item, index) => {
         const id = idExtractor(item);
-        
+
         if (id === undefined || id === null) {
-          console.warn(`[KeyGuard] Item at index ${index} is missing a unique ID in component <${componentName}>.`);
+          console.warn(
+            `[KeyGuard] Item at index ${index} is missing a unique ID in component <${componentName}>.`,
+          );
           return;
         }
 
@@ -40,14 +42,14 @@ export const useKeyGuard = (
       if (duplicates.size > 0) {
         const dupeList = Array.from(duplicates).join('\n• ');
         const message = `Duplicate keys detected in <${componentName}>:\n• ${dupeList}`;
-        
+
         console.warn(`[KeyGuard] Collision Error in ${componentName}:`, Array.from(duplicates));
 
         // Visual alert that forces immediate attention
         Alert.alert(
-          "⚠️ Key Collision Detected",
+          '⚠️ Key Collision Detected',
           `${message}\n\nDuplicates in mapped lists cause unstable animations and data corruption. Replace manual IDs with IdUtility.generateId().`,
-          [{ text: "I will fix it", style: "destructive" }]
+          [{ text: 'I will fix it', style: 'destructive' }],
         );
       }
     }

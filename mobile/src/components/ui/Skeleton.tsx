@@ -1,8 +1,8 @@
-import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
-import { Skeleton } from "moti/skeleton";
+import React from 'react';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { Skeleton } from 'moti/skeleton';
 
-import { Colors } from "@/constants/tokens";
+import { Colors } from '@/constants/tokens';
 
 interface AtelierSkeletonProps {
   width?: number | string;
@@ -12,7 +12,13 @@ interface AtelierSkeletonProps {
   className?: string;
 }
 
-export const SkeletonBox = ({ width = "100%", height = 20, radius = 8, show = true, className }: AtelierSkeletonProps) => (
+export const SkeletonBox = ({
+  width = '100%',
+  height = 20,
+  radius = 8,
+  show = true,
+  className,
+}: AtelierSkeletonProps) => (
   <Skeleton
     show={show}
     width={width as any}
@@ -21,7 +27,7 @@ export const SkeletonBox = ({ width = "100%", height = 20, radius = 8, show = tr
     colorMode="light"
     backgroundColor={Colors.neutral[50]}
     transition={{
-      type: "timing",
+      type: 'timing',
       duration: 1000,
     }}
   />
@@ -45,7 +51,7 @@ export const DashboardSkeleton = () => (
       <SkeletonBox width={120} height={24} />
       <SkeletonBox width={60} height={20} />
     </View>
-    
+
     <View style={styles.listItem}>
       <SkeletonBox height={70} radius={16} />
     </View>
@@ -68,11 +74,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   listHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   listItem: {
     marginBottom: 12,
-  }
+  },
 });

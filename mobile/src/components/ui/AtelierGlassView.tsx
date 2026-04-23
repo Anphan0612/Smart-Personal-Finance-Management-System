@@ -5,7 +5,15 @@ import * as Device from 'expo-device';
 
 interface AtelierGlassViewProps extends ViewProps {
   intensity?: number;
-  tint?: 'light' | 'dark' | 'default' | 'transparent' | 'systemThinMaterial' | 'systemMaterial' | 'systemThickMaterial' | 'systemChromeMaterial';
+  tint?:
+    | 'light'
+    | 'dark'
+    | 'default'
+    | 'transparent'
+    | 'systemThinMaterial'
+    | 'systemMaterial'
+    | 'systemThickMaterial'
+    | 'systemChromeMaterial';
   fallbackColor?: string;
   children?: React.ReactNode;
 }
@@ -30,16 +38,16 @@ export const AtelierGlassView = ({
         }
       }
     };
-    
+
     checkDeviceCapability();
   }, []);
 
   if (isHighEnd) {
     return (
-      <BlurView 
-        intensity={intensity} 
-        tint={tint} 
-        style={style as BlurViewProps['style']} 
+      <BlurView
+        intensity={intensity}
+        tint={tint}
+        style={style as BlurViewProps['style']}
         {...(rest as any)}
       >
         {children}

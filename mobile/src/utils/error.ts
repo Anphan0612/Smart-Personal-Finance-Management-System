@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 export function handleApiError(
   error: any,
   title: string = 'Lỗi',
-  fallbackMessage: string = 'Đã xảy ra lỗi. Vui lòng thử lại.'
+  fallbackMessage: string = 'Đã xảy ra lỗi. Vui lòng thử lại.',
 ): string {
   // Extract error message with fallback chain
   const errorMessage =
@@ -50,10 +50,7 @@ export function triggerSuccessHaptic(): void {
 /**
  * Variant for warning scenarios.
  */
-export function handleWarning(
-  message: string,
-  title: string = 'Cảnh báo'
-): void {
+export function handleWarning(message: string, title: string = 'Cảnh báo'): void {
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
   Alert.alert(title, message);
 }

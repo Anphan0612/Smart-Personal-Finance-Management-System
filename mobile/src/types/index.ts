@@ -1,7 +1,7 @@
 export interface Transaction {
   id: string;
   amount: number;
-  type: "INCOME" | "EXPENSE" | "TRANSFER";
+  type: 'INCOME' | 'EXPENSE' | 'TRANSFER';
   categoryId: string;
   categoryName: string;
   description: string;
@@ -14,7 +14,7 @@ export interface Budget {
   category: string;
   limit: number;
   spent: number;
-  period: "weekly" | "monthly" | "yearly";
+  period: 'weekly' | 'monthly' | 'yearly';
 }
 
 export interface UserProfile {
@@ -33,14 +33,17 @@ export interface DashboardSummary {
   budgetOverview: Budget[];
 }
 
-export type ElevationLevel = "lowest" | "low" | "high";
+export type ElevationLevel = 'lowest' | 'low' | 'high';
 
-export type TypographyVariant =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "body"
-  | "caption"
-  | "label";
+export type TypographyVariant = 'h1' | 'h2' | 'h3' | 'body' | 'caption' | 'label';
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "link" | "elevated" | "default" | "gradient" | "tertiary" | "error";
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'link'
+  | 'elevated'
+  | 'default'
+  | 'gradient'
+  | 'tertiary'
+  | 'error';

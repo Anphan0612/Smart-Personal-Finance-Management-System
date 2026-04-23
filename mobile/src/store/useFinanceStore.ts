@@ -1,7 +1,7 @@
-import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Transaction, Budget, UserProfile } from "../types";
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Transaction, Budget, UserProfile } from '../types';
 
 interface FinanceState {
   user: UserProfile | null;
@@ -48,7 +48,7 @@ export const useFinanceStore = create<FinanceState>()(
       reset: () => set(initialState),
     }),
     {
-      name: "finance-storage",
+      name: 'finance-storage',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         user: state.user,
@@ -56,6 +56,6 @@ export const useFinanceStore = create<FinanceState>()(
         budgets: state.budgets,
         totalBalance: state.totalBalance,
       }),
-    }
-  )
+    },
+  ),
 );

@@ -23,7 +23,7 @@ export default function AppLoading() {
         </Text>
         <ActivityIndicator color="#005ab4" size="small" />
       </MotiView>
-      
+
       {/* Bottom version or branding */}
       <View className="absolute bottom-12 items-center">
         <Text className="text-[10px] text-outline font-bold uppercase tracking-widest">

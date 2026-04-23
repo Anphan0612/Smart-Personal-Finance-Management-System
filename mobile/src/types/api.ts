@@ -48,7 +48,7 @@ export interface CategoryBreakdown {
   color: string;
 }
 
-export type TransactionType = "INCOME" | "EXPENSE" | "TRANSFER";
+export type TransactionType = 'INCOME' | 'EXPENSE' | 'TRANSFER';
 
 export interface TransactionResponse {
   id: string;
@@ -65,7 +65,7 @@ export interface TransactionResponse {
   receiptImageUrl?: string;
 }
 
-export type WalletType = "CASH" | "BANK" | "EWALLET" | "INVESTMENT";
+export type WalletType = 'CASH' | 'BANK' | 'EWALLET' | 'INVESTMENT';
 
 export interface WalletResponse {
   id: string;
@@ -88,7 +88,7 @@ export interface DashboardResponse {
   transactions: TransactionResponse[];
 }
 
-export type ThresholdStatus = "COMFORT" | "PACING" | "DANGER" | "OVERBUDGET";
+export type ThresholdStatus = 'COMFORT' | 'PACING' | 'DANGER' | 'OVERBUDGET';
 
 export interface BudgetResponse {
   id: string;
@@ -116,10 +116,10 @@ export interface BudgetPlanningResponse {
  * Các lỗi nghiệp vụ phổ biến từ BE
  */
 export enum AppErrorCode {
-  UNAUTHORIZED = "AUTH_001",
-  INSUFFICIENT_FUNDS = "WAL_002",
-  TRANSACTION_NOT_FOUND = "TXN_001",
-  AI_PROCESSING_ERROR = "AI_001",
+  UNAUTHORIZED = 'AUTH_001',
+  INSUFFICIENT_FUNDS = 'WAL_002',
+  TRANSACTION_NOT_FOUND = 'TXN_001',
+  AI_PROCESSING_ERROR = 'AI_001',
 }
 
 /**

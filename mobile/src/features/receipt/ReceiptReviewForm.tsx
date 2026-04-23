@@ -1,7 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Animated } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Animated,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Calendar, Store, Tag, Wallet as WalletIcon, Check, ChevronLeft, AlertCircle, Brain, Shield, Info } from 'lucide-react-native';
+import {
+  Calendar,
+  Store,
+  Tag,
+  Wallet as WalletIcon,
+  Check,
+  ChevronLeft,
+  AlertCircle,
+  Brain,
+  Shield,
+  Info,
+} from 'lucide-react-native';
 import apiClient from '../../services/api';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,25 +30,16 @@ import { WalletPicker } from '../transactions/components/WalletPicker';
 import { CategoryPicker } from '../transactions/components/CategoryPicker';
 import * as Haptics from 'expo-haptics';
 import { WalletResponse } from '../../types/api';
-import { 
-  AtelierTypography, 
-  AtelierCard 
-} from "@/components/ui";
-import { Colors } from "@/constants/tokens";
+import { AtelierTypography, AtelierCard } from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
 const MAX_POLLING_RETRIES = 5;
 
 export default function ReceiptReviewForm() {
   const { receiptId: rawReceiptId } = useLocalSearchParams();
   const receiptId = Array.isArray(rawReceiptId) ? rawReceiptId[0] : rawReceiptId;
-  const { 
-    addMessage, 
-    wallets, 
-    categories, 
-    refreshMetadata, 
-    isMetadataLoading,
-    activeWalletId 
-  } = useAppStore();
+  const { addMessage, wallets, categories, refreshMetadata, isMetadataLoading, activeWalletId } =
+    useAppStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pollingRetries, setPollingRetries] = useState(0);
@@ -46,23 +56,23 @@ export default function ReceiptReviewForm() {
     transactionDate: new Date().toISOString(),
     walletId: activeWalletId || '',
     categoryId: '',
-    description: ''
+    description: '',
   });
   const [aiValues, setAiValues] = useState({
     storeName: '',
     amount: '',
     categoryId: '',
-    isMappedFromHistory: false
+    isMappedFromHistory: false,
   });
   const [fieldEdited, setFieldEdited] = useState({
     storeName: false,
     amount: false,
-    categoryId: false
+    categoryId: false,
   });
   const [validationErrors, setValidationErrors] = useState({
     walletId: false,
     categoryId: false,
-    amount: false
+    amount: false,
   });
   const shakeAnimation = useRef(new Animated.Value(0)).current;
 
@@ -74,14 +84,17 @@ export default function ReceiptReviewForm() {
 
   useEffect(() => {
     if (activeWalletId && !formData.walletId) {
-      setFormData(prev => ({ ...prev, walletId: activeWalletId }));
+      setFormData((prev) => ({ ...prev, walletId: activeWalletId }));
     }
   }, [activeWalletId]);
 
   useEffect(() => {
     if (categories.length > 0 && !formData.categoryId) {
-      const defaultCat = categories.find(c => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop')) || categories[0];
-      setFormData(prev => ({ ...prev, categoryId: defaultCat.id }));
+      const defaultCat =
+        categories.find(
+          (c) => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop'),
+        ) || categories[0];
+      setFormData((prev) => ({ ...prev, categoryId: defaultCat.id }));
     }
   }, [categories]);
 
@@ -90,22 +103,25 @@ export default function ReceiptReviewForm() {
       Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
       Animated.timing(shakeAnimation, { toValue: -10, duration: 50, useNativeDriver: true }),
       Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true })
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true }),
     ]).start();
   };
 
   const handleWalletSelect = useCallback((wallet: WalletResponse) => {
-    setFormData(prev => ({ ...prev, walletId: wallet.id }));
-    setValidationErrors(prev => ({ ...prev, walletId: false }));
+    setFormData((prev) => ({ ...prev, walletId: wallet.id }));
+    setValidationErrors((prev) => ({ ...prev, walletId: false }));
   }, []);
 
-  const handleCategorySelect = useCallback((category: { id: string; name: string; iconName: string }) => {
-    setFormData(prev => ({ ...prev, categoryId: category.id }));
-    setValidationErrors(prev => ({ ...prev, categoryId: false }));
-    if (!fieldEdited.categoryId) {
-      setFieldEdited(prev => ({ ...prev, categoryId: true }));
-    }
-  }, [fieldEdited.categoryId]);
+  const handleCategorySelect = useCallback(
+    (category: { id: string; name: string; iconName: string }) => {
+      setFormData((prev) => ({ ...prev, categoryId: category.id }));
+      setValidationErrors((prev) => ({ ...prev, categoryId: false }));
+      if (!fieldEdited.categoryId) {
+        setFieldEdited((prev) => ({ ...prev, categoryId: true }));
+      }
+    },
+    [fieldEdited.categoryId],
+  );
 
   useEffect(() => {
     fetchReceiptData();
@@ -117,20 +133,20 @@ export default function ReceiptReviewForm() {
       if (response.data.success) {
         const data = response.data.data;
         const formattedAmount = data.amount ? formatVND(data.amount.toString()) : '';
-        
-        setFormData(prev => ({
+
+        setFormData((prev) => ({
           ...prev,
           storeName: data.storeName || '',
           amount: formattedAmount,
           transactionDate: data.transactionDate || new Date().toISOString(),
-          categoryId: data.categoryId || prev.categoryId
+          categoryId: data.categoryId || prev.categoryId,
         }));
 
         setAiValues({
           storeName: data.aiStoreName || data.storeName || '',
           amount: data.aiAmount ? formatVND(data.aiAmount.toString()) : formattedAmount,
           categoryId: data.aiCategoryId || data.categoryId || '',
-          isMappedFromHistory: data.isMappedFromHistory || false
+          isMappedFromHistory: data.isMappedFromHistory || false,
         });
 
         setOcrMeta({
@@ -141,7 +157,7 @@ export default function ReceiptReviewForm() {
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Lỗi", "Không thể tải dữ liệu hóa đơn.");
+      Alert.alert('Lỗi', 'Không thể tải dữ liệu hóa đơn.');
     } finally {
       setLoading(false);
     }
@@ -152,7 +168,7 @@ export default function ReceiptReviewForm() {
     const errors = {
       walletId: !formData.walletId,
       categoryId: !formData.categoryId,
-      amount: !rawAmount
+      amount: !rawAmount,
     };
 
     setValidationErrors(errors);
@@ -171,7 +187,7 @@ export default function ReceiptReviewForm() {
         storeName: formData.storeName,
         amount: parseInt(cleanAmount),
         transactionDate: formData.transactionDate,
-        description: formData.description
+        description: formData.description,
       };
 
       const response = await apiClient.post(`/receipts/${receiptId}/confirm`, payload);
@@ -180,21 +196,23 @@ export default function ReceiptReviewForm() {
           id: `ocr-success-${Date.now()}`,
           role: 'assistant',
           content: `✅ Đã lưu hóa đơn từ **${formData.storeName || 'cửa hàng'}** thành công!\nSố tiền: **${formatVND(rawAmount)}**.`,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         router.replace('/(tabs)/transactions');
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Lỗi", "Xác nhận giao dịch thất bại.");
+      Alert.alert('Lỗi', 'Xác nhận giao dịch thất bại.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const getConfidenceColor = (conf: number) => {
-    if (conf >= 0.85) return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' };
-    if (conf >= 0.65) return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' };
+    if (conf >= 0.85)
+      return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' };
+    if (conf >= 0.65)
+      return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' };
     return { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' };
   };
 
@@ -202,7 +220,9 @@ export default function ReceiptReviewForm() {
     return (
       <View className="flex-1 bg-surface-lowest justify-center items-center">
         <ActivityIndicator color={Colors.primary.DEFAULT} />
-        <AtelierTypography variant="body" className="mt-4 opacity-60">Đang đồng bộ dữ liệu AI...</AtelierTypography>
+        <AtelierTypography variant="body" className="mt-4 opacity-60">
+          Đang đồng bộ dữ liệu AI...
+        </AtelierTypography>
       </View>
     );
   }
@@ -214,8 +234,8 @@ export default function ReceiptReviewForm() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <LinearGradient colors={['#f8fafc', '#ffffff']} className="px-6 pt-16 pb-32">
           <View className="flex-row items-center mb-8">
-            <TouchableOpacity 
-              onPress={() => router.back()} 
+            <TouchableOpacity
+              onPress={() => router.back()}
               className="mr-4 w-10 h-10 items-center justify-center bg-white border border-neutral-100 rounded-full shadow-sm"
             >
               <ChevronLeft size={20} color={Colors.neutral[400]} />
@@ -226,7 +246,9 @@ export default function ReceiptReviewForm() {
           <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }}>
             {/* Confidence & Correction Badges */}
             <View className="flex-row items-center justify-center gap-3 mb-6">
-              <View className={`${confStyles.bg} ${confStyles.border} border px-4 py-2 rounded-full flex-row items-center`}>
+              <View
+                className={`${confStyles.bg} ${confStyles.border} border px-4 py-2 rounded-full flex-row items-center`}
+              >
                 <Shield size={14} color={confStyles.text.replace('text-', '')} className="mr-2" />
                 <AtelierTypography variant="label" className={`${confStyles.text} font-bold`}>
                   ĐỘ TIN CẬY: {(ocrMeta.confidence * 100).toFixed(0)}%
@@ -239,17 +261,25 @@ export default function ReceiptReviewForm() {
                   className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-full flex-row items-center"
                 >
                   <Brain size={14} color={Colors.primary.DEFAULT} className="mr-2" />
-                  <AtelierTypography variant="label" color="primary" className="font-bold">AI ĐÃ TỰ SỬA</AtelierTypography>
+                  <AtelierTypography variant="label" color="primary" className="font-bold">
+                    AI ĐÃ TỰ SỬA
+                  </AtelierTypography>
                 </TouchableOpacity>
               )}
             </View>
 
             {showCorrectionDetail && ocrMeta.correctionReason && (
-              <MotiView from={{ opacity: 0, scaleY: 0.8 }} animate={{ opacity: 1, scaleY: 1 }} className="mb-6">
+              <MotiView
+                from={{ opacity: 0, scaleY: 0.8 }}
+                animate={{ opacity: 1, scaleY: 1 }}
+                className="mb-6"
+              >
                 <AtelierCard variant="elevated" className="bg-primary/5 border border-primary/10">
                   <View className="flex-row items-center mb-2">
                     <Info size={14} color={Colors.primary.DEFAULT} className="mr-2" />
-                    <AtelierTypography variant="h3" color="primary">Chi tiết sửa lỗi</AtelierTypography>
+                    <AtelierTypography variant="h3" color="primary">
+                      Chi tiết sửa lỗi
+                    </AtelierTypography>
                   </View>
                   <AtelierTypography variant="body" className="opacity-70 leading-5">
                     {ocrMeta.correctionReason}
@@ -259,9 +289,17 @@ export default function ReceiptReviewForm() {
             )}
 
             {/* Main Info Card */}
-            <AtelierCard padding="lg" className="bg-white border border-neutral-100 shadow-atelier-low mb-6">
+            <AtelierCard
+              padding="lg"
+              className="bg-white border border-neutral-100 shadow-atelier-low mb-6"
+            >
               <View className="items-center mb-8">
-                <AtelierTypography variant="label" className="text-neutral-400 uppercase tracking-widest mb-2">Số tiền hóa đơn</AtelierTypography>
+                <AtelierTypography
+                  variant="label"
+                  className="text-neutral-400 uppercase tracking-widest mb-2"
+                >
+                  Số tiền hóa đơn
+                </AtelierTypography>
                 <View className="flex-row items-baseline justify-center">
                   <TextInput
                     value={formData.amount}
@@ -274,11 +312,19 @@ export default function ReceiptReviewForm() {
                     keyboardType="numeric"
                     className="text-5xl font-bold tracking-tighter text-primary"
                   />
-                  <AtelierTypography variant="h2" className="ml-2 text-primary opacity-50">đ</AtelierTypography>
+                  <AtelierTypography variant="h2" className="ml-2 text-primary opacity-50">
+                    đ
+                  </AtelierTypography>
                 </View>
                 {!fieldEdited.amount && (
-                  <MotiView from={{ scale: 0 }} animate={{ scale: 1 }} className="mt-2 bg-warning/10 px-3 py-1 rounded-full border border-warning/20">
-                    <AtelierTypography variant="label" className="text-warning font-bold">✨ AI TRÍCH XUẤT</AtelierTypography>
+                  <MotiView
+                    from={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="mt-2 bg-warning/10 px-3 py-1 rounded-full border border-warning/20"
+                  >
+                    <AtelierTypography variant="label" className="text-warning font-bold">
+                      ✨ AI TRÍCH XUẤT
+                    </AtelierTypography>
                   </MotiView>
                 )}
               </View>
@@ -290,24 +336,27 @@ export default function ReceiptReviewForm() {
                     value={formData.storeName}
                     onChangeText={(val) => {
                       setFormData({ ...formData, storeName: val });
-                      if (!fieldEdited.storeName) setFieldEdited({ ...fieldEdited, storeName: true });
+                      if (!fieldEdited.storeName)
+                        setFieldEdited({ ...fieldEdited, storeName: true });
                     }}
                     placeholder="Tên cửa hàng"
                     placeholderTextColor={Colors.neutral[300]}
                     className="flex-1 text-lg font-bold text-neutral-800"
                   />
                   {!fieldEdited.storeName && (
-                    <AtelierTypography variant="label" className="text-warning font-bold ml-2">AI✨</AtelierTypography>
+                    <AtelierTypography variant="label" className="text-warning font-bold ml-2">
+                      AI✨
+                    </AtelierTypography>
                   )}
                 </View>
 
                 <View className="flex-row items-center bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
                   <Calendar size={20} color={Colors.neutral[400]} className="mr-4" />
                   <AtelierTypography variant="h3" className="flex-1">
-                    {new Date(formData.transactionDate).toLocaleDateString('vi-VN', { 
-                      day: '2-digit', 
-                      month: 'long', 
-                      year: 'numeric' 
+                    {new Date(formData.transactionDate).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
                     })}
                   </AtelierTypography>
                 </View>
@@ -317,9 +366,14 @@ export default function ReceiptReviewForm() {
             {/* Transaction Settings */}
             <View className="space-y-6 mb-8">
               <View>
-                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">Tài khoản & Danh mục</AtelierTypography>
-                <AtelierCard padding="none" className="bg-white border border-neutral-100 shadow-atelier-low overflow-hidden">
-                   <View className="p-4 border-b border-neutral-50">
+                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">
+                  Tài khoản & Danh mục
+                </AtelierTypography>
+                <AtelierCard
+                  padding="none"
+                  className="bg-white border border-neutral-100 shadow-atelier-low overflow-hidden"
+                >
+                  <View className="p-4 border-b border-neutral-50">
                     <WalletPicker
                       label="Nguồn tiền"
                       selectedId={formData.walletId}
@@ -327,16 +381,23 @@ export default function ReceiptReviewForm() {
                       onSelect={handleWalletSelect}
                     />
                     {validationErrors.walletId && (
-                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">Vui lòng chọn ví thanh toán</AtelierTypography>
+                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">
+                        Vui lòng chọn ví thanh toán
+                      </AtelierTypography>
                     )}
-                   </View>
-                   <View className="p-4">
+                  </View>
+                  <View className="p-4">
                     <View className="flex-row items-center justify-between mb-3 px-1">
                       <AtelierTypography variant="h3">Danh mục</AtelierTypography>
                       {aiValues.isMappedFromHistory && !fieldEdited.categoryId && (
-                        <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                          className="bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
-                          <AtelierTypography variant="label" className="text-emerald-500 font-bold">G gợi ý✨</AtelierTypography>
+                        <MotiView
+                          from={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"
+                        >
+                          <AtelierTypography variant="label" className="text-emerald-500 font-bold">
+                            G gợi ý✨
+                          </AtelierTypography>
                         </MotiView>
                       )}
                     </View>
@@ -347,14 +408,18 @@ export default function ReceiptReviewForm() {
                       onSelect={handleCategorySelect}
                     />
                     {validationErrors.categoryId && (
-                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">Vui lòng chọn danh mục chi tiêu</AtelierTypography>
+                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">
+                        Vui lòng chọn danh mục chi tiêu
+                      </AtelierTypography>
                     )}
-                   </View>
+                  </View>
                 </AtelierCard>
               </View>
 
               <View>
-                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">Ghi chú</AtelierTypography>
+                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">
+                  Ghi chú
+                </AtelierTypography>
                 <TextInput
                   value={formData.description}
                   onChangeText={(val) => setFormData({ ...formData, description: val })}
@@ -368,7 +433,10 @@ export default function ReceiptReviewForm() {
             </View>
 
             {/* Action Buttons */}
-            <Animated.View className="gap-4" style={{ transform: [{ translateX: shakeAnimation }] }}>
+            <Animated.View
+              className="gap-4"
+              style={{ transform: [{ translateX: shakeAnimation }] }}
+            >
               <TouchableOpacity
                 onPress={handleConfirm}
                 disabled={submitting || wallets.length === 0 || isMetadataLoading}
@@ -380,7 +448,9 @@ export default function ReceiptReviewForm() {
                 ) : (
                   <>
                     <Check size={20} color="white" className="mr-3" />
-                    <AtelierTypography variant="h2" color="white">Hoàn tất & Lưu</AtelierTypography>
+                    <AtelierTypography variant="h2" color="white">
+                      Hoàn tất & Lưu
+                    </AtelierTypography>
                   </>
                 )}
               </TouchableOpacity>
@@ -390,14 +460,17 @@ export default function ReceiptReviewForm() {
                 disabled={submitting}
                 className="h-14 items-center justify-center"
               >
-                <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">Hủy bỏ</AtelierTypography>
+                <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">
+                  Hủy bỏ
+                </AtelierTypography>
               </TouchableOpacity>
             </Animated.View>
 
             <View className="mt-10 flex-row items-center justify-center px-6 py-4 bg-warning/5 rounded-3xl border border-warning/10 mb-20">
               <AlertCircle size={16} color={Colors.warning} className="mr-3" />
               <AtelierTypography variant="caption" className="text-warning flex-1 leading-4">
-                AI có thể nhận diện chưa chính xác, nhất là với chữ viết tay. Vui lòng kiểm tra lại trước khi lưu.
+                AI có thể nhận diện chưa chính xác, nhất là với chữ viết tay. Vui lòng kiểm tra lại
+                trước khi lưu.
               </AtelierTypography>
             </View>
           </MotiView>
