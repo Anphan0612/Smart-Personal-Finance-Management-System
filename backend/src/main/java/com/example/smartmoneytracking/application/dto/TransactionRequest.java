@@ -12,7 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -37,7 +37,7 @@ public class TransactionRequest {
     @NotNull(message = "Transaction date is required")
     @PastOrPresent(message = "Transaction date cannot be in the future")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
-    private LocalDateTime transactionDate;
+    private OffsetDateTime transactionDate;
 
     private String receiptImageUrl;
 }

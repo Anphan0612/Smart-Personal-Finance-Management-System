@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -54,7 +54,7 @@ public class OcrAsyncService {
             Boolean isCorrected = ocrData.get("is_corrected") != null ? (Boolean) ocrData.get("is_corrected") : false;
             String correctionReason = (String) ocrData.get("correction_reason");
 
-            LocalDateTime date = null;
+            OffsetDateTime date = null;
             if (dateStr != null && !dateStr.isEmpty()) {
                 try {
                     if (dateStr.contains("/")) {
@@ -65,13 +65,14 @@ public class OcrAsyncService {
                             int year = Integer.parseInt(parts[2]);
                             if (year < 100) year += 2000;
                             // Set time to 12:00 noon to avoid timezone shift issues
-                            LocalDateTime localDate = LocalDateTime.of(year, month, day, 12, 0);
+
 
                             // Convert from User Timezone to UTC for storage
                             ZoneId userZone = ZoneId.of(userTimezone);
-                            date = ZonedDateTime.of(localDate, userZone)
-                                    .withZoneSameInstant(ZoneOffset.UTC)
-                                    .toLocalDateTime();
+                            date = com.example.smartmoneytracking.application.service.common.DateUtils.normalize(
+                                    ZonedDateTime.of(year, month, day, 12, 0, 0, 0, userZone)
+                                            .toOffsetDateTime()
+                            );
                         }
                     }
                 } catch (Exception e) {

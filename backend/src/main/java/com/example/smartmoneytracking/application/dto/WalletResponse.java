@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -24,5 +24,9 @@ public class WalletResponse {
     private String bankName;
     private String accountNumber;
     private String branch;
-    private LocalDateTime createdAt;
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private OffsetDateTime createdAt;
+
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private OffsetDateTime updatedAt;
 }

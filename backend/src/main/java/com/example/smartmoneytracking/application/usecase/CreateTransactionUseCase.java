@@ -51,7 +51,7 @@ public class CreateTransactionUseCase {
                 request.getAmount(),
                 request.getType(),
                 request.getDescription(),
-                DateUtils.localToUtc(request.getTransactionDate())
+                request.getTransactionDate().withOffsetSameInstant(java.time.ZoneOffset.UTC)
         );
 
         // Wallet validation and balance update
