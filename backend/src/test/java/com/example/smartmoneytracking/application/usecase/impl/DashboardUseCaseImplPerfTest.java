@@ -1,5 +1,6 @@
 package com.example.smartmoneytracking.application.usecase.impl;
 
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import com.example.smartmoneytracking.application.mapper.TransactionMapper;
@@ -9,7 +10,7 @@ import com.example.smartmoneytracking.domain.repositories.WalletRepository;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class DashboardUseCaseImplPerfTest {
         
         for (int count : transactionCounts) {
             List<Transaction> dummyData = generateTransactions(count);
-            when(repository.findByWalletIdAndTransactionDateBetween(anyString(), any(LocalDateTime.class), any(LocalDateTime.class)))
+            when(repository.findByWalletIdAndTransactionDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class)))
                     .thenReturn(dummyData);
 
             // Warmup JVM (JIT compiler)
@@ -53,7 +54,7 @@ public class DashboardUseCaseImplPerfTest {
 
     private List<Transaction> generateTransactions(int count) {
         List<Transaction> list = new ArrayList<>(count);
-        LocalDateTime now = LocalDateTime.now().minusDays(10);
+        OffsetDateTime now = DateUtils.nowUtc().minusDays(10);
         for (int i = 0; i < count; i++) {
             list.add(Transaction.create(
                     "w1",
