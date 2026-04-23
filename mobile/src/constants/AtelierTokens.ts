@@ -4,6 +4,44 @@
  */
 
 export const AtelierTokens = {
+  // Color Palette (Source of Truth)
+  colors: {
+    primary: "#005ab4",
+    primaryContainer: "#0873df",
+    onPrimary: "#ffffff",
+    
+    secondary: "#465f89",
+    secondaryContainer: "#b7cfff",
+    onSecondary: "#ffffff",
+    
+    tertiary: "#964400",
+    tertiaryContainer: "#bd5700",
+    onTertiary: "#ffffff",
+
+    surface: "#f9f9ff",
+    surfaceContainer: "#ecedf7",
+    surfaceContainerLow: "#f2f3fd",
+    surfaceContainerHigh: "#e6e8f1",
+    surfaceContainerLowest: "#ffffff",
+    onSurface: "#181c22",
+    onSurfaceVariant: "#414753",
+
+    outline: "#717785",
+    outlineVariant: "#c1c6d5",
+    
+    error: "#ba1a1a",
+    onError: "#ffffff",
+
+    // AI Specific Tokens
+    ai: {
+      primary: "#005ab4",
+      gradientStart: "#0040a2",
+      gradientEnd: "#003d9b",
+      surfaceGlass: "rgba(255, 255, 255, 0.9)",
+      thinkingDot: "#005ab4",
+    }
+  },
+
   // Radius System
   radius: {
     sm: 16,

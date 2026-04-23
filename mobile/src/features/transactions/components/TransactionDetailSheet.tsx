@@ -16,7 +16,7 @@ import {
   RotateCcw
 } from "lucide-react-native";
 import { TransactionResponse } from "@/types/api";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatDateTime } from "@/utils/format";
 import { format, parseISO } from "date-fns";
 import { Image } from "expo-image";
 import ImageView from "react-native-image-viewing";
@@ -186,7 +186,7 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
                 )}
                 
                 <Text className="text-outline font-bold text-[10px] uppercase tracking-widest mt-2">
-                  {format(parseISO(transaction.transactionDate), "MMMM dd, yyyy • HH:mm")}
+                  {formatDateTime(transaction.transactionDate)}
                 </Text>
               </View>
 

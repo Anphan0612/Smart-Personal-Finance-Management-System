@@ -24,6 +24,11 @@
   --color-surface-container-lowest: #ffffff;
   --color-surface-on: #181c22;
   --color-surface-on-variant: #414753;
+  --color-surface-container-high: #e6e8f1;
+
+  --color-ai-primary: #005ab4;
+  --color-ai-gradient-start: #0040a2;
+  --color-ai-gradient-end: #003d9b;
 
   --color-error: #ba1a1a;
   --color-error-on: #ffffff;
@@ -54,6 +59,11 @@
   --color-surface-container-lowest: #0b0e12;
   --color-surface-on: #e1e2e9;
   --color-surface-on-variant: #c1c6d5;
+  --color-surface-container-high: #2d3038;
+
+  --color-ai-primary: #a8c7ff;
+  --color-ai-gradient-start: #004a99;
+  --color-ai-gradient-end: #003060;
 
   --color-error: #ffb4ab;
   --color-error-on: #690005;

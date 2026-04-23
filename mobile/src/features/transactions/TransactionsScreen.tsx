@@ -10,7 +10,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useTransactions } from "@/hooks/useTransactions";
 import { TransactionResponse } from "@/types/api";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
-import { formatCurrency } from "@/utils/format";
+import { formatCurrency, formatTime, formatDate } from "@/utils/format";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TransactionDetailSheet from "./components/TransactionDetailSheet";
 import { 
@@ -109,7 +109,7 @@ export default function TransactionsScreen() {
     const date = parseISO(dateStr);
     if (isToday(date)) return "Hôm nay";
     if (isYesterday(date)) return "Hôm qua";
-    return format(date, "MMMM dd, yyyy");
+    return formatDate(date);
   };
 
   const handleLoadMore = () => {
@@ -194,7 +194,7 @@ export default function TransactionsScreen() {
                     {transaction.type === 'INCOME' ? '+' : '-'}{formatCurrency(transaction.amount)}
                   </AtelierTypography>
                   <AtelierTypography variant="caption" className="text-neutral-400">
-                    {format(parseISO(transaction.transactionDate), "HH:mm")}
+                    {formatTime(transaction.transactionDate)}
                   </AtelierTypography>
                 </View>
               </View>

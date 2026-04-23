@@ -12,7 +12,7 @@ export interface ChatMessage {
   content: string;
   timestamp: number;
   isStreaming?: boolean;
-  hasCard?: boolean;
+  hasTransactionMatch?: boolean;
   hasProgress?: boolean;
   transactionData?: {
     amount: number;
@@ -25,6 +25,12 @@ export interface ChatMessage {
   };
   // Query history results
   hasQueryResult?: boolean;
+  hasSpendingSummary?: boolean;
+  spendingData?: {
+    totalSpent: number;
+    budgetLimit: number;
+    percentage: number;
+  };
   queryData?: {
     summary: any;
     matchedTransactions: any[];
@@ -36,6 +42,9 @@ export interface ChatMessage {
     anomalies: any[];
     totalChecked: number;
   };
+  isConfirmed?: boolean;
+  hasInsightChart?: boolean;
+  insightData?: any[];
 }
 
 interface UserInfo {
