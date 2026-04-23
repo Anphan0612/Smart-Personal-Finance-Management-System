@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -38,8 +38,8 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
         ZonedDateTime localNow = DateUtils.nowInUserTz();
         ZonedDateTime localStart = calculateStartDate(timeRange, localNow);
         
-        LocalDateTime nowUtc = DateUtils.toUtc(localNow);
-        LocalDateTime startUtc = DateUtils.toUtc(localStart);
+        OffsetDateTime nowUtc = DateUtils.toUtc(localNow);
+        OffsetDateTime startUtc = DateUtils.toUtc(localStart);
 
         List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startUtc, nowUtc);
 
@@ -86,9 +86,8 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
 
         for (Transaction t : transactions) {
             // Convert UTC storage to user local time for correct grouping by month
-            LocalDateTime localDate = t.getTransactionDate().atZone(java.time.ZoneOffset.UTC)
-                    .withZoneSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()))
-                    .toLocalDateTime();
+            OffsetDateTime localDate = t.getTransactionDate()
+                    .withOffsetSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()).getRules().getOffset(t.getTransactionDate().toInstant()));
             
             String month = localDate.format(monthFormatter);
             MonthlyTrendDTO trend = trendMap.getOrDefault(month, new MonthlyTrendDTO(month, BigDecimal.ZERO, BigDecimal.ZERO));

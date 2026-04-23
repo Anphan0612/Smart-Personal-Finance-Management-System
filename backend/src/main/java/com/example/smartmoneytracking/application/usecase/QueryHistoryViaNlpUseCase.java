@@ -26,8 +26,8 @@ public class QueryHistoryViaNlpUseCase {
     public NlpQueryResponse execute(NlpQueryRequest request, String userId) {
         // 1. Fetch all transactions for this wallet (last 90 days for context)
         String walletId = request.getWalletId();
-        java.time.LocalDateTime end = java.time.LocalDateTime.now();
-        java.time.LocalDateTime start = end.minusDays(90);
+        java.time.OffsetDateTime end = java.time.OffsetDateTime.now();
+        java.time.OffsetDateTime start = end.minusDays(90);
 
         List<Transaction> transactions = transactionRepository
                 .findByWalletIdAndTransactionDateBetween(walletId, start, end);

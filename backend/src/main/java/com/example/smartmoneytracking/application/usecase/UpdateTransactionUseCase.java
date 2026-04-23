@@ -56,7 +56,7 @@ public class UpdateTransactionUseCase {
         if (request.getAmount() != null) transaction.updateAmount(request.getAmount());
         if (request.getDescription() != null) transaction.updateDescription(request.getDescription());
         if (request.getType() != null) transaction.updateType(request.getType());
-        if (request.getTransactionDate() != null) transaction.updateDate(request.getTransactionDate());
+        if (request.getTransactionDate() != null) transaction.updateDate(request.getTransactionDate().withOffsetSameInstant(java.time.ZoneOffset.UTC));
 
         // 2. Apply New Transaction details to target Wallet
         if (transaction.isExpense()) {

@@ -49,6 +49,7 @@ public class CreateWalletUseCase {
                 .accountNumber(savedWallet.getAccountNumber())
                 .branch(savedWallet.getBranch())
                 .createdAt(savedWallet.getCreatedAt())
+                .updatedAt(savedWallet.getUpdatedAt())
                 .build();
     }
 }
