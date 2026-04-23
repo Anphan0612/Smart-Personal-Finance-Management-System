@@ -12,9 +12,7 @@
           "name": "Register",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{baseUrl}}/api/auth/register",
               "host": ["{{baseUrl}}"],
@@ -47,9 +45,7 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
               "host": ["{{baseUrl}}"],
@@ -103,9 +99,7 @@
           "name": "Get Wallets",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/wallets",
               "host": ["{{baseUrl}}"],
@@ -117,9 +111,7 @@
           "name": "Get Wallet by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/wallets/{{walletId}}",
               "host": ["{{baseUrl}}"],
@@ -150,9 +142,7 @@
           "name": "Delete Wallet",
           "request": {
             "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/wallets/{{walletId}}",
               "host": ["{{baseUrl}}"],
@@ -202,16 +192,12 @@
           "name": "Get Transactions by Wallet ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions?walletId={{walletId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "v1", "transactions"],
-              "query": [
-                { "key": "walletId", "value": "{{walletId}}" }
-              ]
+              "query": [{ "key": "walletId", "value": "{{walletId}}" }]
             }
           }
         },
@@ -219,9 +205,7 @@
           "name": "Get Transaction by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions/{{transactionId}}",
               "host": ["{{baseUrl}}"],
@@ -252,9 +236,7 @@
           "name": "Delete Transaction",
           "request": {
             "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/transactions/{{transactionId}}",
               "host": ["{{baseUrl}}"],
@@ -304,9 +286,7 @@
           "name": "Get Bank Accounts",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/bank-accounts",
               "host": ["{{baseUrl}}"],
@@ -318,9 +298,7 @@
           "name": "Get Bank Account by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/bank-accounts/{{bankAccountId}}",
               "host": ["{{baseUrl}}"],
@@ -351,9 +329,7 @@
           "name": "Delete Bank Account",
           "request": {
             "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{authToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
             "url": {
               "raw": "{{baseUrl}}/api/v1/bank-accounts/{{bankAccountId}}",
               "host": ["{{baseUrl}}"],

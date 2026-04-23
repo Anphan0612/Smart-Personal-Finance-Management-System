@@ -29,7 +29,7 @@ function parseEnv(filePath) {
   if (!fs.existsSync(filePath)) return {};
   const content = fs.readFileSync(filePath, 'utf-8');
   const config = {};
-  content.split('\n').forEach(line => {
+  content.split('\n').forEach((line) => {
     const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
     if (match) {
       let value = match[2] || '';
@@ -53,7 +53,7 @@ async function selectLanIp() {
         candidates.push({
           name: name,
           address: netInfo.address,
-          isVirtual: /virtual|vbox|docker|vpn|wsl|tailscale/i.test(name)
+          isVirtual: /virtual|vbox|docker|vpn|wsl|tailscale/i.test(name),
         });
       }
     }
@@ -64,19 +64,26 @@ async function selectLanIp() {
 
   console.log(chalk.cyan('\n🌐 Multiple network interfaces detected:'));
   candidates.forEach((c, i) => {
-    const label = c.isVirtual ? chalk.gray(`(Virtual: ${c.name})`) : chalk.green(`(Physical: ${c.name})`);
+    const label = c.isVirtual
+      ? chalk.gray(`(Virtual: ${c.name})`)
+      : chalk.green(`(Physical: ${c.name})`);
     console.log(`  ${i + 1}. ${chalk.bold(c.address.padEnd(15))} ${label}`);
   });
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  
-  const choice = await new Promise(resolve => {
-    rl.question(chalk.yellow(`\n❓ Select the IP address for Mobile connection (1-${candidates.length}) [default 1]: `), (answer) => {
-      const idx = parseInt(answer) - 1;
-      resolve(candidates[idx] ? candidates[idx].address : candidates[0].address);
-    });
+
+  const choice = await new Promise((resolve) => {
+    rl.question(
+      chalk.yellow(
+        `\n❓ Select the IP address for Mobile connection (1-${candidates.length}) [default 1]: `,
+      ),
+      (answer) => {
+        const idx = parseInt(answer) - 1;
+        resolve(candidates[idx] ? candidates[idx].address : candidates[0].address);
+      },
+    );
   });
-  
+
   rl.close();
   return choice;
 }
@@ -100,7 +107,7 @@ function updateMobileEnv(ip) {
   const apiUrl = `http://${ip}:${BACKEND_PORT}/api/v1`;
   let content = fs.existsSync(MOBILE_ENV_PATH) ? fs.readFileSync(MOBILE_ENV_PATH, 'utf-8') : '';
   const newEntry = `EXPO_PUBLIC_API_URL=${apiUrl}`;
-  
+
   if (content.includes('EXPO_PUBLIC_API_URL=')) {
     content = content.replace(/^EXPO_PUBLIC_API_URL=.*$/m, newEntry);
   } else {
@@ -114,15 +121,21 @@ function startService(name, command, args, cwd, env, color) {
   const proc = spawn(command, args, { cwd, env, shell: true });
 
   proc.stdout.on('data', (data) => {
-    data.toString().split('\n').forEach(line => {
-      if (line.trim()) log(name, line, color);
-    });
+    data
+      .toString()
+      .split('\n')
+      .forEach((line) => {
+        if (line.trim()) log(name, line, color);
+      });
   });
 
   proc.stderr.on('data', (data) => {
-    data.toString().split('\n').forEach(line => {
-      if (line.trim()) log(name, chalk.red(line), color);
-    });
+    data
+      .toString()
+      .split('\n')
+      .forEach((line) => {
+        if (line.trim()) log(name, chalk.red(line), color);
+      });
   });
 
   proc.on('exit', (code) => {
@@ -136,7 +149,7 @@ function startService(name, command, args, cwd, env, color) {
 // --- Cleanup ---
 function cleanup() {
   console.log('\n' + chalk.yellow('🧹 Shutting down all services...'));
-  processes.forEach(p => {
+  processes.forEach((p) => {
     if (os.platform() === 'win32') {
       spawn('taskkill', ['/pid', p.pid, '/f', '/t']);
     } else {
@@ -153,11 +166,13 @@ process.on('SIGTERM', cleanup);
 
 async function main() {
   console.clear();
-  console.log(chalk.blue.bold(`
+  console.log(
+    chalk.blue.bold(`
    ╔══════════════════════════════════════════════════════════════╗
    ║        🚀 SMART FINANCE MANAGEMENT SYSTEM - DEV MODE         ║
    ╚══════════════════════════════════════════════════════════════╝
-  `));
+  `),
+  );
 
   const rootConfig = parseEnv(ENV_PATH);
   const lanIp = await selectLanIp();
@@ -166,11 +181,15 @@ async function main() {
   // 1. Database Check
   const isDbUp = await checkPort(DB_PORT);
   if (!isDbUp) {
-    log('DB', chalk.yellow(`Port ${DB_PORT} is closed. Attempting to start Docker DB...`), 'yellow');
+    log(
+      'DB',
+      chalk.yellow(`Port ${DB_PORT} is closed. Attempting to start Docker DB...`),
+      'yellow',
+    );
     try {
       execSync('docker compose up -d db', { stdio: 'inherit', cwd: ROOT_DIR });
       log('DB', chalk.green('Docker DB started successfully.'), 'green');
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
     } catch (e) {
       log('DB', chalk.red('Failed to start Docker DB. Please check Docker Desktop.'), 'red');
     }
@@ -192,39 +211,43 @@ async function main() {
   const aiEnv = { ...commonEnv, HF_HOME: path.join(ROOT_DIR, 'ai-service', 'models', 'cache') };
   const psPath = os.platform() === 'win32' ? 'powershell.exe' : 'pwsh';
   startService(
-    'AI-SVC', 
-    psPath, 
-    ['-ExecutionPolicy', 'Bypass', '-File', path.join(ROOT_DIR, 'ai-service', 'start-ai.ps1')], 
-    ROOT_DIR, 
-    aiEnv, 
-    'cyan'
+    'AI-SVC',
+    psPath,
+    ['-ExecutionPolicy', 'Bypass', '-File', path.join(ROOT_DIR, 'ai-service', 'start-ai.ps1')],
+    ROOT_DIR,
+    aiEnv,
+    'cyan',
   );
 
   // 3. Start Backend
-  const backendEnv = { 
-    ...commonEnv, 
+  const backendEnv = {
+    ...commonEnv,
     DB_URL: `jdbc:mysql://localhost:${DB_PORT}/${rootConfig.MYSQL_DATABASE || 'smart_money_tracking'}`,
     DB_USERNAME: rootConfig.MYSQL_USER,
     DB_PASSWORD: rootConfig.MYSQL_PASSWORD,
-    NLP_SERVICE_URL: `http://localhost:${AI_PORT}`
+    NLP_SERVICE_URL: `http://localhost:${AI_PORT}`,
   };
-  
+
   const mvnBase = os.platform() === 'win32' ? 'mvnw.cmd' : './mvnw';
   const mvnPath = path.join(ROOT_DIR, 'backend', mvnBase);
-  
+
   startService(
-    'BACKEND', 
-    mvnPath, 
-    ['spring-boot:run'], 
-    path.join(ROOT_DIR, 'backend'), 
-    backendEnv, 
-    'green'
+    'BACKEND',
+    mvnPath,
+    ['spring-boot:run'],
+    path.join(ROOT_DIR, 'backend'),
+    backendEnv,
+    'green',
   );
 
-  log('SYSTEM', chalk.bold.magenta('All services are booting up. Press Ctrl+C to stop.'), 'magenta');
+  log(
+    'SYSTEM',
+    chalk.bold.magenta('All services are booting up. Press Ctrl+C to stop.'),
+    'magenta',
+  );
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(chalk.red('💥 Fatal error:'), err);
   cleanup();
 });
