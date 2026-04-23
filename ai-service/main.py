@@ -119,6 +119,39 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Routes
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Retry Logic
+# ---------------------------------------------------------------------------
+import functools
+import time
+
+def retry_on_gpu_error(max_retries: int = 2, delay: float = 0.5):
+    def decorator(func):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            last_exception = None
+            for i in range(max_retries):
+                try:
+                    return await func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    err_msg = str(e).lower()
+                    if "cuda error" in err_msg or "out of memory" in err_msg:
+                        print(f"[AI SERVICE] ⚠️ Transient GPU error detected (Attempt {i+1}/{max_retries}): {str(e)}")
+                        if i < max_retries - 1:
+                            time.sleep(delay)
+                            continue
+                    raise e
+            raise last_exception
+        return wrapper
+    decorator._is_retry_decorator = True # Mark for identification
+    return decorator
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
 @app.get("/health", tags=["System"])
 async def health_check():
     return {"status": "ok"}
@@ -129,14 +162,39 @@ async def health_check():
     tags=["NLP"],
     summary="Generate financial advice based on transaction comparison",
 )
+@retry_on_gpu_error()
 async def generate_insights(comparison_data: dict[str, Any]):
     """
-    Accepts a dictionary of transaction comparisons and returns a 
-    natural language insight in Vietnamese.
+    Accepts a dictionary of transaction comparisons and returns a
+    natural language insight in Vietnamese with spending summary and top categories.
     """
     try:
         insight = generate_financial_insights(comparison_data)
-        return {"insight": insight}
+
+        # Extract summary data from current week
+        current_week = comparison_data.get("currentWeek", {})
+        total_expense = current_week.get("totalExpense", 0)
+
+        # Extract top categories from current week's expenseByCategory
+        expense_by_category = current_week.get("expenseByCategory", {})
+        top_categories = [
+            {"category": cat, "amount": float(amount)}
+            for cat, amount in sorted(
+                expense_by_category.items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:5]  # Top 5 categories
+        ]
+
+        return {
+            "insight": insight,
+            "summary": {
+                "total_expense": float(total_expense),
+                "budget_limit": 15000000,  # Default budget, should be configurable
+                "percentage": round((float(total_expense) / 15000000) * 100, 1) if total_expense else 0
+            },
+            "top_categories": top_categories
+        }
     except Exception as e:
         print(f"[AI SERVICE] Insight Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -151,6 +209,7 @@ class BudgetInsightRequest(BaseModel):
     tags=["NLP"],
     summary="Generate zero-cost rule-based budget insight",
 )
+@retry_on_gpu_error()
 async def get_budget_insight(request: BudgetInsightRequest):
     """
     Returns localized gamification insight for a budget based on its threshold status.
@@ -171,6 +230,7 @@ async def get_budget_insight(request: BudgetInsightRequest):
     tags=["NLP"],
     summary="Parse Vietnamese transaction text into structured data",
 )
+@retry_on_gpu_error()
 async def extract_transaction(request: TransactionRequest):
     """
     Accepts a Vietnamese natural-language sentence describing a financial
@@ -277,6 +337,7 @@ async def detect_anomalies_endpoint(request: AnomalyDetectRequest):
     tags=["OCR"],
     summary="Extract structured data from a receipt image (Vietnamese focus)",
 )
+@retry_on_gpu_error()
 async def ocr_receipt(file: UploadFile = File(...)):
     """
     Accepts an image file via multipart/form-data.
