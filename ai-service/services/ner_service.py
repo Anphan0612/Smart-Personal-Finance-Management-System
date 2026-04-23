@@ -228,7 +228,31 @@ class NERService:
             ner_results = []
             model_confidence = 0.55
         else:
-            ner_results = self._pipeline(text)  # type: ignore[misc]
+            try:
+                ner_results = self._pipeline(text)  # type: ignore[misc]
+            except RuntimeError as e:
+                if "CUDA error" in str(e):
+                    print(f"[NER SERVICE] ⚠️ CUDA error detected: {str(e)}. Retrying on CPU...")
+                    try:
+                        # Re-initialize pipeline on CPU
+                        self._pipeline = pipeline(
+                            task="token-classification",
+                            model=self.MODEL_PATH,
+                            aggregation_strategy="simple",
+                            device=-1, # CPU
+                        )
+                        ner_results = self._pipeline(text) # type: ignore[misc]
+                        print("[NER SERVICE] ✅ Successfully recovered on CPU.")
+                    except Exception as retry_e:
+                        print(f"[NER SERVICE] ❌ CPU Fallback failed: {str(retry_e)}")
+                        ner_results = []
+                else:
+                    print(f"[NER SERVICE] ❌ NER Inference Error: {str(e)}")
+                    ner_results = []
+            except Exception as e:
+                print(f"[NER SERVICE] ❌ NER Unexpected Error: {str(e)}")
+                ner_results = []
+                
             model_confidence = self._avg_confidence(ner_results)
 
         # 3. Category via model label, fallback to keyword map

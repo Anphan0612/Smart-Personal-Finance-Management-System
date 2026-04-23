@@ -1,11 +1,8 @@
-# syntax=docker/dockerfile:1.7
-
-# CUDA runtime image for GPU-ready inference workloads (can still run on CPU hosts)
+# syntax=docker/dockerfile:1.4
 FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
     HF_HOME=/app/models/cache \
     FLAGS_use_onednn=0 \
     FLAGS_use_mkldnn=0 \
@@ -14,12 +11,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 WORKDIR /app
 
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3-pip \
     python3-dev \
     build-essential \
-    git \
     libglib2.0-0 \
     libsm6 \
     libxrender1 \
@@ -27,17 +24,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt ./requirements.txt
-RUN python3.10 -m pip install --upgrade pip setuptools wheel && \
+# Add non-root user for security
+RUN useradd -m -r aiuser
+
+# Create necessary directories and set ownership before switching user
+RUN mkdir -p /app/models/cache /app/uploads && \
+    chown -R aiuser:aiuser /app
+
+# Install Python dependencies using BuildKit pip cache
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3.10 -m pip install --upgrade pip setuptools wheel && \
     python3.10 -m pip install -r requirements.txt
 
-# Copy only runtime source to keep build context lean
-COPY main.py ./
-COPY models ./models
-COPY services ./services
-COPY utils ./utils
+# Switch to non-root user
+USER aiuser
 
-RUN mkdir -p /app/models/cache /app/uploads
+# Copy application source code (ignoring __pycache__ via .dockerignore)
+COPY --chown=aiuser:aiuser main.py ./
+COPY --chown=aiuser:aiuser models ./models
+COPY --chown=aiuser:aiuser services ./services
+COPY --chown=aiuser:aiuser utils ./utils
 
 EXPOSE 8000
+
 CMD ["python3.10", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

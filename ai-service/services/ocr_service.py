@@ -175,12 +175,19 @@ class OCRService:
 
             try:
                 tokenizer = load_tokenizer()
-                model = AutoModelForSeq2SeqLM.from_pretrained(
-                    model_id,
-                    device_map={"": device},
-                    torch_dtype=torch_dtype,
-                    trust_remote_code=True
-                )
+                if device == "cuda":
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_id,
+                        device_map={"": device},
+                        torch_dtype=torch_dtype,
+                        trust_remote_code=True
+                    )
+                else:
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_id,
+                        trust_remote_code=True
+                    ).to(device)
+                
                 align_embeddings(model, tokenizer)
                 pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
                 logger.info(f"✅ ViT5 OCR Corrector initialized on {device.upper()}.")
@@ -190,10 +197,8 @@ class OCRService:
                     tokenizer = load_tokenizer()
                     model = AutoModelForSeq2SeqLM.from_pretrained(
                         model_id,
-                        device_map={"": "cpu"},
-                        torch_dtype=torch.float32,
                         trust_remote_code=True
-                    )
+                    ).to("cpu")
                     align_embeddings(model, tokenizer)
                     pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
                     logger.info(f"✅ ViT5 OCR Corrector initialized on CPU (Fallback).")

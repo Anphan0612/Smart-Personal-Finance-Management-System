@@ -1,17 +1,18 @@
-# Virtual environments and caches
-.venv
-.venv-ocr
+.git
+.idea
+.vscode
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv-ocr/
+.venv/
 .pytest_cache/
-
-# Model/cache artifacts
-models/cache/
-benchmark/
-
-# Local tooling / docs
-README.md
-start-ai.ps1
 tests/
-
-# Runtime outputs
+models/cache/
 uploads/
+benchmark/
