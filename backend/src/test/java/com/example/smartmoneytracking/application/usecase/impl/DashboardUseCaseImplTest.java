@@ -2,6 +2,7 @@ package com.example.smartmoneytracking.application.usecase.impl;
 
 import com.example.smartmoneytracking.application.dto.dashboard.response.DashboardResponseDTO;
 import com.example.smartmoneytracking.application.mapper.TransactionMapper;
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
@@ -16,7 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +47,7 @@ class DashboardUseCaseImplTest {
     @Test
     void getDashboardSummary_shouldCalculateCorrectSavingsRate() {
         String walletId = "wallet-123";
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = DateUtils.nowUtc();
         
         // Income = 1000, Expenses = 200 -> Savings = 800 -> Rate = 80%
         Transaction income = Transaction.create(walletId, "cat-1", new BigDecimal("1000"), TransactionType.INCOME, "Job", now);
