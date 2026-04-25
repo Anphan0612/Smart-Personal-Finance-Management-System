@@ -1,3 +1,4 @@
+// Trigger re-bundle
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import {
   useFonts,
@@ -26,6 +27,7 @@ import 'react-native-reanimated';
 import '../global.css';
 import { useAppStore } from '../src/store/useAppStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { Pressable, Text } from 'react-native';
 
@@ -146,7 +148,14 @@ export default function RootLayout() {
 
   const isReady = loaded && isHydrated;
 
-  // Auth Guard Logic
+  // 1. Hide Splash Screen only once when app is ready
+  useEffect(() => {
+    if (isReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isReady]);
+
+  // 2. Auth Guard Logic
   useEffect(() => {
     if (!isReady) return;
 
@@ -155,19 +164,16 @@ export default function RootLayout() {
 
     const currentSegments = segments as string[];
     const inAuthGroup = currentSegments.includes('(auth)');
+    const inOnboardingGroup = currentSegments.includes('onboarding');
 
     // Tránh vòng lặp: Chỉ redirect nếu thực sự cần thiết
-    if (!currentToken && !inAuthGroup) {
-      console.log('[ROUTING] Unauthenticated -> Login');
-      router.replace('/(auth)/login');
+    if (!currentToken && !inAuthGroup && !inOnboardingGroup) {
+      console.log('[ROUTING] Unauthenticated -> Welcome');
+      router.replace('/(auth)/welcome' as any);
     } else if (currentToken && (inAuthGroup || currentSegments.length === 0)) {
+      // If token exists, check if onboarding is needed
       console.log('[ROUTING] Authenticated -> Tabs');
-      router.replace('/(tabs)');
-    }
-
-    // Ẩn Splash Screen sau khi đã xác định được tuyến đường
-    if (isReady) {
-      SplashScreen.hideAsync().catch(() => {});
+      router.replace('/(tabs)' as any);
     }
   }, [currentToken, segments, isReady, rootNavigationState?.key]);
 
@@ -177,20 +183,23 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <BottomSheetModalProvider>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider value={colorScheme === 'dark' ? AtelierDarkTheme : AtelierLightTheme}>
-              <Stack>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
-                <Stack.Screen name="receipt" options={{ headerShown: false }} />
-              </Stack>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </BottomSheetModalProvider>
-      </SafeAreaProvider>
+      <KeyboardProvider>
+        <SafeAreaProvider>
+          <BottomSheetModalProvider>
+            <QueryClientProvider client={queryClient}>
+              <ThemeProvider value={colorScheme === 'dark' ? AtelierDarkTheme : AtelierLightTheme}>
+                <Stack>
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="+not-found" options={{ title: 'Not Found' }} />
+                  <Stack.Screen name="receipt" options={{ headerShown: false }} />
+                </Stack>
+              </ThemeProvider>
+            </QueryClientProvider>
+          </BottomSheetModalProvider>
+        </SafeAreaProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

@@ -99,6 +99,22 @@ export default function ReceiptScannerScreen() {
 
   const pickImage = async (useCamera: boolean) => {
     try {
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập camera để quét hóa đơn.');
+          router.back();
+          return;
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập thư viện ảnh để chọn hóa đơn.');
+          router.back();
+          return;
+        }
+      }
+
       const result = useCamera
         ? await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -191,14 +207,16 @@ export default function ReceiptScannerScreen() {
         },
       });
 
-      if (response.data.success) {
+      if (response.data.success && response.data.data?.id) {
         const receiptId = response.data.data.id;
         pollWithDelay(receiptId);
+      } else {
+        throw new Error('Không nhận được ID biên lai từ máy chủ.');
       }
-    } catch (error) {
+    } catch (error: any) {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       setLoadingState(false);
-      Alert.alert('Lỗi Upload', 'Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng.', [
+      Alert.alert('Lỗi Upload', error.message || 'Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng.', [
         { text: 'Thử lại', style: 'cancel', onPress: () => resetState() },
       ]);
     }
