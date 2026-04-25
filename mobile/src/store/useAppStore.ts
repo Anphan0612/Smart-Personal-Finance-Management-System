@@ -11,6 +11,22 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: number;
+  // Standardized AI response structure
+  type?: 'QUERY' | 'SUMMARY' | 'INSIGHT_CHART' | 'COMMAND' | 'DEFAULT' | 'review_transaction';
+  data?: {
+    transactions?: any[];
+    summary?: {
+      totalSpent: number;
+      budgetLimit: number;
+      percentage: number;
+    };
+    chartData?: any[];
+    filters?: any;
+    transaction?: any; // For review_transaction type
+    type?: 'pie' | 'line'; // Chart type
+    currency?: string;
+  };
+  // Legacy fields (deprecated, kept for backward compatibility)
   isStreaming?: boolean;
   hasTransactionMatch?: boolean;
   hasProgress?: boolean;
@@ -23,7 +39,6 @@ export interface ChatMessage {
     confidence: number;
     categoryId?: string;
   };
-  // Query history results
   hasQueryResult?: boolean;
   hasSpendingSummary?: boolean;
   spendingData?: {
@@ -36,7 +51,6 @@ export interface ChatMessage {
     matchedTransactions: any[];
     filters: any;
   };
-  // Anomaly detection results
   hasAnomaly?: boolean;
   anomalyData?: {
     anomalies: any[];
@@ -60,6 +74,10 @@ interface AppState {
   setToken: (token: string | null) => void;
   setTokens: (token: string | null, refreshToken: string | null, user?: UserInfo) => void;
   logout: () => Promise<void>;
+
+  // Onboarding State
+  onboardingCurrency: string | null;
+  setOnboardingCurrency: (currency: string | null) => void;
 
   // UI State
   isTransactionModalOpen: boolean;
@@ -100,6 +118,8 @@ export const useAppStore = create<AppState>()(
           token,
           refreshToken,
           user: user || { name: null, email: null },
+          activeWalletId: null, // Reset active wallet when user changes
+          messages: [], // Clear chat for new user
         }),
       logout: async () => {
         await SecureStore.deleteItemAsync('auth_token');
@@ -109,8 +129,13 @@ export const useAppStore = create<AppState>()(
           user: { name: null, email: null },
           activeWalletId: null,
           messages: [],
+          onboardingCurrency: null,
         });
       },
+
+      // Onboarding State
+      onboardingCurrency: null,
+      setOnboardingCurrency: (currency) => set({ onboardingCurrency: currency }),
 
       // UI Defaults
       isTransactionModalOpen: false,

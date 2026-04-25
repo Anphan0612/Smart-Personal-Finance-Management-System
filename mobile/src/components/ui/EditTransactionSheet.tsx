@@ -385,14 +385,59 @@ export const EditTransactionSheet = React.forwardRef<
                   </View>
 
                   {activePicker === 'date' ? (
-                    <View className="items-center">
-                      <DateTimePicker
-                        value={selectedDate}
-                        mode="date"
-                        display="spinner"
-                        onChange={(e, date) => date && setSelectedDate(date)}
-                        style={{ height: 120, width: '100%' }}
-                      />
+                    <View>
+                      <View className="flex-row justify-center gap-3 mb-6">
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedDate(new Date());
+                            setActivePicker('none');
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          }}
+                          className="px-6 py-3 bg-ai-primary/10 rounded-full border border-ai-primary/20"
+                        >
+                          <AtelierTypography variant="label" className="text-ai-primary font-bold">
+                            Hôm nay
+                          </AtelierTypography>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => {
+                            const yesterday = new Date();
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            setSelectedDate(yesterday);
+                            setActivePicker('none');
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                          }}
+                          className="px-6 py-3 bg-surface-container-high rounded-full border border-outline-variant/10"
+                        >
+                          <AtelierTypography variant="label" className="text-surface-on font-bold">
+                            Hôm qua
+                          </AtelierTypography>
+                        </TouchableOpacity>
+                      </View>
+
+                      <View className="items-center bg-white rounded-2xl p-2 border border-outline-variant/10">
+                        <DateTimePicker
+                          value={selectedDate}
+                          mode="date"
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          onChange={(e, date) => {
+                            if (date) setSelectedDate(date);
+                            if (Platform.OS === 'android' && (e.type === 'set' || e.type === 'dismissed')) {
+                              setActivePicker('none');
+                            }
+                          }}
+                          style={{ height: 120, width: '100%' }}
+                        />
+                      </View>
+                      
+                      {Platform.OS === 'ios' && (
+                        <TouchableOpacity 
+                          onPress={() => setActivePicker('none')}
+                          className="mt-4 bg-primary py-3 rounded-xl items-center"
+                        >
+                          <AtelierTypography variant="label" className="text-white font-bold">Xác nhận ngày</AtelierTypography>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   ) : (
                     <View className="flex-row flex-wrap gap-2">

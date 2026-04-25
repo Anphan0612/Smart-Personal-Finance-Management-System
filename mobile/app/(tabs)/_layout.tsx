@@ -123,10 +123,6 @@ export default function TabLayout() {
           setTransactionModalOpen(true);
         }}
         onAskAI={() => setIsAIOpen(true)}
-        onManage={() => {
-          // Navigate to settings
-          console.log('Manage settings');
-        }}
         tabBarHeight={tabBarHeight}
       />
 

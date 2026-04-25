@@ -4,9 +4,7 @@ import { MotiView } from 'moti';
 import { Search, ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { useTransactions } from '@/hooks/useTransactions';
-import { TransactionResponse } from '@/types/api';
-import { format, isToday, isYesterday, parseISO } from 'date-fns';
-import { formatCurrency, formatTime, formatDate } from '@/utils/format';
+import { formatCurrency, formatTime } from '@/utils/format';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TransactionDetailSheet from './components/TransactionDetailSheet';
 import {
@@ -16,6 +14,24 @@ import {
   AtelierTransactionCard,
 } from '@/components/ui';
 import { Colors } from '@/constants/tokens';
+import { TransactionPresentationMapper } from './presentation/TransactionPresentationMapper';
+import { Transaction } from '@/domain/entities/Transaction';
+import { TransactionResponse } from '@/types/api';
+
+const toTransactionResponse = (transaction: Transaction): TransactionResponse => ({
+  id: transaction.id,
+  walletId: transaction.walletId,
+  categoryId: transaction.categoryId,
+  categoryName: transaction.categoryName,
+  iconName: transaction.iconName,
+  isAiSuggested: transaction.isAiSuggested,
+  amount: transaction.amount,
+  description: transaction.description,
+  type: transaction.type,
+  transactionDate: transaction.transactionDate.toISOString(),
+  createdAt: transaction.createdAt.toISOString(),
+  receiptImageUrl: transaction.receiptImageUrl,
+});
 
 const TransactionSkeleton = () => (
   <AtelierCard elevation="lowest" padding="sm" className="mb-3">
@@ -45,24 +61,13 @@ export default function TransactionsScreen() {
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
     useTransactions(activeWalletId || '');
 
-  // Flatten and Filter Duplicates
   const allTransactions = useMemo(() => {
     if (!data?.pages) return [];
-
-    const rawItems = data.pages.flatMap((page) => page.content || []);
-    const uniqueItemsMap = new Map<string, TransactionResponse>();
-
-    rawItems.forEach((item) => {
-      if (item && item.id) {
-        uniqueItemsMap.set(item.id, item);
-      }
-    });
-
-    return Array.from(uniqueItemsMap.values());
+    return TransactionPresentationMapper.flattenPages(data.pages);
   }, [data]);
 
-  const handleTransactionPress = (transaction: TransactionResponse) => {
-    setSelectedTransaction(transaction);
+  const handleTransactionPress = (transaction: Transaction) => {
+    setSelectedTransaction(toTransactionResponse(transaction));
     setIsSheetVisible(true);
   };
 
@@ -70,37 +75,10 @@ export default function TransactionsScreen() {
     setIsSheetVisible(false);
   };
 
-  // Group transactions by date
   const groupedTransactions = useMemo(() => {
     if (!allTransactions || allTransactions.length === 0) return [];
-
-    const filtered = allTransactions.filter(
-      (t: TransactionResponse) =>
-        (t.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.categoryName || '').toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    const groups: { [key: string]: TransactionResponse[] } = {};
-    filtered.forEach((t: TransactionResponse) => {
-      const date = t.transactionDate.split('T')[0];
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(t);
-    });
-
-    return Object.keys(groups)
-      .sort((a, b) => b.localeCompare(a))
-      .map((date) => ({
-        date,
-        items: groups[date],
-      }));
+    return TransactionPresentationMapper.groupAndFilter(allTransactions, searchQuery);
   }, [allTransactions, searchQuery]);
-
-  const formatDateLabel = (dateStr: string) => {
-    const date = parseISO(dateStr);
-    if (isToday(date)) return 'Hôm nay';
-    if (isYesterday(date)) return 'Hôm qua';
-    return formatDate(date);
-  };
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -145,7 +123,7 @@ export default function TransactionsScreen() {
     item,
     index,
   }: {
-    item: { date: string; items: TransactionResponse[] };
+    item: { date: string; dateLabel: string; items: Transaction[] };
     index: number;
   }) => (
     <MotiView
@@ -156,10 +134,10 @@ export default function TransactionsScreen() {
       className="mb-8"
     >
       <AtelierTypography variant="label" className="text-neutral-400 mb-4 px-1">
-        {formatDateLabel(item.date)}
+        {item.dateLabel}
       </AtelierTypography>
       <View className="gap-3">
-        {item.items.map((transaction: TransactionResponse) => (
+        {item.items.map((transaction: Transaction) => (
           <TouchableOpacity
             key={transaction.id}
             activeOpacity={0.7}
@@ -170,10 +148,10 @@ export default function TransactionsScreen() {
                 <View className="flex-1 flex-row items-center gap-4 mr-3">
                   <View
                     className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                      transaction.type === 'INCOME' ? 'bg-green-50' : 'bg-red-50'
+                      transaction.isIncome() ? 'bg-green-50' : 'bg-red-50'
                     }`}
                   >
-                    {transaction.type === 'INCOME' ? (
+                    {transaction.isIncome() ? (
                       <ArrowDownLeft size={20} color={Colors.secondary.DEFAULT} />
                     ) : (
                       <ArrowUpRight size={20} color={Colors.error} />
@@ -192,14 +170,14 @@ export default function TransactionsScreen() {
                   <AtelierTypography
                     variant="h3"
                     className={`text-[16px] ${
-                      transaction.type === 'INCOME' ? 'text-green-600' : 'text-error'
+                      transaction.isIncome() ? 'text-green-600' : 'text-error'
                     }`}
                   >
-                    {transaction.type === 'INCOME' ? '+' : '-'}
+                    {transaction.isIncome() ? '+' : '-'}
                     {formatCurrency(transaction.amount)}
                   </AtelierTypography>
                   <AtelierTypography variant="caption" className="text-neutral-400">
-                    {formatTime(transaction.transactionDate)}
+                    {formatTime(transaction.transactionDate.toISOString())}
                   </AtelierTypography>
                 </View>
               </View>
