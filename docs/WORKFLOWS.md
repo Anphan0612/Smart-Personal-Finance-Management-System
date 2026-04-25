@@ -249,28 +249,49 @@ stateDiagram-v2
 flowchart TD
     A[User Input] --> B{Input Type}
 
-    B -->|Text| C[POST /api/v1/ai/extract-transaction]
+    B -->|Natural Language| C[POST /api/v1/ai/chat]
     B -->|Receipt Image| D[POST /api/v1/receipts/upload]
 
-    C --> E[Backend gọi AI /api/ai/extract-transaction]
-    E --> F{Valid parse?}
-    F -->|No| G[Return error + suggestion]
-    F -->|Yes| H[Return transaction draft]
+    C --> E[Backend Intent Recognition]
+    E --> F{Intent Type}
+    
+    F -->|COMMAND| G[Extract Transaction Flow]
+    F -->|QUERY| H[Query History Handler]
+    F -->|SUMMARY| I[Summary Handler]
+    F -->|INSIGHT_CHART| J[Chart Handler]
+    F -->|DEFAULT| K[Default Response]
+    
+    G --> L[POST /api/v1/ai/extract-transaction]
+    L --> M{Valid parse?}
+    M -->|No| N[Return error + suggestion]
+    M -->|Yes| O[Return transaction draft with type: review_transaction]
+    
+    H --> P[Return data.transactions array]
+    I --> Q[Return data.summary object]
+    J --> R[Return data.chartData array]
+    K --> S[Return conversational response]
 
-    D --> I[Create Receipt PENDING]
-    I --> J[Async OCR /api/ai/ocr-receipt]
-    J --> K{OCR success?}
-    K -->|No| L[Receipt FAILED]
-    K -->|Yes| M[Receipt PROCESSED\nMapping category + confidence]
+    D --> T[Create Receipt PENDING]
+    T --> U[Async OCR /api/ai/ocr-receipt]
+    U --> V{OCR success?}
+    V -->|No| W[Receipt FAILED]
+    V -->|Yes| X[Receipt PROCESSED\nMapping category + confidence]
 
-    H --> N[User review]
-    M --> N
-    N --> O{User confirm?}
-    O -->|No| P[Edit/Retry/Cancel]
-    O -->|Yes| Q[Create Transaction]
-    Q --> R[Update Receipt CONFIRMED]
-    Q --> S[Learn Merchant Preference]
+    O --> Y[User review]
+    X --> Y
+    Y --> Z{User confirm?}
+    Z -->|No| AA[Edit/Retry/Cancel]
+    Z -->|Yes| AB[Create Transaction]
+    AB --> AC[Update Receipt CONFIRMED]
+    AB --> AD[Learn Merchant Preference]
 ```
+
+**Key Changes**
+- ⭐ Unified `/api/v1/ai/chat` endpoint handles all natural language inputs
+- Backend performs intent recognition (no client-side regex)
+- Standardized response contract with `type` and `data` fields
+- `data.transactions` replaces `matchedTransactions`
+- Fallback to extract flow when intent is `COMMAND`
 
 **Liên kết nghiệp vụ**
 

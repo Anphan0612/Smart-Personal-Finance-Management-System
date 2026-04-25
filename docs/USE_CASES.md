@@ -173,19 +173,22 @@ Tài liệu mô tả kịch bản sử dụng chính/phụ cho hệ thống **Sm
 
 **Main flow**
 
-1. User nhập câu hỏi tự nhiên.
-2. Backend lấy transaction context theo wallet.
-3. Backend gọi AI `query-history`.
-4. AI trả về intent, filters, summary, answer.
-5. Mobile hiển thị câu trả lời + transaction liên quan.
+1. User nhập câu hỏi tự nhiên vào Atelier AI.
+2. Mobile gọi `POST /api/v1/ai/chat` với `message` và `walletId`.
+3. Backend nhận diện intent (QUERY, SUMMARY, INSIGHT_CHART, COMMAND, DEFAULT).
+4. Backend lấy transaction context theo wallet và gọi AI service tương ứng.
+5. AI trả về response với `type`, `message`, và `data` (chứa `transactions`, `summary`, `chartData`, `filters`).
+6. Mobile hiển thị câu trả lời + dữ liệu có cấu trúc (danh sách giao dịch, biểu đồ, tóm tắt).
 
 **Alternate flow**
 
-- AI service timeout/lỗi -> trả fallback response.
+- AI service timeout/lỗi -> trả fallback response với type `DEFAULT`.
+- Intent là `COMMAND` -> Backend tự động fallback sang extract transaction flow.
 
 **Postconditions**
 
 - User nhận được câu trả lời tổng hợp có thể hành động.
+- Response sử dụng key chuẩn `data.transactions` (không phải `matchedTransactions`).
 
 **Related features/workflows**
 
@@ -194,7 +197,8 @@ Tài liệu mô tả kịch bản sử dụng chính/phụ cho hệ thống **Sm
 
 **Related APIs**
 
-- `POST /api/v1/ai/query-history`
+- `POST /api/v1/ai/chat` ⭐ Primary endpoint
+- `POST /api/v1/ai/query-history` (Deprecated)
 
 ---
 
@@ -399,7 +403,7 @@ Tài liệu mô tả kịch bản sử dụng chính/phụ cho hệ thống **Sm
 | [UC-01](#uc-01) | [F-01](./FEATURES.md#f-01), [F-09](./FEATURES.md#f-09) | [WF-02](./WORKFLOWS.md#wf-02) | `/api/v1/auth/*` |
 | [UC-02](#uc-02) | [F-02](./FEATURES.md#f-02) | [WF-01](./WORKFLOWS.md#wf-01) | `/api/v1/wallets` |
 | [UC-03](#uc-03) | [F-03](./FEATURES.md#f-03) | [WF-01](./WORKFLOWS.md#wf-01), [WF-05](./WORKFLOWS.md#wf-05) | `/api/v1/transactions` |
-| [UC-04](#uc-04) | [F-07](./FEATURES.md#f-07) | [WF-06](./WORKFLOWS.md#wf-06) | `/api/v1/ai/query-history` |
+| [UC-04](#uc-04) | [F-07](./FEATURES.md#f-07) | [WF-06](./WORKFLOWS.md#wf-06) | `/api/v1/ai/chat` ⭐ |
 | [UC-05](#uc-05) | [F-07](./FEATURES.md#f-07), [F-03](./FEATURES.md#f-03) | [WF-06](./WORKFLOWS.md#wf-06), [WF-05](./WORKFLOWS.md#wf-05) | `/api/v1/ai/extract-transaction`, `/api/v1/transactions` |
 | [UC-06](#uc-06) | [F-08](./FEATURES.md#f-08), [F-09](./FEATURES.md#f-09) | [WF-03](./WORKFLOWS.md#wf-03), [WF-04](./WORKFLOWS.md#wf-04) | `/api/v1/receipts/*` |
 | [UC-07](#uc-07) | [F-05](./FEATURES.md#f-05) | [WF-01](./WORKFLOWS.md#wf-01) | `/api/v1/budgets/*` |
