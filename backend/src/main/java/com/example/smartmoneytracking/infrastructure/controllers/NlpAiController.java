@@ -3,7 +3,8 @@ package com.example.smartmoneytracking.infrastructure.controllers;
 import com.example.smartmoneytracking.application.dto.*;
 import com.example.smartmoneytracking.application.dto.common.ApiResponse;
 import com.example.smartmoneytracking.application.usecase.ExtractTransactionViaNlpUseCase;
-import com.example.smartmoneytracking.application.usecase.QueryHistoryViaNlpUseCase;
+import com.example.smartmoneytracking.application.usecase.AtelierChatUseCase;
+import com.example.smartmoneytracking.application.usecase.GetTransactionComparisonUseCase;
 import com.example.smartmoneytracking.infrastructure.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class NlpAiController {
 
     private final ExtractTransactionViaNlpUseCase extractTransactionViaNlpUseCase;
-    private final QueryHistoryViaNlpUseCase queryHistoryViaNlpUseCase;
+    private final AtelierChatUseCase atelierChatUseCase;
+    private final GetTransactionComparisonUseCase getTransactionComparisonUseCase;
     private final com.example.smartmoneytracking.infrastructure.ai.NlpExtractionClient nlpExtractionClient;
     private final SecurityUtils securityUtils;
 
@@ -33,7 +35,7 @@ public class NlpAiController {
     }
 
     @PostMapping("/generate-insights")
-    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> generateInsights(
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> generateInsights(
             @RequestBody Object comparisonData) {
 
         securityUtils.getCurrentUserId();
@@ -50,12 +52,27 @@ public class NlpAiController {
         return ResponseEntity.ok(ApiResponse.success(nlpExtractionClient.getBudgetInsight(categoryName, threshold)));
     }
 
-    @PostMapping("/query-history")
-    public ResponseEntity<ApiResponse<NlpQueryResponse>> queryHistory(
-            @Valid @RequestBody NlpQueryRequest request) {
+    @PostMapping("/chat")
+    public ResponseEntity<ApiResponse<AtelierChatResponse>> chat(
+            @Valid @RequestBody AtelierChatRequest request) {
 
         String userId = securityUtils.getCurrentUserId();
-        NlpQueryResponse response = queryHistoryViaNlpUseCase.execute(request, userId);
+        AtelierChatResponse response = atelierChatUseCase.execute(request, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/proactive-insights")
+    public ResponseEntity<ApiResponse<java.util.Map<String, String>>> getProactiveInsights(
+            @org.springframework.web.bind.annotation.RequestParam String walletId) {
+
+        String userId = securityUtils.getCurrentUserId();
+        // 1. Get comparison data (Weekly/Monthly)
+        Object comparisonData = getTransactionComparisonUseCase.execute(walletId, userId);
+        
+        // 2. Call AI service to generate natural language insight
+        java.util.Map<String, Object> aiResult = nlpExtractionClient.generateInsights(comparisonData);
+        String insight = (String) aiResult.get("insight");
+        
+        return ResponseEntity.ok(ApiResponse.success(java.util.Map.of("message", insight)));
     }
 }
