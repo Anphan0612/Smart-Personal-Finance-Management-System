@@ -1,10 +1,11 @@
-package com.example.smartmoneytracking.application.usecase;
+package com.example.smartmoneytracking.application.service.chat;
 
-import com.example.smartmoneytracking.application.dto.NlpQueryRequest;
-import com.example.smartmoneytracking.application.dto.NlpQueryResponse;
+import com.example.smartmoneytracking.application.dto.AtelierChatRequest;
+import com.example.smartmoneytracking.application.dto.AtelierChatResponse;
+import com.example.smartmoneytracking.application.dto.NlpExtractTransactionRequest;
+import com.example.smartmoneytracking.application.dto.NlpExtractTransactionResponse;
 import com.example.smartmoneytracking.application.dto.TransactionResponse;
-import com.example.smartmoneytracking.application.mapper.TransactionMapper;
-import com.example.smartmoneytracking.domain.entities.category.Category;
+import com.example.smartmoneytracking.application.service.AiChatIntentHandler;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
@@ -12,27 +13,32 @@ import com.example.smartmoneytracking.infrastructure.ai.NlpExtractionClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class QueryHistoryViaNlpUseCase {
+public class HistoryChatIntentHandler implements AiChatIntentHandler {
 
     private final NlpExtractionClient nlpExtractionClient;
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
 
-    public NlpQueryResponse execute(NlpQueryRequest request, String userId) {
-        // 1. Fetch all transactions for this wallet (last 90 days for context)
+    @Override
+    public boolean canHandle(String intent) {
+        return "HISTORY".equalsIgnoreCase(intent) || "QUERY".equalsIgnoreCase(intent);
+    }
+
+    @Override
+    public AtelierChatResponse handle(AtelierChatRequest request, String userId) {
         String walletId = request.getWalletId();
-        java.time.OffsetDateTime end = java.time.OffsetDateTime.now();
-        java.time.OffsetDateTime start = end.minusDays(90);
+        OffsetDateTime end = OffsetDateTime.now();
+        OffsetDateTime start = end.minusDays(90);
 
         List<Transaction> transactions = transactionRepository
                 .findByWalletIdAndTransactionDateBetween(walletId, start, end);
 
-        // 2. Build category name map
         Set<String> categoryIds = transactions.stream()
                 .map(Transaction::getCategoryId)
                 .filter(Objects::nonNull)
@@ -49,7 +55,6 @@ public class QueryHistoryViaNlpUseCase {
             });
         }
 
-        // 3. Convert transactions to simple maps for AI service
         List<Map<String, Object>> txnMaps = transactions.stream()
                 .map(t -> {
                     Map<String, Object> map = new LinkedHashMap<>();
@@ -67,10 +72,9 @@ public class QueryHistoryViaNlpUseCase {
                 })
                 .collect(Collectors.toList());
 
-        // 4. Call AI service
-        Map<String, Object> aiResult = nlpExtractionClient.queryHistory(request.getText(), txnMaps);
+        // We map message to text for the AI service
+        Map<String, Object> aiResult = nlpExtractionClient.queryHistory(request.getMessage(), txnMaps);
 
-        // 5. Build response
         String intent = String.valueOf(aiResult.getOrDefault("intent", "COMMAND"));
 
         @SuppressWarnings("unchecked")
@@ -83,7 +87,6 @@ public class QueryHistoryViaNlpUseCase {
         @SuppressWarnings("unchecked")
         List<String> matchedIds = (List<String>) aiResult.getOrDefault("matched_txn_ids", Collections.emptyList());
 
-        // 6. If QUERY, include matched transactions for mobile rendering
         List<TransactionResponse> matched = Collections.emptyList();
         if ("QUERY".equals(intent) && !transactions.isEmpty()) {
             matched = transactions.stream()
@@ -104,12 +107,15 @@ public class QueryHistoryViaNlpUseCase {
                     .collect(Collectors.toList());
         }
 
-        return NlpQueryResponse.builder()
-                .intent(intent)
-                .filters(filters)
-                .answer(answer)
-                .summary(summary)
-                .matchedTransactions(matched)
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("filters", filters);
+        responseData.put("summary", summary);
+        responseData.put("transactions", matched);
+
+        return AtelierChatResponse.builder()
+                .message(answer)
+                .data(responseData)
+                .type(intent)
                 .build();
     }
 }

@@ -84,7 +84,7 @@ public class NlpExtractionClient {
         }
     }
 
-    public Map<String, String> generateInsights(Object comparisonData) {
+    public Map<String, Object> generateInsights(Object comparisonData) {
         String url = nlpServiceUrl.endsWith("/")
                 ? nlpServiceUrl + "api/ai/generate-insights"
                 : nlpServiceUrl + "/api/ai/generate-insights";
@@ -102,7 +102,7 @@ public class NlpExtractionClient {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
             if (response.statusCode() == 200) {
-                return objectMapper.readValue(response.body(), new TypeReference<Map<String, String>>() {});
+                return objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {});
             }
 
             throw new RuntimeException("AI Insight service error: HTTP " + response.statusCode());
