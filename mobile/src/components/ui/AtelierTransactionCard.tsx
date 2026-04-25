@@ -20,11 +20,14 @@ import { AtelierTokens } from '../../constants/AtelierTokens';
 interface TransactionData {
   id?: string;
   amount: number;
-  category: string;
+  category?: string;
+  categoryName?: string;
   type: string;
-  date: string;
-  note: string;
-  confidence: number;
+  date?: string;
+  transactionDate?: string;
+  note?: string;
+  description?: string;
+  confidence?: number;
   categoryId?: string | null;
   walletId?: string;
 }
@@ -38,7 +41,8 @@ interface AtelierTransactionCardProps {
   isConfirmed?: boolean;
 }
 
-const getCategoryIcon = (category: string) => {
+const getCategoryIcon = (category?: string) => {
+  if (!category) return Tag;
   const cat = category.toLowerCase();
   if (cat.includes('coffee') || cat.includes('uống')) return Coffee;
   if (cat.includes('ăn') || cat.includes('food')) return Utensils;
@@ -58,7 +62,11 @@ export const AtelierTransactionCard = ({
   isPending = false,
   isConfirmed = false,
 }: AtelierTransactionCardProps) => {
-  const Icon = getCategoryIcon(data.category);
+  const displayCategory = data.categoryName || data.category || 'Khác';
+  const displayNote = data.note || data.description || 'Giao dịch mới';
+  const displayDate = data.date || data.transactionDate || new Date().toISOString();
+
+  const Icon = getCategoryIcon(displayCategory);
   const formattedAmount = formatCurrency(data.amount);
 
   const isBubble = variant === 'bubble';
@@ -69,7 +77,7 @@ export const AtelierTransactionCard = ({
         elevation: 'lowest' as const,
         padding: 'md' as const,
         className:
-          'w-full bg-surface-container-lowest border border-outline-variant/10 rounded-[24px] shadow-sm shadow-black/5',
+          'w-full bg-surface-container-lowest border-x border-b border-outline-variant/10 rounded-b-[24px] rounded-t-none shadow-sm shadow-black/5',
       }
     : {
         elevation: 'lowest' as const,
@@ -91,7 +99,7 @@ export const AtelierTransactionCard = ({
               className="text-[15px] font-bold text-surface-on"
               numberOfLines={1}
             >
-              {data.note || 'Giao dịch mới'}
+              {displayNote}
             </AtelierTypography>
             <AtelierTypography
               variant="label"
@@ -149,14 +157,14 @@ export const AtelierTransactionCard = ({
             <View className="flex-row items-center gap-1.5">
               <AtelierTypography
                 variant="body"
-                className={`text-[14px] font-bold ${!data.categoryId ? 'text-error' : 'text-surface-on'}`}
+                className={`text-[14px] font-bold ${!data.categoryId && !data.category ? 'text-error' : 'text-surface-on'}`}
                 numberOfLines={1}
               >
-                {data.category || 'Cần chọn'}
+                {displayCategory}
               </AtelierTypography>
               <Edit3
                 size={12}
-                color={!data.categoryId ? AtelierTokens.colors.error : AtelierTokens.colors.outline}
+                color={!data.categoryId && !data.category ? AtelierTokens.colors.error : AtelierTokens.colors.outline}
               />
             </View>
           </TouchableOpacity>
@@ -171,7 +179,7 @@ export const AtelierTransactionCard = ({
               NGÀY & GIỜ
             </AtelierTypography>
             <AtelierTypography variant="body" className="text-[14px] font-bold text-surface-on">
-              {formatDateTime(data.date)}
+              {formatDateTime(displayDate)}
             </AtelierTypography>
           </View>
         </View>

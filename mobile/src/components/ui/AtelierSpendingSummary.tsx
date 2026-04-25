@@ -21,31 +21,22 @@ export const AtelierSpendingSummary = ({
   const progressWidth = Math.min(percentage, 100);
 
   return (
-    <View
-      className="mt-4 bg-surface-container-low/90 rounded-3xl p-5 border border-outline-variant/20 shadow-lg shadow-black/5"
-      style={{ overflow: 'hidden' }}
-    >
-      {/* Background Glow Effect */}
-      <View
-        className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-10"
-        style={{ backgroundColor: AtelierTokens.colors.ai.primary }}
-      />
-
+    <View className="w-full">
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-row items-center gap-2.5">
-          <View className="p-2 bg-ai-primary/10 rounded-xl">
-            <PieChart size={18} color={AtelierTokens.colors.ai.primary} />
+          <View className="p-2 bg-white/10 rounded-xl">
+            <PieChart size={18} color="white" />
           </View>
-          <AtelierTypography variant="h3" className="text-[15px] font-bold text-surface-on">
+          <AtelierTypography variant="h3" className="text-[15px] font-bold text-white">
             Spending Summary
           </AtelierTypography>
         </View>
         <View
-          className={`px-2.5 py-1 rounded-full ${isOverBudget ? 'bg-error/10' : 'bg-primary/10'}`}
+          className={`px-2.5 py-1 rounded-full ${isOverBudget ? 'bg-error/20' : 'bg-white/20'}`}
         >
           <AtelierTypography
             variant="label"
-            className={`text-[10px] font-bold ${isOverBudget ? 'text-error' : 'text-primary'}`}
+            className={`text-[10px] font-bold ${isOverBudget ? 'text-white' : 'text-white/80'}`}
           >
             {isOverBudget ? 'Over Budget' : 'On Track'}
           </AtelierTypography>
@@ -54,39 +45,39 @@ export const AtelierSpendingSummary = ({
 
       <View className="mb-4">
         <View className="flex-row items-baseline gap-1">
-          <AtelierTypography variant="h2" className="text-[24px] font-bold text-surface-on">
+          <AtelierTypography variant="h2" className="text-[24px] font-bold text-white">
             {totalSpent.toLocaleString()}
           </AtelierTypography>
           <AtelierTypography
             variant="body"
-            className="text-[14px] text-surface-on-variant opacity-60"
+            className="text-[14px] text-white/60"
           >
             {currency} / {budgetLimit.toLocaleString()} {currency}
           </AtelierTypography>
         </View>
         <AtelierTypography
           variant="label"
-          className="text-[12px] text-surface-on-variant mt-1 opacity-70"
+          className="text-[12px] text-white/50 mt-1"
         >
           You&apos;ve spent {percentage}% of your planned budget
         </AtelierTypography>
       </View>
 
       {/* Progress Bar Container */}
-      <View className="h-2.5 w-full bg-surface-container-high rounded-full overflow-hidden">
-        {/* Progress Fill with Gradient-like effect via background color */}
+      <View className="h-2.5 w-full bg-white/10 rounded-full overflow-hidden">
+        {/* Progress Fill */}
         <View
-          className={`h-full rounded-full ${isOverBudget ? 'bg-error' : 'bg-primary'}`}
+          className={`h-full rounded-full ${isOverBudget ? 'bg-error' : 'bg-white/80'}`}
           style={{ width: `${progressWidth}%` }}
         />
       </View>
 
       {/* Footer Info */}
-      <View className="flex-row items-center gap-1.5 mt-4 pt-4 border-t border-outline-variant/10">
-        <TrendingUp size={14} color={AtelierTokens.colors.outline} />
+      <View className="flex-row items-center gap-1.5 mt-4 pt-4 border-t border-white/10">
+        <TrendingUp size={14} color="rgba(255,255,255,0.4)" />
         <AtelierTypography
           variant="label"
-          className="text-[11px] text-surface-on-variant opacity-60"
+          className="text-[11px] text-white/40"
         >
           Your spending is 5% lower than last month
         </AtelierTypography>
