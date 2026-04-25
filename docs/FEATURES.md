@@ -230,13 +230,15 @@
 **Phạm vi**
 
 - Extract transaction from text.
-- Query history với intent classification (`QUERY` / `COMMAND`).
+- Unified chat endpoint with smart intent orchestration.
+- Query history với intent classification (`QUERY`, `SUMMARY`, `INSIGHT_CHART`, `COMMAND`, `DEFAULT`).
 - Generate insights và budget insight.
 
 **API backend (gateway)**
 
+- `POST /api/v1/ai/chat` ⭐ **Primary endpoint** - Unified chat orchestrator
 - `POST /api/v1/ai/extract-transaction`
-- `POST /api/v1/ai/query-history`
+- `POST /api/v1/ai/query-history` (Deprecated - use `/chat` instead)
 - `POST /api/v1/ai/generate-insights`
 - `POST /api/v1/ai/budget-insight`
 
@@ -250,14 +252,26 @@
 
 **Input/Output chính**
 
-- Extract input: `text`
-- Query input: `text`, `walletId`
-- Extract output: `amount`, `type`, `category`, `date`, `note`, `confidence`, `categoryId?`
-- Query output: `intent`, `filters`, `answer`, `summary`, `matchedTransactions`
+**Chat Request** (`POST /api/v1/ai/chat`):
+- Input: `message` (string), `walletId` (string)
+- Output: `AtelierChatResponse`
+  - `message` (string) - Natural language response
+  - `type` (enum) - `QUERY`, `SUMMARY`, `INSIGHT_CHART`, `COMMAND`, `DEFAULT`
+  - `data` (object) - Structured data container
+    - `transactions` (array, optional) - List of matched transactions
+    - `summary` (object, optional) - `{totalSpent, budgetLimit, percentage}`
+    - `chartData` (array, optional) - Data points for charts
+    - `filters` (object, optional) - Applied query filters
+
+**Extract Transaction**:
+- Input: `text`
+- Output: `amount`, `type`, `category`, `date`, `note`, `confidence`, `categoryId?`
 
 **Constraints**
 
 - Text input không được rỗng.
+- Chat endpoint handles intent recognition on backend (no client-side regex).
+- Response uses standardized key `transactions` (not `matchedTransactions`).
 - Query history yêu cầu dữ liệu transactions ngữ cảnh (backend chuẩn bị trước khi gọi AI).
 
 **Liên kết**
