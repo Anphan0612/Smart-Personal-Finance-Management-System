@@ -30,12 +30,12 @@ export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) =>
         <View className="w-12 h-12 rounded-full bg-surface-container-low items-center justify-center mb-3">
           <BarChart2 size={24} color="#717785" />
         </View>
-        <AtelierTypography variant="h3" className="text-[14px] text-surface-on mb-1">
+        <AtelierTypography variant="h3" className="text-[14px] text-white mb-1">
           Chưa có dữ liệu
         </AtelierTypography>
         <AtelierTypography
           variant="label"
-          className="text-[11px] text-surface-on-variant text-center px-6"
+          className="text-[11px] text-white/60 text-center px-6"
         >
           Hãy thêm giao dịch mới để Atelier AI có thể phân tích chi tiêu cho bạn nhé.
         </AtelierTypography>
@@ -73,10 +73,10 @@ export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) =>
           centerLabelComponent={() => {
             return (
               <View className="justify-center items-center">
-                <AtelierTypography variant="label" className="text-[10px] text-surface-on-variant">
+                <AtelierTypography variant="label" className="text-[10px] text-white/50">
                   Tổng chi
                 </AtelierTypography>
-                <AtelierTypography variant="h3" className="text-[12px] font-bold text-error mt-0.5">
+                <AtelierTypography variant="h3" className="text-[12px] font-bold text-white mt-0.5">
                   {formatCurrency(total)}
                 </AtelierTypography>
               </View>
@@ -97,7 +97,7 @@ export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) =>
               />
               <AtelierTypography
                 variant="label"
-                className="text-[11px] font-medium text-surface-on"
+                className="text-[11px] font-medium text-white/80"
               >
                 {item.label}
               </AtelierTypography>

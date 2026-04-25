@@ -1,38 +1,42 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useRouter } from 'expo-router';
+
 import {
   View,
-  ScrollView,
-  TextInput,
   TouchableOpacity,
   Dimensions,
-  KeyboardAvoidingView,
   Platform,
   StyleSheet,
   ActivityIndicator,
   Alert,
   Text,
-  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  Pressable,
+  TextInput,
+  FlatList,
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
-import { X, Bolt, Sparkles, Coffee, ArrowUp, Camera, Plus, Edit3 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { X, Zap, Sparkles, Coffee, ArrowUp, ArrowDown, Camera, TrendingUp, Target } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+
+// Internal Components
 import { AtelierTypography } from './AtelierTypography';
-import { AtelierCard } from './AtelierCard';
-import { useAppStore, ChatMessage } from '../../store/useAppStore';
-import { fetcher, poster } from '../../services/api';
-import { AtelierTransactionCard } from './AtelierTransactionCard';
-import { formatCurrency, parseCurrency } from '../../utils/format';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { AtelierActionSheet } from './AtelierActionSheet';
-import { router } from 'expo-router';
 import { EditTransactionSheet } from './EditTransactionSheet';
-import { AtelierGlassView } from './AtelierGlassView';
-import { AtelierInsightChart } from './AtelierInsightChart';
-import { AtelierTokens } from '../../constants/AtelierTokens';
-import { AtelierSpendingSummary } from './AtelierSpendingSummary';
+import { MessageItem } from './MessageItem';
+
+// Store & Hooks
+import { useAppStore, ChatMessage } from '../../store/useAppStore';
 import { useAddTransaction, CreateTransactionRequest } from '../../hooks/useTransactions';
-import { TransactionType } from '../../types/api';
+import { fetcher, poster } from '../../services/api';
+
+// Utils
+import { generateId, ID_PREFIX } from '../../utils/id';
+import { formatCurrency } from '../../utils/format';
 
 const { height: screenHeight } = Dimensions.get('window');
 
@@ -42,622 +46,367 @@ interface AtelierAIProps {
 }
 
 export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
+  const router = useRouter();
   const { messages, addMessage, activeWalletId } = useAppStore();
   const addTransactionMutation = useAddTransaction();
+  
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<any>(null);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
   const editSheetRef = useRef<any>(null);
+  const insets = useSafeAreaInsets();
+  
+  const [inputHeight, setInputHeight] = useState(40);
+  const isNearBottomRef = useRef(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Scroll to bottom when messages change
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
+    const nearBottom = distanceFromBottom < 150;
+    isNearBottomRef.current = nearBottom;
+    setShowScrollToBottom(!nearBottom && contentSize.height > layoutMeasurement.height);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, []);
+
   useEffect(() => {
-    if (messages.length > 0) {
-      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+    if (messages.length > 0 && isNearBottomRef.current && isOpen) {
+      scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, scrollToBottom, isOpen]);
 
-  // Fetch proactive insights when opened
   useEffect(() => {
     if (!isOpen || !activeWalletId) return;
 
-    const hasRecentInsight = messages.some(
-      (m) => m.id.startsWith('proactive-insight') && Date.now() - m.timestamp < 300000, // 5 minutes
-    );
+    const fetchInitialInsights = async () => {
+      try {
+        const response: any = await fetcher(`/ai/proactive-insights?walletId=${activeWalletId}`);
+        if (response && response.message) {
+          addMessage({
+            id: generateId(ID_PREFIX.MESSAGE),
+            role: 'assistant',
+            content: response.message,
+            timestamp: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching initial insights:', error);
+      }
+    };
 
-    if (messages.length === 0 || !hasRecentInsight) {
-      fetchProactiveInsight();
+    if (messages.length === 0) {
+      fetchInitialInsights();
     }
-  }, [isOpen, activeWalletId]);
-
-  const fetchProactiveInsight = async () => {
-    if (!activeWalletId) return;
-
-    setIsProcessing(true);
-    try {
-      const comparison = await fetcher<any>(`/transactions/comparison?walletId=${activeWalletId}`);
-      const aiResponse = await poster<any, any>('/ai/generate-insights', comparison);
-
-      addMessage({
-        id: 'proactive-insight-' + Date.now(),
-        role: 'assistant',
-        content:
-          aiResponse.insight ||
-          'Chào bạn! Tôi đã sẵn sàng giúp bạn quản lý tài chính. Bạn có muốn xem phân tích chi tiêu tuần này không?',
-        timestamp: Date.now(),
-        hasSpendingSummary: !!aiResponse.summary,
-        spendingData: aiResponse.summary
-          ? {
-              totalSpent: aiResponse.summary.total_expense || 0,
-              budgetLimit: aiResponse.summary.budget_limit || 15000000,
-              percentage: aiResponse.summary.percentage || 0,
-            }
-          : undefined,
-        hasInsightChart: !!aiResponse.top_categories,
-        insightData: aiResponse.top_categories || [],
-      });
-    } catch (error) {
-      console.error('Failed to fetch proactive insight', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  }, [isOpen, activeWalletId, messages.length, addMessage]);
 
   const handleSend = async () => {
     if (!input.trim() || isProcessing) return;
 
-    const userText = input.trim();
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: userText,
-      timestamp: Date.now(),
-    };
+    if (!activeWalletId) {
+      Alert.alert('Thông báo', 'Vui lòng chọn ví để bắt đầu trò chuyện với Atelier AI');
+      return;
+    }
 
-    addMessage(userMessage);
+    const userMessage = input.trim();
     setInput('');
+    setInputHeight(40);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    addMessage({
+      id: generateId(ID_PREFIX.MESSAGE),
+      role: 'user',
+      content: userMessage,
+      timestamp: Date.now(),
+    });
+
     setIsProcessing(true);
+    scrollToBottom();
 
     try {
-      const queryResponse = await poster<any, any>('/ai/query-history', {
-        text: userText,
+      // ─── Smart Orchestration: Always try /ai/chat first ───
+      const response: any = await poster('/ai/chat', {
+        message: userMessage,
         walletId: activeWalletId,
       });
 
-      if (queryResponse.intent === 'QUERY') {
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: queryResponse.answer || 'Đây là kết quả phân tích của bạn.',
-          timestamp: Date.now(),
-          hasQueryResult: true,
-          queryData: {
-            summary: queryResponse.summary || {},
-            matchedTransactions: queryResponse.matchedTransactions || [],
-            filters: queryResponse.filters || {},
-          },
-        };
-        addMessage(aiMessage);
-      } else {
-        const response = await poster<any, any>('/ai/extract-transaction', {
-          text: userText,
-        });
+      if (response) {
+        // ─── Fallback to Extract: If backend identifies COMMAND intent ───
+        if (response.type === 'COMMAND') {
+          const extractResponse: any = await poster('/ai/extract-transaction', {
+            text: userMessage,
+          });
 
-        const hasData = response && response.amount > 0;
-
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: hasData
-            ? `Đã xong! Tôi đã phân tích yêu cầu của bạn: "${userText}". Vui lòng xác nhận thông tin bên dưới.`
-            : response?.message || 'Tôi đã phân tích xong. Tôi có thể giúp gì thêm cho bạn?',
-          timestamp: Date.now(),
-          hasTransactionMatch: hasData,
-          transactionData: hasData
-            ? {
-                amount: response.amount,
-                category: response.category,
-                type: response.type,
-                date: response.date,
-                note: response.note,
-                confidence: response.confidence,
-                categoryId: response.categoryId,
-              }
-            : undefined,
-        };
-        addMessage(aiMessage);
+          if (extractResponse) {
+            addMessage({
+              id: generateId(ID_PREFIX.MESSAGE),
+              role: 'assistant',
+              content: `Mình đã nhận diện được giao dịch này. Bạn có muốn lưu lại không?`,
+              type: 'review_transaction',
+              data: { transaction: extractResponse },
+              timestamp: Date.now(),
+            });
+          }
+        } else {
+          // ─── Standard AI Response (QUERY, SUMMARY, INSIGHT_CHART, DEFAULT) ───
+          addMessage({
+            id: generateId(ID_PREFIX.MESSAGE),
+            role: 'assistant',
+            content: response.message || (response.type === 'QUERY' ? 'Đây là kết quả mình tìm được:' : 'Atelier đã xử lý xong yêu cầu của bạn.'),
+            data: response.data,
+            type: response.type,
+            timestamp: Date.now(),
+          });
+        }
       }
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      const errorMessage =
-        apiError?.message || 'Xin lỗi, tôi đang gặp khó khăn khi xử lý yêu cầu này.';
-
+    } catch (error) {
       addMessage({
-        id: (Date.now() + 1).toString(),
+        id: generateId(ID_PREFIX.MESSAGE),
         role: 'assistant',
-        content: errorMessage,
+        content: 'Xin lỗi, Atelier gặp chút trục trặc. Bạn thử lại nhé!',
         timestamp: Date.now(),
       });
     } finally {
       setIsProcessing(false);
+      scrollToBottom();
     }
   };
 
-  const handleEdit = (data: any, messageId?: string) => {
-    if (editSheetRef.current && 'open' in editSheetRef.current) {
-      // Đính kèm messageId để biết Card nào cần cập nhật sau khi lưu
-      (editSheetRef.current as any).open({ ...data, originalMessageId: messageId });
-    }
-  };
-
-  const onSaveReview = async (formData: any) => {
-    try {
-      if (!formData.walletId && !activeWalletId) {
-        Alert.alert('Lỗi', 'Vui lòng chọn ví trước khi lưu.');
-        return;
-      }
-
-      if (!formData.categoryId) {
-        Alert.alert('Lỗi', 'Vui lòng chọn danh mục cho giao dịch.');
-        return;
-      }
-
-      const payload: CreateTransactionRequest = {
-        walletId: formData.walletId || activeWalletId!,
-        categoryId: formData.categoryId,
-        amount:
-          typeof formData.amount === 'string'
-            ? parseCurrency(formData.amount)
-            : Number(formData.amount),
-        description: formData.description || formData.note || 'Trích xuất bởi AI',
-        type: formData.type as TransactionType,
-        transactionDate: formData.transactionDate || new Date().toISOString(),
-      };
-
-      await addTransactionMutation.mutateAsync(payload);
-
-      if (formData.originalMessageId) {
-        const originalMsg = messages.find((m) => m.id === formData.originalMessageId);
-        if (originalMsg) {
-          addMessage({
-            ...originalMsg,
-            isConfirmed: true,
-            transactionData: {
-              ...originalMsg.transactionData!,
-              amount: payload.amount,
-              categoryId: payload.categoryId,
-              note: payload.description,
-            },
-          });
-        }
-      }
-
-      addMessage({
-        id: 'confirm-' + Date.now(),
-        role: 'assistant',
-        content: `✅ Đã lưu giao dịch: ${payload.description} (${formatCurrency(payload.amount)}) vào ví của bạn.`,
-        timestamp: Date.now(),
-      });
-    } catch (error: any) {
-      const apiError = error.response?.data;
-      Alert.alert('Lỗi Giao dịch', apiError?.message || 'Không thể lưu giao dịch.');
-      throw error;
-    }
+  const handleSuggestionPress = (suggestion: string) => {
+    setInput(suggestion);
+    Haptics.selectionAsync();
   };
 
   const handleSelectSource = (source: 'camera' | 'library') => {
     setIsSheetVisible(false);
-    onClose();
-    router.push({
-      pathname: '/receipt/scanner',
-      params: { source },
-    });
+    setTimeout(() => {
+      // Navigate to receipt screen
+      router.push({ pathname: '/receipt/scanner' as any, params: { source } });
+    }, 300);
   };
 
-  // --- Render a Query Result Card inside chat ---
-  const renderQueryResultCard = (data: ChatMessage['queryData']) => {
-    if (!data) return null;
-    const { summary, matchedTransactions } = data;
-    const totalExpense = summary?.total_expense || 0;
-    const totalIncome = summary?.total_income || 0;
-    const count = summary?.transaction_count || 0;
-    const topCats: any[] = summary?.top_categories || [];
-
-    return (
-      <MotiView
-        from={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        style={styles.queryCard}
-      >
-        <View style={styles.queryStatsRow}>
-          <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Tổng chi</Text>
-            <Text style={[styles.queryStatValue, { color: '#D32F2F' }]}>
-              {formatCurrency(totalExpense)}
-            </Text>
-          </View>
-          <View style={styles.queryStatDivider} />
-          <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Tổng thu</Text>
-            <Text style={[styles.queryStatValue, { color: '#2E7D32' }]}>
-              {formatCurrency(totalIncome)}
-            </Text>
-          </View>
-          <View style={styles.queryStatDivider} />
-          <View style={styles.queryStat}>
-            <Text style={styles.queryStatLabel}>Giao dịch</Text>
-            <Text style={[styles.queryStatValue, { color: '#003d9b' }]}>{count}</Text>
-          </View>
-        </View>
-
-        {topCats.length > 0 && (
-          <View style={styles.topCategoriesSection}>
-            <Text style={styles.topCatTitle}>Danh mục chi tiêu cao nhất</Text>
-            <AtelierInsightChart type="pie" data={topCats} />
-          </View>
-        )}
-
-        {matchedTransactions && matchedTransactions.length > 0 && (
-          <View style={styles.matchedSection}>
-            <Text style={styles.matchedTitle}>Giao dịch gần đây</Text>
-            {matchedTransactions.slice(0, 3).map((txn: any, i: number) => (
-              <TouchableOpacity
-                key={txn.id || i}
-                style={styles.miniTxnRow}
-                onPress={() =>
-                  handleEdit({
-                    id: txn.id,
-                    amount: txn.amount,
-                    category: txn.categoryName,
-                    categoryId: txn.categoryId,
-                    type: txn.type,
-                    date: txn.transactionDate,
-                    note: txn.description,
-                    walletId: txn.walletId,
-                  })
-                }
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.miniTxnDesc} numberOfLines={1}>
-                    {txn.description || 'Giao dịch'}
-                  </Text>
-                  <Text style={styles.miniTxnDate}>{txn.transactionDate?.split('T')[0]}</Text>
-                </View>
-                <View className="flex-row items-center gap-2">
-                  <Text
-                    style={[
-                      styles.miniTxnAmount,
-                      { color: txn.type === 'INCOME' ? '#2E7D32' : '#D32F2F' },
-                    ]}
-                  >
-                    {txn.type === 'INCOME' ? '+' : '-'}
-                    {formatCurrency(txn.amount)}
-                  </Text>
-                  <Edit3 size={12} color="#717785" />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </MotiView>
-    );
+  const onSaveReview = async (data: CreateTransactionRequest) => {
+    try {
+      await addTransactionMutation.mutateAsync(data);
+      addMessage({
+        id: generateId(ID_PREFIX.MESSAGE),
+        role: 'assistant',
+        content: `Đã lưu giao dịch ${formatCurrency(data.amount)}.`,
+        timestamp: Date.now(),
+      });
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể lưu giao dịch');
+    }
   };
+
+  const renderSuggestions = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      className="px-4 py-3"
+      contentContainerStyle={{ gap: 8 }}
+    >
+      {[
+        { text: 'Xem xu hướng chi tiêu', icon: <TrendingUp size={14} color="#0052CC" /> },
+        { text: 'Đặt mục tiêu tiết kiệm', icon: <Target size={14} color="#0052CC" /> },
+        { text: 'Tổng kết tuần qua', icon: <Coffee size={14} color="#0052CC" /> },
+      ].map((suggestion, index) => (
+        <TouchableOpacity
+          key={index}
+          onPress={() => handleSuggestionPress(suggestion.text)}
+          className="flex-row items-center gap-2 bg-white px-4 py-2.5 rounded-full border border-neutral-100 shadow-sm"
+        >
+          {suggestion.icon}
+          <Text className="text-[13px] font-medium text-neutral-700">{suggestion.text}</Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderItem = useCallback(({ item }: { item: ChatMessage }) => (
+    <MessageItem 
+      message={item} 
+      onEditTransaction={(txn) => editSheetRef.current?.open(txn)} 
+      onConfirmTransaction={onSaveReview}
+    />
+  ), [onSaveReview]);
 
   return (
-    <Modal animationType="slide" transparent={true} visible={isOpen} onRequestClose={onClose}>
-      <BottomSheetModalProvider>
-        <View style={styles.modalContainer}>
-          <AnimatePresence>
-            {isOpen && (
-              <MotiView
-                from={{ opacity: 0, translateY: 50 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: 50 }}
-                className="flex-1"
-              >
-                {/* Header */}
-                <View className="flex-row items-center justify-between px-6 pt-14 pb-4">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-2xl bg-ai-primary items-center justify-center shadow-lg shadow-ai-primary/30">
-                      <Sparkles size={20} color="white" />
-                    </View>
-                    <View>
-                      <AtelierTypography variant="h3" className="text-white">
-                        Atelier AI
-                      </AtelierTypography>
-                      <AtelierTypography variant="caption" className="text-white/60">
-                        Assistant thông minh
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <View style={[StyleSheet.absoluteFill, { zIndex: 100, elevation: 100 }]}>
+            <MotiView 
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ type: 'timing', duration: 300 }}
+              style={StyleSheet.absoluteFill}
+            >
+              <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+                <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} />
+              </Pressable>
+            </MotiView>
+
+            <MotiView
+              from={{ translateY: screenHeight }}
+              animate={{ translateY: 0 }}
+              exit={{ translateY: screenHeight }}
+              transition={{ type: 'timing', duration: 300 }}
+              style={{
+                marginTop: insets.top + 20,
+                flex: 1,
+                backgroundColor: '#F9F9FF',
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+                overflow: 'hidden',
+              }}
+            >
+              <View className="flex-row items-center justify-between px-6 pt-6 pb-4 bg-[#F9F9FF] border-b border-neutral-100/50">
+                <View className="flex-row items-center gap-4">
+                  <View className="w-12 h-12 rounded-2xl bg-[#0052CC] items-center justify-center shadow-lg shadow-blue-500/20">
+                    <Zap size={24} color="white" fill="white" />
+                  </View>
+                  <View>
+                    <AtelierTypography variant="h3" className="text-neutral-900 font-bold">
+                      Atelier AI
+                    </AtelierTypography>
+                    <View className="flex-row items-center gap-1.5">
+                      <View className="w-2 h-2 rounded-full bg-[#4caf50]" />
+                      <AtelierTypography variant="caption" className="text-neutral-500 font-bold tracking-widest text-[10px]">
+                        ONLINE • PREMIUM CONCIERGE
                       </AtelierTypography>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    onPress={onClose}
-                    className="w-10 h-10 rounded-full bg-white/10 items-center justify-center"
-                  >
-                    <X size={20} color="white" />
-                  </TouchableOpacity>
                 </View>
-
-                {/* Chat Content */}
-                <ScrollView
-                  ref={scrollViewRef}
-                  className="flex-1 px-4"
-                  contentContainerStyle={{ paddingBottom: 100 }}
-                  showsVerticalScrollIndicator={false}
+                <TouchableOpacity 
+                  onPress={onClose}
+                  className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm border border-neutral-100"
                 >
-                  {messages.map((msg, index) => (
-                    <MotiView
-                      key={msg.id}
-                      from={{ opacity: 0, translateX: msg.role === 'user' ? 20 : -20 }}
-                      animate={{ opacity: 1, translateX: 0 }}
-                      transition={{ delay: index * 100 }}
-                      className={`mb-6 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                  <X size={20} color="#171A1F" />
+                </TouchableOpacity>
+              </View>
+
+              <FlatList
+                ref={scrollViewRef}
+                data={messages}
+                keyExtractor={(item) => item.id}
+                renderItem={renderItem}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 24 }}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                keyboardShouldPersistTaps="handled"
+                ListEmptyComponent={!isProcessing ? (
+                  <View className="items-center justify-center py-10 opacity-60">
+                    <View className="w-16 h-16 rounded-3xl bg-white items-center justify-center shadow-sm mb-4">
+                      <Sparkles size={32} color="#0052CC" />
+                    </View>
+                    <AtelierTypography variant="body" className="text-center text-neutral-500 px-10">
+                      Chào bạn! Mình là Atelier AI. Bạn cần giúp gì về tài chính hôm nay?
+                    </AtelierTypography>
+                  </View>
+                ) : null}
+                ListFooterComponent={isProcessing ? (
+                  <View className="flex-row items-center gap-3 mb-6">
+                    <View className="w-8 h-8 rounded-full bg-[#0052CC]/10 items-center justify-center">
+                      <Zap size={16} color="#0052CC" fill="#0052CC" />
+                    </View>
+                    <View className="bg-white px-4 py-3 rounded-2xl rounded-tl-none border border-neutral-100 flex-row items-center gap-2">
+                      <ActivityIndicator size="small" color="#0052CC" />
+                      <Text className="text-[14px] text-neutral-500 font-medium italic">Atelier đang suy nghĩ...</Text>
+                    </View>
+                  </View>
+                ) : <View style={{ height: 20 }} />}
+              />
+
+              <AnimatePresence>
+                {showScrollToBottom && (
+                  <MotiView
+                    from={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute right-5 z-10"
+                    style={{ bottom: inputHeight + Math.max(insets.bottom, 24) + 60 }}
+                  >
+                    <TouchableOpacity
+                      onPress={scrollToBottom}
+                      className="w-10 h-10 rounded-full bg-[#0052CC] items-center justify-center shadow-lg"
                     >
-                      <View
-                        className={`max-w-[85%] px-4 py-3 rounded-3xl ${
-                          msg.role === 'user'
-                            ? 'bg-ai-primary rounded-tr-none shadow-sm shadow-ai-primary/20'
-                            : 'bg-white rounded-tl-none shadow-sm shadow-black/5'
+                      <ArrowDown size={20} color="white" />
+                    </TouchableOpacity>
+                  </MotiView>
+                )}
+              </AnimatePresence>
+
+              <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                <View 
+                  className="bg-white border-t border-neutral-50"
+                  style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+                >
+                  {renderSuggestions()}
+                  
+                  <View className="px-4 pb-2 flex-row items-center gap-3">
+                    <TouchableOpacity 
+                      onPress={() => setIsSheetVisible(true)}
+                      className="w-11 h-11 rounded-full bg-[#F2F3F7] items-center justify-center"
+                    >
+                      <Camera size={22} color="#0052CC" />
+                    </TouchableOpacity>
+                    
+                    <View className="flex-1 flex-row items-end bg-[#F2F3F7] rounded-[24px] px-4 py-2">
+                      <TextInput
+                        value={input}
+                        onChangeText={setInput}
+                        placeholder="Hỏi về tài chính của bạn"
+                        placeholderTextColor="#9BA1B0"
+                        multiline
+                        onContentSizeChange={(e) => setInputHeight(e.nativeEvent.contentSize.height)}
+                        style={{ 
+                          flex: 1, 
+                          color: '#171A1F', 
+                          fontFamily: 'Inter-Medium', 
+                          fontSize: 15, 
+                          maxHeight: 120,
+                          paddingTop: Platform.OS === 'ios' ? 8 : 4,
+                          paddingBottom: Platform.OS === 'ios' ? 8 : 4,
+                        }}
+                      />
+                      <TouchableOpacity
+                        onPress={handleSend}
+                        disabled={isProcessing || !input.trim()}
+                        className={`w-9 h-9 rounded-full items-center justify-center ml-2 ${
+                          isProcessing || !input.trim() ? 'bg-neutral-300' : 'bg-[#0052CC]'
                         }`}
                       >
-                        <AtelierTypography
-                          variant="body"
-                          className={msg.role === 'user' ? 'text-white' : 'text-surface-on'}
-                        >
-                          {msg.content}
-                        </AtelierTypography>
-                      </View>
-
-                      {msg.hasSpendingSummary && msg.spendingData && (
-                        <AtelierSpendingSummary
-                          totalSpent={msg.spendingData.totalSpent}
-                          budgetLimit={msg.spendingData.budgetLimit}
-                          percentage={msg.spendingData.percentage}
-                        />
-                      )}
-
-                      {msg.hasInsightChart && msg.insightData && (
-                        <AtelierInsightChart type="pie" data={msg.insightData} />
-                      )}
-
-                      {msg.hasQueryResult && msg.queryData && renderQueryResultCard(msg.queryData)}
-
-                      {msg.hasTransactionMatch && msg.transactionData && (
-                        <MotiView
-                          from={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="w-full mt-4"
-                        >
-                          <AtelierTransactionCard
-                            variant="bubble"
-                            data={msg.transactionData}
-                            onConfirm={async () => {
-                              const data = msg.transactionData;
-                              if (!data) return;
-
-                              const walletId = useAppStore.getState().activeWalletId;
-                              if (!walletId) {
-                                Alert.alert(
-                                  'Yêu cầu chọn Ví',
-                                  'Vui lòng chọn một ví từ màn hình chính trước khi xác nhận.',
-                                );
-                                return;
-                              }
-
-                              if (!data.categoryId) {
-                                Alert.alert(
-                                  'Thiếu thông tin',
-                                  "Giao dịch này chưa có danh mục. Vui lòng nhấn 'Sửa chi tiết' để chọn danh mục.",
-                                );
-                                return;
-                              }
-
-                              if (addTransactionMutation.isPending) return;
-
-                              try {
-                                const payload: CreateTransactionRequest = {
-                                  walletId: walletId,
-                                  categoryId: data.categoryId!,
-                                  amount:
-                                    typeof data.amount === 'string'
-                                      ? parseCurrency(data.amount)
-                                      : Number(data.amount),
-                                  description: data.note || 'Trích xuất bởi AI',
-                                  type: data.type as TransactionType,
-                                  transactionDate: new Date().toISOString(),
-                                };
-
-                                await addTransactionMutation.mutateAsync(payload);
-
-                                addMessage({
-                                  ...msg,
-                                  isConfirmed: true,
-                                });
-
-                                addMessage({
-                                  id: 'confirm-' + Date.now(),
-                                  role: 'assistant',
-                                  content: `✅ Đã lưu giao dịch: ${payload.description} (${formatCurrency(payload.amount)}) vào ví của bạn.`,
-                                  timestamp: Date.now(),
-                                });
-
-                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                              } catch (error: any) {
-                                const apiError = error.response?.data;
-                                const errorMessage =
-                                  apiError?.message || 'Không thể lưu giao dịch. Vui lòng thử lại.';
-                                Alert.alert('Lỗi Giao dịch', errorMessage);
-                              }
-                            }}
-                            onEdit={() => handleEdit(msg.transactionData, msg.id)}
-                            isPending={addTransactionMutation.isPending}
-                            isConfirmed={msg.isConfirmed}
-                          />
-                        </MotiView>
-                      )}
-                    </MotiView>
-                  ))}
-
-                  {isProcessing && (
-                    <MotiView
-                      from={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex-row items-center gap-2 px-4 py-2"
-                    >
-                      <ActivityIndicator size="small" color="white" />
-                      <AtelierTypography variant="caption" className="text-white/60">
-                        Atelier đang xử lý...
-                      </AtelierTypography>
-                    </MotiView>
-                  )}
-                </ScrollView>
-
-                {/* Input Area */}
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                  keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
-                  className="p-4"
-                >
-                  <AtelierGlassView
-                    intensity={20}
-                    className="rounded-[32px] overflow-hidden border border-white/20"
-                  >
-                    <View className="flex-row items-center px-2 py-2">
-                      <TouchableOpacity
-                        onPress={() => setIsSheetVisible(true)}
-                        className="w-10 h-10 rounded-2xl bg-white/10 items-center justify-center ml-1"
-                      >
-                        <Plus size={20} color="white" />
+                        {isProcessing ? (
+                          <ActivityIndicator size="small" color="white" />
+                        ) : (
+                          <ArrowUp size={20} color="white" strokeWidth={3} />
+                        )}
                       </TouchableOpacity>
-
-                      <View className="flex-1 px-3">
-                        <TextInput
-                          value={input}
-                          onChangeText={setInput}
-                          placeholder="Nhập yêu cầu của bạn..."
-                          placeholderTextColor="rgba(255,255,255,0.5)"
-                          className="text-white font-inter font-medium text-[15px] py-2"
-                          multiline
-                        />
-                        <TouchableOpacity
-                          onPress={handleSend}
-                          disabled={isProcessing}
-                          className="absolute right-1.5 top-1.5 w-9 h-9 rounded-xl overflow-hidden items-center justify-center"
-                        >
-                          <LinearGradient
-                            colors={['#005ab4', '#003d9b']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            className="absolute inset-0"
-                          />
-                          {isProcessing ? (
-                            <ActivityIndicator size="small" color="white" />
-                          ) : (
-                            <ArrowUp size={18} color="white" strokeWidth={2.5} />
-                          )}
-                        </TouchableOpacity>
-                      </View>
                     </View>
-                  </AtelierGlassView>
-                </KeyboardAvoidingView>
-              </MotiView>
-            )}
-          </AnimatePresence>
+                  </View>
+                </View>
+              </KeyboardAvoidingView>
+            </MotiView>
+          </View>
+        )}
+      </AnimatePresence>
 
-          <EditTransactionSheet ref={editSheetRef} onSave={onSaveReview} />
-          <AtelierActionSheet
-            isVisible={isSheetVisible}
-            onClose={() => setIsSheetVisible(false)}
-            onSelectCamera={() => handleSelectSource('camera')}
-            onSelectGallery={() => handleSelectSource('library')}
-          />
-        </View>
-      </BottomSheetModalProvider>
-    </Modal>
+      <EditTransactionSheet ref={editSheetRef} onSave={onSaveReview} />
+      <AtelierActionSheet
+        isVisible={isSheetVisible}
+        onClose={() => setIsSheetVisible(false)}
+        onSelectCamera={() => handleSelectSource('camera')}
+        onSelectGallery={() => handleSelectSource('library')}
+      />
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(10, 10, 10, 0.95)',
-  },
-  queryCard: {
-    marginTop: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 24,
-    padding: 20,
-    width: '100%',
-  },
-  queryStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  queryStat: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  queryStatLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#717785',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  queryStatValue: {
-    fontSize: 16,
-    fontWeight: '900',
-  },
-  queryStatDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  topCategoriesSection: {
-    paddingTop: 12,
-    marginBottom: 12,
-  },
-  topCatTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#414753',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  matchedSection: {
-    paddingTop: 12,
-  },
-  matchedTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#414753',
-    marginBottom: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  miniTxnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.03)',
-  },
-  miniTxnDesc: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1a1a2e',
-  },
-  miniTxnDate: {
-    fontSize: 10,
-    color: '#717785',
-    marginTop: 2,
-  },
-  miniTxnAmount: {
-    fontSize: 14,
-    fontWeight: '800',
-  },
-});

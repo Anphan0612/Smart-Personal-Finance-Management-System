@@ -12,7 +12,6 @@ interface ActionHubProps {
   onClose: () => void;
   onAddTransaction: () => void;
   onAskAI: () => void;
-  onManage: () => void;
   tabBarHeight: number;
 }
 
@@ -21,7 +20,6 @@ export const ActionHub: React.FC<ActionHubProps> = ({
   onClose,
   onAddTransaction,
   onAskAI,
-  onManage,
   tabBarHeight,
 }) => {
   const insets = useSafeAreaInsets();
@@ -94,17 +92,7 @@ export const ActionHub: React.FC<ActionHubProps> = ({
             iconBg="bg-purple-50"
           />
 
-          <ActionItem
-            icon={<Settings size={24} color={Colors.neutral[500]} />}
-            label="Cài đặt & Quản lý"
-            subtitle="Tùy chỉnh danh mục và tài khoản"
-            onPress={() => {
-              onManage();
-              onClose();
-            }}
-            delay={300}
-            iconBg="bg-neutral-50"
-          />
+
         </View>
 
         {/* Footer Spacing */}
