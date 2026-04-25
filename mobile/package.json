@@ -13,6 +13,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "clean:android": "powershell -ExecutionPolicy Bypass -File .\\clean-android-build.ps1",
     "clean:android:fast": "powershell -ExecutionPolicy Bypass -File .\\clean-android-build.ps1 -SkipGradleClean"
   },
@@ -60,6 +63,7 @@
     "react-native-get-random-values": "~1.11.0",
     "react-native-gifted-charts": "^1.4.76",
     "react-native-image-viewing": "^0.2.2",
+    "react-native-keyboard-controller": "^1.21.6",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
@@ -72,9 +76,15 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "babel-jest": "^30.2.0",
     "babel-plugin-module-resolver": "^5.0.3",
     "eslint-config-expo": "~10.0.0",
+    "jest": "^30.2.0",
+    "jest-expo": "~54.0.13",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
   },
