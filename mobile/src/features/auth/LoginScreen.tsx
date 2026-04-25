@@ -119,6 +119,7 @@ export default function LoginScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              testID="login-email-input"
               leftIcon={<Mail size={18} color="#74777f" />}
             />
 
@@ -130,6 +131,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
+                testID="login-password-input"
                 leftIcon={<Lock size={18} color="#74777f" />}
                 rightIcon={
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -155,6 +157,7 @@ export default function LoginScreen() {
               loading={isLoading}
               fullWidth
               className="mt-2"
+              testID="login-submit-button"
             />
 
             {/* Divider */}

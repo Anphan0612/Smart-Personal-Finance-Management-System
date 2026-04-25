@@ -25,7 +25,6 @@ import { formatLiveCurrency, parseCurrency } from '@/utils/format';
 import { useWallets } from '@/hooks/useWallets';
 import { useCategories, useCreateCategory } from '@/hooks/useCategories';
 import { useAddTransaction } from '@/hooks/useTransactions';
-import { useAppStore } from '@/store/useAppStore';
 import { Colors } from '@/constants/tokens';
 import * as Haptics from 'expo-haptics';
 
@@ -266,6 +265,7 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
                         </AtelierTypography>
                         <RNTextInput
                           ref={amountInputRef}
+                          testID="transaction-amount-input"
                           className="text-6xl font-headline font-extrabold text-neutral-900 text-center p-0 m-0"
                           style={{ minWidth: 120 }}
                           value={amount}
@@ -367,6 +367,7 @@ export const ManualTransactionModal = ({ isVisible, onClose }: ManualTransaction
                       </TouchableOpacity>
 
                       <TouchableOpacity
+                        testID="transaction-save-button"
                         onPress={handleSave}
                         disabled={addTransaction.isPending || isInsufficientBalance}
                         activeOpacity={0.9}
