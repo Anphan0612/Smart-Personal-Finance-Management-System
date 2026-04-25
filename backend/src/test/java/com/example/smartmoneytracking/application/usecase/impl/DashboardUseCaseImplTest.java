@@ -6,6 +6,8 @@ import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
+import com.example.smartmoneytracking.domain.entities.wallet.valueobject.Currency;
+import com.example.smartmoneytracking.domain.entities.wallet.valueobject.WalletType;
 import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
@@ -47,6 +49,7 @@ class DashboardUseCaseImplTest {
     @Test
     void getDashboardSummary_shouldCalculateCorrectSavingsRate() {
         String walletId = "wallet-123";
+        String userId = "user-123";
         OffsetDateTime now = DateUtils.nowUtc();
         
         // Income = 1000, Expenses = 200 -> Savings = 800 -> Rate = 80%
@@ -56,10 +59,11 @@ class DashboardUseCaseImplTest {
         when(transactionRepository.findByWalletIdAndTransactionDateBetween(eq(walletId), any(), any()))
                 .thenReturn(List.of(income, expense));
         
-        when(walletRepository.findById(walletId))
-                .thenReturn(Optional.of(new Wallet())); // Balance doesn't matter for the new logic anymore
+        Wallet wallet = Wallet.create(userId, "Main wallet", new Currency("VND", "đ"), WalletType.CASH, new BigDecimal("5000"));
+        when(walletRepository.findByIdAndUserId(walletId, userId))
+                .thenReturn(Optional.of(wallet));
 
-        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month");
+        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month", userId);
 
         assertThat(result.getSummary().getIncome()).isEqualByComparingTo("1000");
         assertThat(result.getSummary().getExpenses()).isEqualByComparingTo("200");
