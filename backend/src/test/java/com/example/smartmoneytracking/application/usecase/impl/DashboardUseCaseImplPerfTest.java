@@ -3,6 +3,9 @@ package com.example.smartmoneytracking.application.usecase.impl;
 import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
+import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
+import com.example.smartmoneytracking.domain.entities.wallet.valueobject.Currency;
+import com.example.smartmoneytracking.domain.entities.wallet.valueobject.WalletType;
 import com.example.smartmoneytracking.application.mapper.TransactionMapper;
 import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
@@ -12,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -37,13 +42,17 @@ public class DashboardUseCaseImplPerfTest {
             List<Transaction> dummyData = generateTransactions(count);
             when(repository.findByWalletIdAndTransactionDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class)))
                     .thenReturn(dummyData);
+            when(walletRepository.findByIdAndUserId(anyString(), anyString()))
+                    .thenReturn(Optional.of(Wallet.create("u1", "Main", new Currency("VND", "đ"), WalletType.CASH, new BigDecimal("1000000"))));
+            when(categoryRepository.findAllById(any())).thenReturn(Collections.emptyList());
+            when(transactionMapper.toResponseList(any())).thenReturn(Collections.emptyList());
 
             // Warmup JVM (JIT compiler)
-            useCase.getDashboardSummary("w1", "current_month");
+            useCase.getDashboardSummary("w1", "current_month", "u1");
 
             // Measure actual time
             long startTime = System.nanoTime();
-            useCase.getDashboardSummary("w1", "current_month");
+            useCase.getDashboardSummary("w1", "current_month", "u1");
             long endTime = System.nanoTime();
 
             double durationMs = (endTime - startTime) / 1_000_000.0;

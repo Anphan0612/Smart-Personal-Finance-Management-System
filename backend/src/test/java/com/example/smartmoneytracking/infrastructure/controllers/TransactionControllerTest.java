@@ -103,7 +103,7 @@ class TransactionControllerTest {
                     {
                         "walletId": "wallet-1",
                         "type": "EXPENSE",
-                        "transactionDate": "2025-01-01T10:00:00"
+                        "transactionDate": "2025-01-01T10:00:00.000Z"
                     }
                     """;
 
