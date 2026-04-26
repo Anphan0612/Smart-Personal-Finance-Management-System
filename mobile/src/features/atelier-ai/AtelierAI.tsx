@@ -14,24 +14,24 @@ import {
 import { MotiView, AnimatePresence } from 'moti';
 import { X, Zap, Camera, ArrowUp, ArrowDown, TrendingUp, Target, Coffee } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { AtelierTypography } from '../../../components/ui/AtelierTypography';
-import { useAppStore, ChatMessage } from '../../../store/useAppStore';
+import { AtelierTypography } from '../../components/ui/AtelierTypography';
+import { useAppStore, ChatMessage } from '../../store/useAppStore';
 import { KeyboardAwareScrollView, KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import { AtelierActionSheet } from '../../../components/ui/AtelierActionSheet';
+import { AtelierActionSheet } from '../../components/ui/AtelierActionSheet';
 import { router } from 'expo-router';
-import { EditTransactionSheet } from '../../../components/ui/EditTransactionSheet';
-import { AtelierInsightChart } from '../../../components/ui/AtelierInsightChart';
-import { AtelierAICard } from '../../../components/ui/AtelierAICard';
-import { AtelierSpendingSummary } from '../../../components/ui/AtelierSpendingSummary';
-import { AtelierTransactionCard } from '../../../components/ui/AtelierTransactionCard';
-import { useAddTransaction, CreateTransactionRequest } from '../../../hooks/useTransactions';
+import { EditTransactionSheet } from '../../components/ui/EditTransactionSheet';
+import { AtelierInsightChart } from '../../components/ui/AtelierInsightChart';
+import { AtelierAICard } from '../../components/ui/AtelierAICard';
+import { AtelierSpendingSummary } from '../../components/ui/AtelierSpendingSummary';
+import { AtelierTransactionCard } from '../../components/ui/AtelierTransactionCard';
+import { useAddTransaction, CreateTransactionRequest } from '../../hooks/useTransactions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { generateId, ID_PREFIX } from '../../../utils/id';
+import { generateId, ID_PREFIX } from '../../utils/id';
 import { Sparkles } from 'lucide-react-native';
 
 // Feature hooks
-import { useAtelierChat, useChatScroll, useProactiveInsights } from '../hooks';
-import { ChatList } from '../components';
+import { useAtelierChat, useChatScroll, useProactiveInsights } from './hooks';
+import { ChatList } from './components';
 
 const { height: screenHeight } = Dimensions.get('window');
 

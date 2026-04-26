@@ -416,3 +416,5 @@ export const ChangePasswordSheet = forwardRef<ChangePasswordSheetRef>((_, ref) =
     </BottomSheetModal>
   );
 });
+
+ChangePasswordSheet.displayName = 'ChangePasswordSheet';

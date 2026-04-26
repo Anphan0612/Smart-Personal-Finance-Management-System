@@ -147,7 +147,7 @@ export const CategoryPicker = React.memo(
             {searchQuery.length > 0 && filteredCategories.length === 0 && (
               <View className="mt-2 bg-white rounded-xl shadow-sm border border-neutral-100 p-4">
                 <AtelierTypography variant="body" className="text-sm text-center text-slate-500">
-                  Không tìm thấy danh mục "{searchQuery}"
+                  Không tìm thấy danh mục &quot;{searchQuery}&quot;
                 </AtelierTypography>
               </View>
             )}
@@ -157,3 +157,5 @@ export const CategoryPicker = React.memo(
     );
   },
 );
+
+CategoryPicker.displayName = 'CategoryPicker';

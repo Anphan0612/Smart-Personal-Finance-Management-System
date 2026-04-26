@@ -11,7 +11,7 @@ export default function NotFoundScreen() {
           Page not found
         </AtelierTypography>
         <AtelierTypography variant="body" className="text-neutral-400 mt-2 text-center">
-          The screen you're looking for doesn't exist.
+          The screen you&apos;re looking for doesn&apos;t exist.
         </AtelierTypography>
         <View className="mt-6">
           <Link href="/" asChild>

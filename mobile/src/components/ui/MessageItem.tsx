@@ -121,3 +121,5 @@ export const MessageItem = memo(({ message, onEditTransaction, onConfirmTransact
     </View>
   );
 });
+
+MessageItem.displayName = 'MessageItem';

@@ -20,7 +20,7 @@ export const ChatList = memo<ChatListProps>(({ messages, isProcessing, renderDat
             <Sparkles size={32} color="#0052CC" />
           </View>
           <AtelierTypography variant="body" className="text-center text-neutral-500 px-10">
-            Hi! I'm your AI financial assistant. Ask me anything about your spending, budgets, or goals.
+            Hi! I&apos;m your AI financial assistant. Ask me anything about your spending, budgets, or goals.
           </AtelierTypography>
         </View>
       )}
