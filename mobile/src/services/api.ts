@@ -19,10 +19,10 @@ export const DYNAMIC_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   (lanIpAddress ? `http://${lanIpAddress}:8080/api/v1` : 'http://10.0.2.2:8080/api/v1');
 
-// eslint-disable-next-line no-console
+ 
 console.log(`[API CONFIG] 🌐 API URL: ${DYNAMIC_BASE_URL}`);
 if (!process.env.EXPO_PUBLIC_API_URL && lanIpAddress) {
-  // eslint-disable-next-line no-console
+   
   console.log(`[API CONFIG] 🚀 Auto-detected LAN IP: ${lanIpAddress}`);
 }
 
@@ -36,7 +36,7 @@ export const apiClient = axios.create({
 
 // Fail fast with a clear error when API URL cannot be resolved.
 if (!DYNAMIC_BASE_URL || typeof DYNAMIC_BASE_URL !== 'string') {
-  // eslint-disable-next-line no-console
+   
   console.error(
     '[API CONFIG] Missing EXPO_PUBLIC_API_URL and cannot infer LAN IP from Expo hostUri.',
   );
