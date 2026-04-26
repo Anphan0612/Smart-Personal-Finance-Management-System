@@ -1,3 +1,5 @@
+/* eslint-env jest */
+/* global jest */
 const React = require('react');
 
 const Mock = ({ children }) => React.createElement(React.Fragment, null, children);

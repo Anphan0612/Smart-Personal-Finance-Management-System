@@ -503,3 +503,5 @@ export const EditTransactionSheet = React.forwardRef<
     </BottomSheetModal>
   );
 });
+
+EditTransactionSheet.displayName = 'EditTransactionSheet';
