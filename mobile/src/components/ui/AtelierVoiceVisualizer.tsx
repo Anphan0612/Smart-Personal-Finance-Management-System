@@ -36,7 +36,7 @@ export const AtelierVoiceVisualizer = ({
     setIsRecording(true);
 
     // Simulate real-time transcription
-    let currentText = 'Đang nghe';
+    const currentText = 'Đang nghe';
     setTranscription(currentText + '...');
 
     setTimeout(() => setTranscription('Thêm giao dịch...'), 1500);

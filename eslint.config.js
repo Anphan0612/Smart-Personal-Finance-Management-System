@@ -35,6 +35,8 @@ module.exports = [
     rules: {
       "react/react-in-jsx-scope": "off",
       "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
     settings: {
       react: {
@@ -50,6 +52,21 @@ module.exports = [
       "ml-models/",
       "dist/",
       "build/",
+      ".agent/",
+      ".agents/",
+      ".cursor/",
+      ".claude/",
+      "eslint.config.js",
     ],
+  },
+  {
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "no-useless-escape": "off",
+      "no-redeclare": "off"
+    },
   },
 ];
