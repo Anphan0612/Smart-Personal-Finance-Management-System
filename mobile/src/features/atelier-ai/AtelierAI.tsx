@@ -132,29 +132,32 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   ), [handleSuggestionPress]);
 
   const renderDataContent = useCallback((message: ChatMessage) => {
-    if (!message.data) return null;
+    const { data, type } = message;
+    if (!data) return null;
 
-    if (message.type === 'insight_chart' && message.data.chartData) {
+    if (type === 'INSIGHT_CHART' && data.chartData) {
       return (
         <AtelierInsightChart
-          data={message.data.chartData}
-          title={message.data.title}
-          insight={message.data.insight}
+          type={data.type || 'pie'}
+          data={data.chartData}
+          title={data.title}
+          insight={data.insight}
         />
       );
     }
 
-    if (message.type === 'spending_summary' && message.data.categories) {
+    if (type === 'SUMMARY' && data.summary) {
       return (
         <AtelierSpendingSummary
-          categories={message.data.categories}
-          totalSpent={message.data.totalSpent}
-          period={message.data.period}
+          totalSpent={data.summary.totalSpent}
+          budgetLimit={data.summary.budgetLimit}
+          percentage={data.summary.percentage}
+          currency={data.currency}
         />
       );
     }
 
-    if (message.type === 'review_transaction' && message.data.transaction) {
+    if (type === 'review_transaction' && data.transaction) {
       return (
         <View className="bg-white rounded-2xl border border-neutral-100 overflow-hidden shadow-sm">
           <View className="bg-[#0052CC]/5 px-4 py-2 border-b border-neutral-50 flex-row items-center gap-2">
@@ -164,18 +167,20 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
             </Text>
           </View>
           <AtelierTransactionCard
-            transaction={message.data.transaction}
-            onEdit={() => editSheetRef.current?.open(message.data.transaction)}
+            data={data.transaction}
+            onEdit={() => data.transaction && editSheetRef.current?.open(data.transaction)}
           />
         </View>
       );
     }
 
-    if (message.data.transactions && Array.isArray(message.data.transactions)) {
+    if (data.transactions && Array.isArray(data.transactions)) {
       return (
         <View className="gap-3">
-          {message.data.transactions.map((txn: any, idx: number) => (
-            <AtelierAICard key={idx} variant="transaction" data={txn} />
+          {data.transactions.map((txn: any, idx: number) => (
+            <AtelierAICard key={idx}>
+              <AtelierTransactionCard data={txn} variant="bubble" />
+            </AtelierAICard>
           ))}
         </View>
       );

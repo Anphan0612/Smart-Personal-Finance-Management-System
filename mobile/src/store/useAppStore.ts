@@ -25,6 +25,8 @@ export interface ChatMessage {
     transaction?: any; // For review_transaction type
     type?: 'pie' | 'line'; // Chart type
     currency?: string;
+    title?: string;
+    insight?: string;
   };
   // Legacy fields (deprecated, kept for backward compatibility)
   isStreaming?: boolean;
