@@ -13,6 +13,8 @@ venv/
 .venv/
 .pytest_cache/
 tests/
-models/cache/
 uploads/
 benchmark/
+# Don't copy local model cache to Docker (will be downloaded during build)
+models/cache/
+ml-models/
