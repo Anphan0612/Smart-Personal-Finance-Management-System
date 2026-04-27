@@ -169,7 +169,6 @@ For new deployments:
 
 ### Contributors
 - Development: Anphan0612
-- AI Assistance: Claude Code
 
 ---
 
