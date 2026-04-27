@@ -194,15 +194,35 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
 
   const onSaveReview = async (data: CreateTransactionRequest) => {
     try {
-      await addTransactionMutation.mutateAsync(data);
+      console.log('[ATELIER AI] Preparing to save transaction:', data);
+      
+      // Ensure all fields meet TransactionValidator requirements
+      const payload: CreateTransactionRequest = {
+        ...data,
+        amount: Number(data.amount) || 0,
+        description: data.description?.trim() ? data.description : 'Giao dịch từ AI',
+        walletId: data.walletId || activeWalletId || '',
+        transactionDate: data.transactionDate || new Date().toISOString(),
+      };
+
+      console.log('[ATELIER AI] Normalized payload:', payload);
+
+      await addTransactionMutation.mutateAsync(payload);
       addMessage({
         id: generateId(ID_PREFIX.MESSAGE),
         role: 'assistant',
-        content: `Đã lưu giao dịch ${formatCurrency(data.amount)}.`,
+        content: `Đã lưu giao dịch ${formatCurrency(payload.amount)}.`,
         timestamp: Date.now(),
       });
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể lưu giao dịch');
+    } catch (error: any) {
+      console.error('[ATELIER AI ERROR] Failed to save transaction:', error);
+      if (error?.errors) {
+        console.error('[ATELIER AI ERROR] Validation details:', error.errors);
+        const errorDetails = error.errors.map((e: any) => e.message).join('\n');
+        Alert.alert('Lỗi dữ liệu', errorDetails);
+      } else {
+        Alert.alert('Lỗi', error?.message || 'Không thể lưu giao dịch');
+      }
     }
   };
 
