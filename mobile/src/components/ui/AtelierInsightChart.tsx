@@ -4,6 +4,7 @@ import { PieChart, LineChart } from 'react-native-gifted-charts';
 import { AtelierTypography } from './AtelierTypography';
 import { formatCurrency } from '../../utils/format';
 import { MotiView } from 'moti';
+import { BarChart2 } from 'lucide-react-native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -15,11 +16,11 @@ interface TopCategory {
 interface AtelierInsightChartProps {
   type: 'pie' | 'line';
   data: TopCategory[] | any[];
+  title?: string;
+  insight?: string;
 }
 
-import { BarChart2 } from 'lucide-react-native';
-
-export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) => {
+export const AtelierInsightChart = ({ type, data, title, insight }: AtelierInsightChartProps) => {
   if (!data || data.length === 0) {
     return (
       <MotiView
@@ -43,6 +44,24 @@ export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) =>
     );
   }
 
+  const renderHeader = () => {
+    if (!title && !insight) return null;
+    return (
+      <View className="mb-4">
+        {title && (
+          <AtelierTypography variant="h3" className="text-[16px] font-bold text-white mb-1">
+            {title}
+          </AtelierTypography>
+        )}
+        {insight && (
+          <AtelierTypography variant="body" className="text-[13px] text-white/70">
+            {insight}
+          </AtelierTypography>
+        )}
+      </View>
+    );
+  };
+
   if (type === 'pie') {
     // Colors for pie chart
     const colors = ['#005ab4', '#8b5cf6', '#ba1a1a', '#006b5f', '#bf5f00'];
@@ -60,54 +79,66 @@ export const AtelierInsightChart = ({ type, data }: AtelierInsightChartProps) =>
     });
 
     return (
-      <View className="items-center py-4">
-        <PieChart
-          data={pieData}
-          donut
-          radius={screenWidth * 0.2}
-          innerRadius={screenWidth * 0.12}
-          showText
-          textColor="white"
-          textSize={10}
-          textBackgroundRadius={14}
-          centerLabelComponent={() => {
-            return (
-              <View className="justify-center items-center">
-                <AtelierTypography variant="label" className="text-[10px] text-white/50">
-                  Tổng chi
-                </AtelierTypography>
-                <AtelierTypography variant="h3" className="text-[12px] font-bold text-white mt-0.5">
-                  {formatCurrency(total)}
+      <View className="py-2">
+        {renderHeader()}
+        <View className="items-center">
+          <PieChart
+            data={pieData}
+            donut
+            radius={screenWidth * 0.2}
+            innerRadius={screenWidth * 0.12}
+            showText
+            textColor="white"
+            textSize={10}
+            textBackgroundRadius={14}
+            centerLabelComponent={() => {
+              return (
+                <View className="justify-center items-center">
+                  <AtelierTypography variant="label" className="text-[10px] text-white/50">
+                    Tổng chi
+                  </AtelierTypography>
+                  <AtelierTypography variant="h3" className="text-[12px] font-bold text-white mt-0.5">
+                    {formatCurrency(total)}
+                  </AtelierTypography>
+                </View>
+              );
+            }}
+          />
+          <View className="flex-row flex-wrap justify-center mt-6 gap-3">
+            {pieData.map((item, index) => (
+              <View key={index} className="flex-row items-center">
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: item.color,
+                    marginRight: 6,
+                  }}
+                />
+                <AtelierTypography
+                  variant="label"
+                  className="text-[11px] font-medium text-white/80"
+                >
+                  {item.label}
                 </AtelierTypography>
               </View>
-            );
-          }}
-        />
-        <View className="flex-row flex-wrap justify-center mt-6 gap-3">
-          {pieData.map((item, index) => (
-            <View key={index} className="flex-row items-center">
-              <View
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: item.color,
-                  marginRight: 6,
-                }}
-              />
-              <AtelierTypography
-                variant="label"
-                className="text-[11px] font-medium text-white/80"
-              >
-                {item.label}
-              </AtelierTypography>
-            </View>
-          ))}
+            ))}
+          </View>
         </View>
       </View>
     );
   }
 
   // Fallback for line chart if needed later
-  return null;
+  return (
+    <View className="py-2">
+      {renderHeader()}
+      <View className="items-center py-8 bg-white/5 rounded-xl border border-white/10">
+        <AtelierTypography variant="body" className="text-white/60">
+          Chart type "{type}" not implemented yet
+        </AtelierTypography>
+      </View>
+    </View>
+  );
 };

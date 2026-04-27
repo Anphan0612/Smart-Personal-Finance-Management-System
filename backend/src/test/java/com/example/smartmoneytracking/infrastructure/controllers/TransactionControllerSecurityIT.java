@@ -36,11 +36,12 @@ class TransactionControllerSecurityIT {
 
     @BeforeEach
     void setUp() {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
         User user = User.create(
-                "security-user",
-                "security.user@example.com",
+                "security-user-" + uniqueId,
+                "security.user." + uniqueId + "@example.com",
                 "$2a$10$wsRK80ib84iUYMKjR2uPyePPQkx6miiJm5GUEni9BxJgjZGQbj4Dq",
-                "0900000000",
+                "09" + System.currentTimeMillis() % 100000000,
                 "012345678901"
         );
         user.setId(UUID.randomUUID().toString());

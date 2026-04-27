@@ -4,6 +4,12 @@ import { useAppStore, ChatMessage } from '../../../store/useAppStore';
 import { poster } from '../../../services/api';
 import * as Haptics from 'expo-haptics';
 
+interface ChatResponse {
+  message: string;
+  data?: any;
+  type?: ChatMessage['type'];
+}
+
 export const useAtelierChat = () => {
   const { messages, addMessage, activeWalletId } = useAppStore();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,7 +30,7 @@ export const useAtelierChat = () => {
       setIsProcessing(true);
 
       try {
-        const response = await poster('/ai/chat', {
+        const response = await poster<ChatResponse, any>('/ai/chat', {
           message: userMessage,
           walletId: activeWalletId,
         });

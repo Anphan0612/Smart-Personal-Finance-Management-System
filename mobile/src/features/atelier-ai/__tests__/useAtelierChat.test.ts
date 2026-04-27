@@ -1,6 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useAtelierChat } from '../hooks/useAtelierChat';
-import { useAppStore } from '../../../store/useAppStore';
+import { useAppStore, ChatMessage } from '../../../store/useAppStore';
 import { poster } from '../../../services/api';
 import * as Haptics from 'expo-haptics';
 
@@ -15,7 +15,7 @@ jest.mock('../../../utils/id', () => ({
 
 describe('useAtelierChat', () => {
   const mockAddMessage = jest.fn();
-  const mockMessages = [];
+  const mockMessages: ChatMessage[] = [];
   const mockActiveWalletId = 'wallet-123';
 
   beforeEach(() => {
