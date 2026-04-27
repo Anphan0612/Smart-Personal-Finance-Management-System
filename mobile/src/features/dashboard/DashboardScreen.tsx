@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TrendingUp, Wallet, ChevronDown, Plus } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppStore } from '../../store/useAppStore';
 import { useWallets } from '../../hooks/useWallets';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useComparison } from '../../hooks/useComparison';
 import { useBudgets } from '../../hooks/useBudgets';
+import { useBudgetInsight } from '../../hooks/useAi';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatCurrency } from '../../utils/format';
 import {
@@ -21,22 +21,12 @@ import {
 } from '../../components/ui';
 import { WalletModal } from '../wallets/WalletModal';
 import { WalletSelectionModal } from '../wallets/WalletSelectionModal';
-import { poster } from '../../services/api';
 import * as Haptics from 'expo-haptics';
 import type { BudgetResponse } from '../../types/api';
-
-const ALERT_DISMISSED_KEY = 'budget_alert_dismissed_';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId, setActiveWalletId, user } = useAppStore();
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertData, setAlertData] = useState<{
-    categoryName: string;
-    percentageUsed: number;
-    overspentAmount: number;
-    aiInsight: string;
-  } | null>(null);
 
   const [walletModalVisible, setWalletModalVisible] = useState(false);
   const [selectionModalVisible, setSelectionModalVisible] = useState(false);
@@ -54,61 +44,15 @@ export default function HomeScreen() {
 
   const { data: budgets } = useBudgets();
 
+  // AI Budget Insight: React Query-based, deduplicated + persisted
+  const {
+    data: insightData,
+    alertVisible,
+    handleDismiss: handleDismissAlert,
+  } = useBudgetInsight(budgets);
+
   const isLoading = isWalletsLoading || isDashboardLoading;
   const activeWallet = wallets?.find((w) => w.id === activeWalletId);
-
-  // Gamification: Check budgets for DANGER/OVERBUDGET and fire alert modal
-  useEffect(() => {
-    if (!budgets?.length) return;
-
-    const checkAlerts = async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const critical = budgets.find(
-        (b) => b.thresholdStatus === 'OVERBUDGET' || b.thresholdStatus === 'DANGER',
-      );
-
-      if (!critical) return;
-
-      const dismissKey = `${ALERT_DISMISSED_KEY}${critical.id}_${today}`;
-      const wasDismissed = await AsyncStorage.getItem(dismissKey);
-      if (wasDismissed) return;
-
-      try {
-        const result = await poster<{ insight: string }, any>('/ai/budget-insight', {
-          category_name: critical.categoryName,
-          threshold: critical.thresholdStatus,
-        });
-        setAlertData({
-          categoryName: critical.categoryName,
-          percentageUsed: critical.percentageUsed,
-          overspentAmount: Math.abs(critical.remainingAmount),
-          aiInsight: result.insight,
-        });
-        setAlertVisible(true);
-      } catch {
-        setAlertData({
-          categoryName: critical.categoryName,
-          percentageUsed: critical.percentageUsed,
-          overspentAmount: Math.abs(critical.remainingAmount),
-          aiInsight: `Quỹ ${critical.categoryName} đang ở mức ${critical.percentageUsed.toFixed(0)}%. Hãy cẩn thận!`,
-        });
-        setAlertVisible(true);
-      }
-    };
-
-    checkAlerts();
-  }, [budgets]);
-
-  const handleDismissAlert = async () => {
-    if (alertData) {
-      const today = new Date().toISOString().slice(0, 10);
-      const critical = budgets?.find((b) => b.categoryName === alertData.categoryName);
-      if (critical) {
-        await AsyncStorage.setItem(`${ALERT_DISMISSED_KEY}${critical.id}_${today}`, '1');
-      }
-    }
-    setAlertVisible(false);
-  };
 
   const onRefresh = React.useCallback(() => {
     refetchWallets();
@@ -360,14 +304,14 @@ export default function HomeScreen() {
       </ScrollView>
 
       {/* Modals and Overlays */}
-      {alertData && (
+      {insightData && (
         <BudgetAlertModal
           visible={alertVisible}
           onDismiss={handleDismissAlert}
-          categoryName={alertData.categoryName}
-          percentageUsed={alertData.percentageUsed}
-          overspentAmount={alertData.overspentAmount}
-          aiInsight={alertData.aiInsight}
+          categoryName={insightData.categoryName}
+          percentageUsed={insightData.percentageUsed}
+          overspentAmount={insightData.overspentAmount}
+          aiInsight={insightData.aiInsight}
         />
       )}
 
