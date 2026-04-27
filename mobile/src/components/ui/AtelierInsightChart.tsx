@@ -136,7 +136,7 @@ export const AtelierInsightChart = ({ type, data, title, insight }: AtelierInsig
       {renderHeader()}
       <View className="items-center py-8 bg-white/5 rounded-xl border border-white/10">
         <AtelierTypography variant="body" className="text-white/60">
-          Chart type "{type}" not implemented yet
+          Chart type &quot;{type}&quot; not implemented yet
         </AtelierTypography>
       </View>
     </View>
