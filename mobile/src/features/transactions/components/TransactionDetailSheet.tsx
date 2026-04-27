@@ -32,7 +32,7 @@ import { TransactionResponse } from '@/types/api';
 import { formatCurrency, formatDateTime } from '@/utils/format';
 import { format, parseISO } from 'date-fns';
 import { Image } from 'expo-image';
-import ImageView from 'react-native-image-viewing';
+import { ImageViewer } from './ImageViewer';
 import { DYNAMIC_BASE_URL } from '@/services/api';
 import { useAppStore } from '@/store/useAppStore';
 import { useCategories } from '@/hooks/useCategories';
@@ -358,9 +358,8 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
 
       {/* Full Screen Image Viewer */}
       {fullImageUrl && (
-        <ImageView
+      <ImageViewer
           images={[{ uri: fullImageUrl, headers: { Authorization: `Bearer ${token}` } }]}
-          imageIndex={0}
           visible={showImageFull}
           onRequestClose={() => setShowImageFull(false)}
         />

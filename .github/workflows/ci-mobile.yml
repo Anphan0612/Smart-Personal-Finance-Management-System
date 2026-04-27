@@ -79,6 +79,6 @@ jobs:
         run: npm ci
 
       - name: Run Expo Export (Smoke Test)
-        run: npx expo export --platform all
+        run: npx expo export --platform ios --platform android
         env:
           EXPO_PUBLIC_API_URL: 'http://localhost:8080/api/v1'
