@@ -1,4 +1,3 @@
-/* eslint-env jest */
 /* global jest */
 const React = require('react');
 

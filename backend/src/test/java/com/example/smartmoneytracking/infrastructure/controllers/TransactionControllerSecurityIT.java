@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.transaction.annotation.Transactional
 class TransactionControllerSecurityIT {
 
     @Autowired
@@ -41,7 +42,7 @@ class TransactionControllerSecurityIT {
                 "security-user-" + uniqueId,
                 "security.user." + uniqueId + "@example.com",
                 "$2a$10$wsRK80ib84iUYMKjR2uPyePPQkx6miiJm5GUEni9BxJgjZGQbj4Dq",
-                "09" + System.currentTimeMillis() % 100000000,
+                "09" + (System.currentTimeMillis() % 1000000 + (int)(Math.random() * 1000)),
                 "012345678901"
         );
         user.setId(UUID.randomUUID().toString());

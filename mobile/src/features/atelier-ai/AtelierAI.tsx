@@ -313,7 +313,7 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
                         style={{
                           flex: 1,
                           color: '#171A1F',
-                          fontFamily: 'Inter-Medium',
+                          fontFamily: 'Inter_500Medium',
                           fontSize: 15,
                           maxHeight: 120,
                           paddingTop: Platform.OS === 'ios' ? 8 : 4,
