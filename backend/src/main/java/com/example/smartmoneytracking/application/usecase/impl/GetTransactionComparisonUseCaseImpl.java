@@ -9,8 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,17 +26,17 @@ public class GetTransactionComparisonUseCaseImpl implements GetTransactionCompar
 
     @Override
     public TransactionComparisonResponse execute(String walletId, String userId) {
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
 
         // Weekly Periods
-        LocalDateTime w0Start = now.minusDays(6).with(LocalTime.MIN);
-        LocalDateTime w1Start = now.minusDays(13).with(LocalTime.MIN);
-        LocalDateTime w1End = now.minusDays(7).with(LocalTime.MAX);
+        OffsetDateTime w0Start = now.minusDays(6).with(LocalTime.MIN).withOffsetSameInstant(now.getOffset());
+        OffsetDateTime w1Start = now.minusDays(13).with(LocalTime.MIN).withOffsetSameInstant(now.getOffset());
+        OffsetDateTime w1End = now.minusDays(7).with(LocalTime.MAX).withOffsetSameInstant(now.getOffset());
 
         // Monthly Periods
-        LocalDateTime m0Start = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-        LocalDateTime m1Start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-        LocalDateTime m1End = now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).with(LocalTime.MAX);
+        OffsetDateTime m0Start = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN).withOffsetSameInstant(now.getOffset());
+        OffsetDateTime m1Start = now.minusMonths(1).with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN).withOffsetSameInstant(now.getOffset());
+        OffsetDateTime m1End = now.minusMonths(1).with(TemporalAdjusters.lastDayOfMonth()).with(LocalTime.MAX).withOffsetSameInstant(now.getOffset());
 
         // Fetch Transactions
         List<Transaction> w0Transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, w0Start, now);

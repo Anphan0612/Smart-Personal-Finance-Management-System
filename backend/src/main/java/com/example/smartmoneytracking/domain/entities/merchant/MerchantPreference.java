@@ -2,7 +2,7 @@ package com.example.smartmoneytracking.domain.entities.merchant;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -25,12 +25,12 @@ public class MerchantPreference {
     private String categoryId;
 
     @Column(name = "last_used_at")
-    private LocalDateTime lastUsedAt;
+    private OffsetDateTime lastUsedAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) id = UUID.randomUUID().toString();
-        if (lastUsedAt == null) lastUsedAt = LocalDateTime.now();
+        if (lastUsedAt == null) lastUsedAt = OffsetDateTime.now();
     }
 
     public static MerchantPreference create(String userId, String normalizedPattern, String categoryId) {
@@ -38,16 +38,16 @@ public class MerchantPreference {
         pref.userId = userId;
         pref.normalizedPattern = normalizedPattern;
         pref.categoryId = categoryId;
-        pref.lastUsedAt = LocalDateTime.now();
+        pref.lastUsedAt = OffsetDateTime.now();
         return pref;
     }
 
     public void updateCategory(String categoryId) {
         this.categoryId = categoryId;
-        this.lastUsedAt = LocalDateTime.now();
+        this.lastUsedAt = OffsetDateTime.now();
     }
 
     public void markUsed() {
-        this.lastUsedAt = LocalDateTime.now();
+        this.lastUsedAt = OffsetDateTime.now();
     }
 }

@@ -139,19 +139,21 @@ class OCRService:
         try:
             import os
             # Set local cache path BEFORE importing transformers to ensure it's picked up
-            os.environ["HF_HOME"] = os.path.join(os.getcwd(), "models", "cache")
-            
+            cache_dir = os.path.join(os.getcwd(), "models", "cache")
+            os.environ["HF_HOME"] = cache_dir
+
             from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
             import torch
- 
+
             # Use a specialized ViT5 Correction model
             model_id = "hoanghaiduong/vit5-correction"
-            
+
             # Detect fastest available device
             device = "cuda" if torch.cuda.is_available() else "cpu"
             torch_dtype = torch.float16 if device == "cuda" else torch.float32
-            
-            logger.info(f"Initializing ViT5 Corrector ({model_id}) on {device.upper()}...")
+
+            logger.info(f"[OCR SERVICE] 🔧 Initializing ViT5 Corrector ({model_id}) on {device.upper()}...")
+            logger.info(f"[OCR SERVICE] 📁 Using cache directory: {cache_dir}")
 
             def load_tokenizer():
                 # Keep T5 tokenizer behavior explicit to avoid runtime warning noise
@@ -175,37 +177,43 @@ class OCRService:
 
             try:
                 tokenizer = load_tokenizer()
-                model = AutoModelForSeq2SeqLM.from_pretrained(
-                    model_id,
-                    device_map={"": device},
-                    torch_dtype=torch_dtype,
-                    trust_remote_code=True
-                )
+                if device == "cuda":
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_id,
+                        device_map={"": device},
+                        torch_dtype=torch_dtype,
+                        trust_remote_code=True
+                    )
+                else:
+                    model = AutoModelForSeq2SeqLM.from_pretrained(
+                        model_id,
+                        trust_remote_code=True
+                    ).to(device)
+                
                 align_embeddings(model, tokenizer)
                 pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
-                logger.info(f"✅ ViT5 OCR Corrector initialized on {device.upper()}.")
+                logger.info(f"[OCR SERVICE] ✅ ViT5 OCR Corrector initialized on {device.upper()}.")
             except Exception as e:
                 if device == "cuda":
-                    logger.warning(f"⚠️ GPU Initialization for T5 failed: {e}. Falling back to CPU...")
+                    logger.warning(f"[OCR SERVICE] ⚠️ GPU Initialization for T5 failed: {e}. Falling back to CPU...")
                     tokenizer = load_tokenizer()
                     model = AutoModelForSeq2SeqLM.from_pretrained(
                         model_id,
-                        device_map={"": "cpu"},
-                        torch_dtype=torch.float32,
                         trust_remote_code=True
-                    )
+                    ).to("cpu")
                     align_embeddings(model, tokenizer)
                     pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer)
-                    logger.info(f"✅ ViT5 OCR Corrector initialized on CPU (Fallback).")
+                    logger.info(f"[OCR SERVICE] ✅ ViT5 OCR Corrector initialized on CPU (Fallback).")
                 else:
                     raise e
 
             return pipe
         except Exception as e:
             import traceback
-            logger.error(f"❌ Failed to initialize ProtonX Corrector: {e}")
+            logger.error(f"[OCR SERVICE] ❌ Failed to initialize ViT5 Corrector: {e}")
             logger.error(traceback.format_exc())
-            logger.info("⚠️ Graceful Degradation: AI Correction will be disabled.")
+            logger.info("[OCR SERVICE] ⚠️ Graceful Degradation: AI Correction will be disabled.")
+            logger.info("[OCR SERVICE] 💡 Run 'python scripts/setup_models.py' to download models")
             return None
 
     # ------------------------------------------------------------------

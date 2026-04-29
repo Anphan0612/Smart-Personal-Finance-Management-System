@@ -11,12 +11,13 @@ import com.example.smartmoneytracking.domain.entities.transaction.Transaction;
 import com.example.smartmoneytracking.domain.repositories.CategoryRepository;
 import com.example.smartmoneytracking.domain.repositories.TransactionRepository;
 import com.example.smartmoneytracking.domain.repositories.WalletRepository;
+import com.example.smartmoneytracking.domain.entities.wallet.Wallet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class DashboardUseCaseImpl implements DashboardUseCase {
+public class DashboardUseCaseImpl implements com.example.smartmoneytracking.application.usecase.DashboardUseCase {
 
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
@@ -34,29 +35,31 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
     private final TransactionMapper transactionMapper;
 
     @Override
-    public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange) {
+    public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange, String userId) {
+        // Verify ownership first
+        Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found or unauthorized"));
+
         ZonedDateTime localNow = DateUtils.nowInUserTz();
         ZonedDateTime localStart = calculateStartDate(timeRange, localNow);
         
-        LocalDateTime nowUtc = DateUtils.toUtc(localNow);
-        LocalDateTime startUtc = DateUtils.toUtc(localStart);
-
+        OffsetDateTime nowUtc = DateUtils.toUtc(localNow);
+        OffsetDateTime startUtc = DateUtils.toUtc(localStart);
+ 
         List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startUtc, nowUtc);
-
+ 
         // 1. Calculate Summary
         BigDecimal income = transactions.stream()
                 .filter(Transaction::isIncome)
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+ 
         BigDecimal expenses = transactions.stream()
                 .filter(Transaction::isExpense)
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal walletBalance = walletRepository.findById(walletId)
-                .map(com.example.smartmoneytracking.domain.entities.wallet.Wallet::getBalance)
-                .orElse(BigDecimal.ZERO);
+ 
+        BigDecimal walletBalance = wallet.getBalance();
         
         double savingsRate = 0.0;
         if (income.compareTo(BigDecimal.ZERO) > 0) {
@@ -86,9 +89,8 @@ public class DashboardUseCaseImpl implements DashboardUseCase {
 
         for (Transaction t : transactions) {
             // Convert UTC storage to user local time for correct grouping by month
-            LocalDateTime localDate = t.getTransactionDate().atZone(java.time.ZoneOffset.UTC)
-                    .withZoneSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()))
-                    .toLocalDateTime();
+            OffsetDateTime localDate = t.getTransactionDate()
+                    .withOffsetSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()).getRules().getOffset(t.getTransactionDate().toInstant()));
             
             String month = localDate.format(monthFormatter);
             MonthlyTrendDTO trend = trendMap.getOrDefault(month, new MonthlyTrendDTO(month, BigDecimal.ZERO, BigDecimal.ZERO));

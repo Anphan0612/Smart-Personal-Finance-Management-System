@@ -5,13 +5,12 @@ node_modules/
 dist/
 tmp/
 
-# Keep docs in Git (do not ignore docs/)
-
 # ==========================================
 # Java / Maven (backend/)
 # ==========================================
 HELP.md
 target/
+build/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .apt_generated
@@ -43,6 +42,7 @@ mobile/.expo/
 mobile/.expo-shared/
 mobile/android/.gradle/
 mobile/android/build/
+mobile/android/app/.cxx/
 
 # ==========================================
 # Security & Environment
@@ -68,6 +68,6 @@ mobile/android/build/
 # ==========================================
 uploads/
 scratch/
-
+docs/PLANS
 # Optional local model store (large)
 ml-models/

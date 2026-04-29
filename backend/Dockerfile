@@ -1,22 +1,29 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.4
+# Stage 1: Build the application
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /build
 
-FROM maven:3.8.5-openjdk-17-slim AS builder
-WORKDIR /app
+COPY pom.xml .
+# Download dependencies first to utilize Docker layer caching
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -B
 
-# Cache dependencies first
-COPY pom.xml ./
-RUN mvn -q -DskipTests dependency:go-offline
-
-# Build application
 COPY src ./src
-RUN mvn -q -DskipTests clean package
+# Build the application using BuildKit cache
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-jammy AS runtime
+# Stage 2: Runtime Environment
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-ENV TZ=UTC
+# Add non-root user for security
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
 
-COPY --from=builder /app/target/*.jar /app/app.jar
+# Copy built JAR from builder stage
+COPY --from=builder /build/target/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

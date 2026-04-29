@@ -1,13 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, ScrollView, Dimensions } from 'react-native';
+import { View, TouchableOpacity, Image, Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon, X, Zap, ArrowRight, Keyboard, Check, Loader } from 'lucide-react-native';
-import { router } from 'expo-router';
+import {
+  Camera,
+  Image as ImageIcon,
+  X,
+  Zap,
+  ArrowRight,
+  Keyboard,
+  Check,
+  Loader,
+} from 'lucide-react-native';
+import { router , useLocalSearchParams } from 'expo-router';
 import apiClient from '../../services/api';
 import { MotiView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { useLocalSearchParams } from 'expo-router';
+import { AtelierTypography, AtelierCard } from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
 const PROCESSING_STEPS = [
   { key: 'PREPROCESSING', icon: '🔍', label: 'Đang làm sắc nét ảnh...' },
@@ -29,7 +39,6 @@ export default function ReceiptScannerScreen() {
   const stepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Helper sync logic
   const setLoadingState = (val: boolean) => {
     setLoading(val);
     isLoadingRef.current = val;
@@ -59,7 +68,7 @@ export default function ReceiptScannerScreen() {
     stepTimerRef.current = setInterval(() => {
       step++;
       if (step < PROCESSING_STEPS.length - 1) {
-        setCompletedSteps(prev => [...prev, PROCESSING_STEPS[step - 1].key]);
+        setCompletedSteps((prev) => [...prev, PROCESSING_STEPS[step - 1].key]);
         setCurrentStep(step);
       } else {
         if (stepTimerRef.current) clearInterval(stepTimerRef.current);
@@ -69,27 +78,42 @@ export default function ReceiptScannerScreen() {
 
   const finishSteps = () => {
     if (stepTimerRef.current) clearInterval(stepTimerRef.current);
-    const allKeys = PROCESSING_STEPS.slice(0, -1).map(s => s.key);
+    const allKeys = PROCESSING_STEPS.slice(0, -1).map((s) => s.key);
     setCompletedSteps(allKeys);
     setCurrentStep(PROCESSING_STEPS.length - 1);
   };
 
   const compressImage = async (uri: string) => {
     try {
-      const result = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: 1200 } }],
-        { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-      );
+      const result = await ImageManipulator.manipulateAsync(uri, [{ resize: { width: 1200 } }], {
+        compress: 0.7,
+        format: ImageManipulator.SaveFormat.JPEG,
+      });
       return result.uri;
     } catch (error) {
-      console.error("Compression error:", error);
+      console.error('Compression error:', error);
       return uri;
     }
   };
 
   const pickImage = async (useCamera: boolean) => {
     try {
+      if (useCamera) {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập camera để quét hóa đơn.');
+          router.back();
+          return;
+        }
+      } else {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Quyền truy cập', 'Vui lòng cấp quyền truy cập thư viện ảnh để chọn hóa đơn.');
+          router.back();
+          return;
+        }
+      }
+
       const result = useCamera
         ? await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -109,24 +133,18 @@ export default function ReceiptScannerScreen() {
         router.back();
       }
     } catch (error) {
-      Alert.alert("Lỗi", "Không thể truy cập camera hoặc thư viện ảnh.");
+      Alert.alert('Lỗi', 'Không thể truy cập camera hoặc thư viện ảnh.');
     }
   };
 
   const pollWithDelay = async (receiptId: string, retryCount = 0) => {
-    // 1. Kiểm tra Unmount Guard hoặc loading đã tắt (Dừng poll)
-    if (isCancelledRef.current || !isLoadingRef.current) {
-        console.log(`[OCR] Polling stopped - Cancelled: ${isCancelledRef.current}, Loading: ${isLoadingRef.current}`);
-        return;
-    }
+    if (isCancelledRef.current || !isLoadingRef.current) return;
 
     try {
       const response = await apiClient.get(`/receipts/${receiptId}`);
-      
+
       if (response.data.success) {
         const status = response.data.data.status;
-        
-        // Cập nhật step simulation dựa trên thời gian thực tế
         if (currentStep < 2) setCurrentStep(2);
 
         if (status === 'PROCESSED' || status === 'CONFIRMED') {
@@ -135,42 +153,34 @@ export default function ReceiptScannerScreen() {
             if (isCancelledRef.current) return;
             setLoadingState(false);
             router.push({
-                pathname: '/receipt/review',
-                params: { receiptId }
+              pathname: '/receipt/review',
+              params: { receiptId },
             });
           }, 800);
-          return; // Kết thúc poll thành công
+          return;
         } else if (status === 'FAILED') {
           setLoadingState(false);
-          Alert.alert("Lỗi", "AI không thể xử lý hóa đơn này.");
-          return; // Kết thúc poll thất bại
+          Alert.alert('Lỗi', 'AI không thể xử lý hóa đơn này.');
+          return;
         }
       }
-
-      // Nếu vẫn PENDING, đợi 3s rồi poll tiếp
       pollingTimerRef.current = setTimeout(() => pollWithDelay(receiptId, 0), 3000);
-
     } catch (error: any) {
-      // 1. Xử lý lỗi Critical (401/403)
       const status = error.response?.status;
       if (status === 401 || status === 403) {
-        console.error(`[OCR] Critical Error ${status}. Stopping poll.`);
         setLoadingState(false);
-        Alert.alert("Phiên làm việc hết hạn", "Vui lòng đăng nhập lại.");
+        Alert.alert('Phiên làm việc hết hạn', 'Vui lòng đăng nhập lại.');
         router.replace('/(auth)/login');
         return;
       }
-
-      // 2. Xử lý lỗi Network/Transient
       if (retryCount >= 10) {
-        console.error("[OCR] Max retries reached. Stopping poll.");
         setLoading(false);
-        Alert.alert("Lỗi kết nối", "Mạng không ổn định. Vui lòng kiểm tra lại sau trong danh sách giao dịch.");
+        Alert.alert(
+          'Lỗi kết nối',
+          'Mạng không ổn định. Vui lòng kiểm tra lại sau trong danh sách giao dịch.',
+        );
         return;
       }
-
-      console.warn(`[OCR] Network Error (Attempt ${retryCount + 1}/10). Retrying...`);
-      // Thử lại ngay sau 3s nếu lỗi mạng (Quiet retry)
       pollingTimerRef.current = setTimeout(() => pollWithDelay(receiptId, retryCount + 1), 3000);
     }
   };
@@ -190,29 +200,24 @@ export default function ReceiptScannerScreen() {
         type: 'image/jpeg',
       });
 
-      console.log("[OCR] Uploading receipt...");
       const response = await apiClient.post('/receipts/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (response.data.success) {
+      if (response.data.success && response.data.data?.id) {
         const receiptId = response.data.data.id;
-        console.log(`[OCR] Upload success. Job ID: ${receiptId}. Starting recursive polling...`);
         pollWithDelay(receiptId);
+      } else {
+        throw new Error('Không nhận được ID biên lai từ máy chủ.');
       }
-    } catch (error) {
+    } catch (error: any) {
       if (stepTimerRef.current) clearInterval(stepTimerRef.current);
       setLoadingState(false);
-      console.error("OCR Upload error:", error);
-      Alert.alert(
-        "Lỗi Upload",
-        "Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng.",
-        [
-          { text: "Thử lại", style: "cancel", onPress: () => resetState() }
-        ]
-      );
+      Alert.alert('Lỗi Upload', error.message || 'Không thể tải ảnh lên máy chủ. Vui lòng kiểm tra kết nối mạng.', [
+        { text: 'Thử lại', style: 'cancel', onPress: () => resetState() },
+      ]);
     }
   };
 
@@ -235,16 +240,16 @@ export default function ReceiptScannerScreen() {
           bottom: 0,
           left: 0,
           right: 0,
-          paddingHorizontal: 20,
-          paddingBottom: 16,
-          paddingTop: 12,
+          paddingHorizontal: 24,
+          paddingBottom: 24,
+          paddingTop: 40,
         }}
       >
         <LinearGradient
-          colors={['transparent', 'rgba(2, 6, 23, 0.95)', 'rgba(2, 6, 23, 1)']}
+          colors={['transparent', 'rgba(0, 0, 0, 0.8)', 'rgba(0, 0, 0, 0.95)']}
           style={{
             position: 'absolute',
-            top: -40,
+            top: 0,
             left: 0,
             right: 0,
             bottom: 0,
@@ -263,22 +268,11 @@ export default function ReceiptScannerScreen() {
               from={{ opacity: 0, translateX: -10 }}
               animate={{ opacity: 1, translateX: 0 }}
               transition={{ type: 'timing', duration: 300, delay: index * 50 }}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 6,
-              }}
+              className="flex-row items-center py-2"
             >
-              {/* Step icon */}
-              <View style={{
-                width: 28,
-                height: 28,
-                borderRadius: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: isCompleted ? '#22c55e' : isCurrent ? '#3b82f6' : '#334155',
-                marginRight: 12,
-              }}>
+              <View
+                className={`w-7 h-7 rounded-full items-center justify-center mr-3 ${isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-primary' : 'bg-neutral-800'}`}
+              >
                 {isCompleted ? (
                   <Check size={14} color="white" />
                 ) : isCurrent ? (
@@ -287,30 +281,22 @@ export default function ReceiptScannerScreen() {
                     animate={{ rotate: '360deg' }}
                     transition={{ loop: true, type: 'timing', duration: 1000 }}
                   >
-                    <Loader size={14} color="white" />
+                    <Loader size={12} color="white" />
                   </MotiView>
                 ) : null}
               </View>
 
-              {/* Step text */}
-              <Text style={{
-                color: isCompleted ? '#86efac' : isCurrent ? '#93c5fd' : '#64748b',
-                fontSize: 14,
-                fontWeight: isCurrent ? '600' : '400',
-              }}>
-                {step.icon} {step.label}
-              </Text>
+              <AtelierTypography
+                variant="h3"
+                color={isCompleted ? 'white' : isCurrent ? 'white' : 'neutral'}
+                className={isCurrent ? 'opacity-100' : 'opacity-60'}
+              >
+                {step.label}
+              </AtelierTypography>
 
-              {/* Duration badge */}
               {isCompleted && step.key !== 'DONE' && (
-                <View style={{
-                  marginLeft: 'auto',
-                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                  paddingHorizontal: 8,
-                  paddingVertical: 2,
-                  borderRadius: 10,
-                }}>
-                  <Text style={{ color: '#4ade80', fontSize: 11 }}>✓</Text>
+                <View className="ml-auto bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                  <Check size={10} color="#10b981" />
                 </View>
               )}
             </MotiView>
@@ -321,94 +307,122 @@ export default function ReceiptScannerScreen() {
   };
 
   return (
-    <View className="flex-1 bg-slate-950">
-      <LinearGradient
-        colors={['#0f172a', '#020617']}
-        className="flex-1 px-6 pt-12"
-      >
-        <View className="flex-row items-center justify-between mb-8">
-          <TouchableOpacity onPress={() => router.back()}>
-            <X size={24} color="#94a3b8" />
+    <View className="flex-1 bg-surface-lowest">
+      <LinearGradient colors={['#0f172a', '#020617']} className="flex-1">
+        <View
+          className="flex-row items-center justify-between px-6 mb-4"
+          style={{ marginTop: Platform.OS === 'ios' ? 60 : 40 }}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center bg-white/10 rounded-full"
+          >
+            <X size={20} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">Quét Hóa Đơn</Text>
-          <View style={{ width: 24 }} />
+          <AtelierTypography variant="h2" color="white">
+            Quét hóa đơn
+          </AtelierTypography>
+          <View className="w-10" />
         </View>
 
         {!image ? (
           <MotiView
             from={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex-1 justify-center items-center"
+            className="flex-1 px-6 justify-center"
           >
-            <View className="w-full aspect-square bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-700 justify-center items-center mb-12">
-              <Zap size={48} color="#3b82f6" strokeWidth={1.5} />
-              <Text className="text-slate-400 mt-4 text-center px-8">
-                Chụp ảnh rõ nét hóa đơn để AI tự động phân loại chi tiêu
-              </Text>
-              <View className="flex-row items-center mt-3 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">
-                <Text className="text-emerald-400 text-xs font-medium">
-                  ⚡ PaddleOCR v3 + AI Healing
-                </Text>
+            <AtelierCard
+              variant="elevated"
+              className="bg-white/5 border border-white/10 p-8 items-center mb-10 overflow-hidden"
+            >
+              <View className="w-20 h-20 bg-primary/20 rounded-[32px] items-center justify-center mb-6">
+                <Zap size={32} color={Colors.primary.DEFAULT} strokeWidth={2} />
               </View>
-            </View>
+              <AtelierTypography variant="h2" color="white" className="text-center mb-2">
+                Tầm nhìn AI
+              </AtelierTypography>
+              <AtelierTypography
+                variant="body"
+                color="white"
+                className="text-center opacity-60 mb-8 leading-5"
+              >
+                Chụp ảnh hóa đơn rõ nét. Hệ thống AI sẽ tự động bóc tách số tiền, cửa hàng và các
+                danh mục.
+              </AtelierTypography>
+              <View className="bg-emerald-500/20 px-4 py-2 rounded-2xl border border-emerald-500/30">
+                <AtelierTypography variant="label" className="text-emerald-400 font-bold uppercase">
+                  ⚡ OCR v3 + Healing Pro
+                </AtelierTypography>
+              </View>
+            </AtelierCard>
 
-            <View className="w-full space-y-4">
+            <View className="space-y-4">
               <TouchableOpacity
                 onPress={() => pickImage(true)}
-                className="bg-blue-600 h-16 rounded-2xl flex-row items-center justify-center"
+                activeOpacity={0.8}
+                className="bg-primary h-16 rounded-[24px] flex-row items-center justify-center shadow-xl shadow-primary/25"
               >
-                <Camera size={20} color="white" className="mr-2" />
-                <Text className="text-white font-bold text-lg">Chụp Ảnh</Text>
+                <Camera size={20} color="white" className="mr-3" />
+                <AtelierTypography variant="h3" color="white">
+                  Máy ảnh
+                </AtelierTypography>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => pickImage(false)}
-                className="bg-slate-800 h-16 rounded-2xl flex-row items-center justify-center"
+                activeOpacity={0.8}
+                className="bg-white/10 h-16 rounded-[24px] flex-row items-center justify-center"
               >
-                <ImageIcon size={20} color="#94a3b8" className="mr-2" />
-                <Text className="text-slate-200 font-bold text-lg">Chọn Từ Thư Viện</Text>
+                <ImageIcon size={20} color="#94a3b8" className="mr-3" />
+                <AtelierTypography variant="h3" color="white">
+                  Thư viện ảnh
+                </AtelierTypography>
               </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={() => router.push('/(tabs)/transactions')}
-                className="h-12 flex-row items-center justify-center"
+                className="h-14 items-center justify-center"
               >
-                <Keyboard size={18} color="#64748b" className="mr-2" />
-                <Text className="text-slate-500 font-medium">Nhập tay thay vì quét OCR</Text>
+                <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">
+                  Nhập tay thay vì quét OCR
+                </AtelierTypography>
               </TouchableOpacity>
             </View>
           </MotiView>
         ) : (
-          <View className="flex-1">
-            <View className="flex-1 rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 relative">
+          <View className="flex-1 px-6">
+            <MotiView
+              from={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex-1 rounded-[40px] overflow-hidden bg-black border border-white/10 relative"
+            >
               <Image source={{ uri: image }} className="flex-1" resizeMode="contain" />
 
-              {/* Scanning Line Animation */}
               {loading && (
                 <MotiView
-                  from={{ translateY: 0 }}
+                  from={{ translateY: -100 }}
                   animate={{ translateY: 600 }}
                   transition={{
                     loop: true,
                     type: 'timing',
-                    duration: 2500,
+                    duration: 2000,
                   }}
                   style={{
                     position: 'absolute',
                     left: 0,
                     right: 0,
-                    height: 3,
-                    backgroundColor: '#3b82f6',
-                    shadowColor: '#3b82f6',
+                    height: 4,
+                    backgroundColor: Colors.primary.DEFAULT,
+                    shadowColor: Colors.primary.DEFAULT,
                     shadowOffset: { width: 0, height: 0 },
                     shadowOpacity: 1,
-                    shadowRadius: 15,
-                    elevation: 15,
+                    shadowRadius: 20,
+                    elevation: 20,
                     zIndex: 20,
                   }}
                 >
                   <LinearGradient
-                    colors={['transparent', '#3b82f6', 'transparent']}
+                    colors={['transparent', Colors.primary.DEFAULT, 'transparent']}
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
                     style={{ flex: 1 }}
@@ -416,28 +430,33 @@ export default function ReceiptScannerScreen() {
                 </MotiView>
               )}
 
-              {/* Step-by-step Processing Status */}
               {loading && renderStepIndicator()}
-            </View>
+            </MotiView>
 
-            <View className="py-8 space-y-4">
+            <View className="py-10 space-y-4">
               <TouchableOpacity
                 disabled={loading}
                 onPress={uploadAndProcess}
-                className={`h-16 rounded-2xl flex-row items-center justify-center ${loading ? 'bg-slate-800' : 'bg-blue-600'}`}
+                activeOpacity={0.9}
+                className={`h-16 rounded-[24px] flex-row items-center justify-center shadow-lg ${loading ? 'bg-neutral-800' : 'bg-primary shadow-primary/20'}`}
               >
-                <Text className="text-white font-bold text-lg mr-2">
-                  {loading ? 'Đang xử lý...' : 'Tiếp Tục'}
-                </Text>
+                <AtelierTypography variant="h3" color="white" className="mr-3">
+                  {loading ? 'Đang phân tích...' : 'Tiếp tục'}
+                </AtelierTypography>
                 {!loading && <ArrowRight size={20} color="white" />}
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => { resetState(); setImage(null); }}
+                onPress={() => {
+                  resetState();
+                  setImage(null);
+                }}
                 disabled={loading}
                 className="h-12 items-center justify-center"
               >
-                <Text className="text-slate-400 font-medium">Chụp lại</Text>
+                <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">
+                  Chụp lại ảnh khác
+                </AtelierTypography>
               </TouchableOpacity>
             </View>
           </View>

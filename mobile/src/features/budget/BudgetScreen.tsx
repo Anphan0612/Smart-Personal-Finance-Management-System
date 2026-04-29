@@ -1,49 +1,46 @@
-import React, { useState, useMemo } from "react";
-import { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  RefreshControl, 
-  Modal, 
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  Modal,
   TextInput,
   Alert,
-  StyleSheet
-} from "react-native";
-import { MotiView, AnimatePresence } from "moti";
-import { 
-  Target, 
-  Sparkles, 
-  Plus, 
+  StyleSheet,
+} from 'react-native';
+import { MotiView, AnimatePresence } from 'moti';
+import {
+  Target,
+  Sparkles,
+  Plus,
   AlertTriangle,
   TrendingDown,
   X,
   Trash2,
-  ChevronRight,
-  Info
-} from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Slider from "@react-native-community/slider";
-import { useBudgets, useBudgetPlanning, useResetBudget, useUpsertBudget } from "../../hooks/useBudgets";
-import { useCategories } from "../../hooks/useCategories";
-import { formatCurrency } from "../../utils/format";
-import { Skeleton } from "../../components/common/Skeleton";
-import type { BudgetResponse, ThresholdStatus } from "../../types/api";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { renderKey, ID_PREFIX } from "@/utils/id";
+  Info,
+} from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Slider from '@react-native-community/slider';
+import {
+  useBudgets,
+  useBudgetPlanning,
+  useResetBudget,
+  useUpsertBudget,
+} from '../../hooks/useBudgets';
+import { useCategories } from '../../hooks/useCategories';
+import { formatCurrency } from '../../utils/format';
+import type { BudgetResponse, ThresholdStatus } from '../../types/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { renderKey, ID_PREFIX } from '@/utils/id';
+import { AtelierTypography, AtelierCard, SkeletonBox } from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
 const THRESHOLD_COLORS: Record<ThresholdStatus, string> = {
-  COMFORT: "#10b981",
-  PACING: "#f59e0b",
-  DANGER: "#f97316",
-  OVERBUDGET: "#ef4444",
-};
-
-const THRESHOLD_BG: Record<ThresholdStatus, string> = {
-  COMFORT: "bg-[#10b981]",
-  PACING: "bg-[#f59e0b]",
-  DANGER: "bg-[#f97316]",
-  OVERBUDGET: "bg-error",
+  COMFORT: '#10b981', // Success green
+  PACING: '#f59e0b', // Warning amber
+  DANGER: '#f97316', // Danger orange
+  OVERBUDGET: '#ef4444', // Error red
 };
 
 export default function BudgetScreen() {
@@ -51,10 +48,20 @@ export default function BudgetScreen() {
   const now = new Date();
   const [month] = useState(now.getMonth() + 1);
   const [year] = useState(now.getFullYear());
-  
+
   // Data Hooks
-  const { data: budgets, isLoading: isBudgetsLoading, refetch: refetchBudgets } = useBudgets(month, year);
-  const { data: planning, isLoading: isPlanningLoading, refetch: refetchPlanning } = useBudgetPlanning(month, year);
+  const {
+    data: budgets,
+    isLoading: isBudgetsLoading,
+    refetch: refetchBudgets,
+    isRefetching: isRefetchingBudgets,
+  } = useBudgets(month, year);
+  const {
+    data: planning,
+    isLoading: isPlanningLoading,
+    refetch: refetchPlanning,
+    isRefetching: isRefetchingPlanning,
+  } = useBudgetPlanning(month, year);
   const { data: categories } = useCategories();
   const upsertBudget = useUpsertBudget();
   const resetBudget = useResetBudget();
@@ -62,39 +69,41 @@ export default function BudgetScreen() {
   // Component State
   const [isTargetModalVisible, setTargetModalVisible] = useState(false);
   const [isCategoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [tempTarget, setTempTarget] = useState("");
+  const [tempTarget, setTempTarget] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryAmount, setCategoryAmount] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
 
   const isLoading = isBudgetsLoading || isPlanningLoading;
+  const isRefreshing = isRefetchingBudgets || isRefetchingPlanning;
   const totalSpent = budgets?.reduce((s, b) => s + b.currentSpending, 0) ?? 0;
-  
-  // New Calculation: Total Allocated across all categories
+
   const totalAllocated = useMemo(() => {
-    return budgets?.filter(b => b.categoryId !== null).reduce((s, b) => s + b.limitAmount, 0) ?? 0;
+    return (
+      budgets?.filter((b) => b.categoryId !== null).reduce((s, b) => s + b.limitAmount, 0) ?? 0
+    );
   }, [budgets]);
 
-  const targetSpentPct = (planning?.targetSpending ?? 0) > 0 
-    ? Math.min((totalSpent / planning!.targetSpending) * 100, 100) 
-    : 0;
+  const targetSpentPct =
+    (planning?.targetSpending ?? 0) > 0
+      ? Math.min((totalSpent / planning!.targetSpending) * 100, 100)
+      : 0;
 
-  // Mismatch Detection logic
   const isMismatched = planning && totalAllocated > planning.targetSpending;
   const mismatchAmount = isMismatched ? totalAllocated - planning.targetSpending : 0;
 
   const handleReset = () => {
     Alert.alert(
-      "Reset Budget",
-      "Are you sure you want to clear all budget settings for this month? This cannot be undone.",
+      'Đặt lại ngân sách',
+      'Bạn có chắc muốn xóa tất cả thiết lập ngân sách tháng này không? Thao tác này không thể hoàn tác.',
       [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Reset", 
-          style: "destructive",
-          onPress: () => resetBudget.mutate({ month, year })
-        }
-      ]
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Đặt lại',
+          style: 'destructive',
+          onPress: () => resetBudget.mutate({ month, year }),
+        },
+      ],
     );
   };
 
@@ -102,94 +111,106 @@ export default function BudgetScreen() {
     if (!planning || !budgets) return;
     const target = planning.targetSpending;
     const allocated = totalAllocated;
-    
+
     if (allocated <= target) return;
 
     const scalingFactor = target / allocated;
 
     Alert.alert(
-      "Auto Adjust Budgets",
-      `This will proportionally reduce your category budgets to fit within the ${formatCurrency(target)} limit. Proceed?`,
+      'Tự động điều chỉnh',
+      `Hệ thống sẽ giảm tỷ lệ ngân sách các danh mục để khớp với giới hạn ${formatCurrency(target)}. Tiếp tục?`,
       [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Adjust All", 
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Đồng ý',
           onPress: async () => {
             try {
-              // Proportional reduction
               const updates = budgets
-                .filter(b => b.categoryId !== null)
-                .map(b => {
-                  const newAmount = Math.floor((b.limitAmount * scalingFactor) / 10000) * 10000; // Round to 10k
+                .filter((b) => b.categoryId !== null)
+                .map((b) => {
+                  const newAmount = Math.floor((b.limitAmount * scalingFactor) / 10000) * 10000;
                   return upsertBudget.mutateAsync({
                     categoryId: b.categoryId,
                     amount: newAmount,
                     month,
-                    year
+                    year,
                   });
                 });
-              
+
               await Promise.all(updates);
-              Alert.alert("Success", "All category budgets have been adjusted.");
+              Alert.alert('Thành công', 'Ngân sách đã được điều chỉnh tự động.');
             } catch (error) {
-              Alert.alert("Error", "Failed to adjust some budgets. Please try again.");
+              Alert.alert('Lỗi', 'Không thể điều chỉnh một số ngân sách. Vui lòng thử lại.');
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
   const handleSaveTarget = () => {
     const amount = parseFloat(tempTarget);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert("Error", "Please enter a valid amount.");
+      Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ.');
       return;
     }
-    upsertBudget.mutate({
-      categoryId: null,
-      amount,
-      month,
-      year
-    }, {
-      onSuccess: () => setTargetModalVisible(false)
-    });
+    upsertBudget.mutate(
+      {
+        categoryId: null,
+        amount,
+        month,
+        year,
+      },
+      {
+        onSuccess: () => setTargetModalVisible(false),
+      },
+    );
   };
 
   const handleSaveCategoryBudget = () => {
     if (!selectedCategory) return;
-    upsertBudget.mutate({
-      categoryId: selectedCategory,
-      amount: categoryAmount,
-      month,
-      year
-    }, {
-      onSuccess: () => {
-        setCategoryModalVisible(false);
-        setSelectedCategory(null);
-        setCategoryAmount(0);
-      }
-    });
+    upsertBudget.mutate(
+      {
+        categoryId: selectedCategory,
+        amount: categoryAmount,
+        month,
+        year,
+      },
+      {
+        onSuccess: () => {
+          setCategoryModalVisible(false);
+          setSelectedCategory(null);
+          setCategoryAmount(0);
+        },
+      },
+    );
   };
 
   const remainingForSlider = useMemo(() => {
     if (!planning) return 0;
-    // If editing existing budget, the pool is remaining + current limit of that category
-    const existing = budgets?.find(b => b.categoryId === selectedCategory);
+    const existing = budgets?.find((b) => b.categoryId === selectedCategory);
     return (planning.remainingAmount || 0) + (existing?.limitAmount || 0);
   }, [planning, selectedCategory, budgets]);
 
   return (
-    <View className="flex-1 bg-surface">
-      <ScrollView 
+    <View className="flex-1 bg-surface-lowest">
+      <ScrollView
         className="flex-1"
-        contentContainerStyle={{ paddingTop: insets.top + 72, paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{
+          paddingTop: insets.top + 88,
+          paddingHorizontal: 24,
+          paddingBottom: 220,
+        }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl 
-            refreshing={false} 
-            onRefresh={() => { refetchBudgets(); refetchPlanning(); }} 
-            tintColor="#005ab4" 
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => {
+              refetchBudgets();
+              refetchPlanning();
+            }}
+            tintColor={Colors.primary.DEFAULT}
+            colors={[Colors.primary.DEFAULT]}
           />
         }
       >
@@ -200,60 +221,82 @@ export default function BudgetScreen() {
           className="mb-8 flex-row justify-between items-end"
         >
           <View>
-            <Text className="font-headline text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-1">
-              Financial Planning • {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(now)}
-            </Text>
-            <Text className="font-headline font-extrabold text-3xl text-on-surface">Budget Atelier</Text>
+            <AtelierTypography variant="label" className="text-neutral-400 mb-1 uppercase">
+              KẾ HOẠCH TÀI CHÍNH •{' '}
+              {new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' }).format(now)}
+            </AtelierTypography>
+            <AtelierTypography variant="h1" className="text-neutral-900">
+              Ngân sách.
+            </AtelierTypography>
           </View>
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setIsEditing(!isEditing)}
-              className={`px-4 py-2 rounded-full border ${isEditing ? "bg-primary border-primary" : "bg-surface-container-high border-outline/10"}`}
+              className={`px-5 py-2.5 rounded-full border ${isEditing ? 'bg-primary border-primary' : 'bg-white border-neutral-100'}`}
             >
-              <Text className={`text-[10px] font-bold uppercase tracking-wider ${isEditing ? "text-white" : "text-on-surface-variant"}`}>
-                {isEditing ? "Done" : "Edit"}
-              </Text>
+              <AtelierTypography
+                variant="label"
+                color={isEditing ? 'white' : 'neutral'}
+                className="uppercase"
+              >
+                {isEditing ? 'Xong' : 'Sửa'}
+              </AtelierTypography>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleReset}
-              className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+              className="w-12 h-12 rounded-2xl bg-white border border-neutral-100 items-center justify-center shadow-atelier-low"
             >
-              <Trash2 size={22} color="#ef4444" />
+              <Trash2 size={20} color={Colors.error} />
             </TouchableOpacity>
           </View>
         </MotiView>
-        
+
         {/* Mismatch Alert Section */}
         <AnimatePresence>
           {isMismatched && (
             <MotiView
               key="budget-mismatch-alert"
-              from={{ opacity: 0, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, height: 'auto', marginBottom: 32 }}
-              exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-              className="bg-error/10 p-6 rounded-[32px] border border-error/20"
+              from={{ opacity: 0, height: 0, scale: 0.8 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.8 }}
+              className="mb-8 overflow-hidden"
             >
-              <View className="flex-row items-center gap-3 mb-3">
-                <AlertTriangle size={20} color="#ef4444" />
-                <Text className="font-headline font-bold text-error text-[15px]">Budget Conflict</Text>
-              </View>
-              <Text className="text-xs text-on-surface-variant leading-5 font-medium mb-5">
-                Your total category budgets ({formatCurrency(totalAllocated)}) exceed your monthly target ({formatCurrency(planning?.targetSpending || 0)}) by <Text className="text-error font-bold">{formatCurrency(mismatchAmount)}</Text>.
-              </Text>
-              <View className="flex-row gap-3">
-                <TouchableOpacity 
-                   onPress={handleAutoAdjust}
-                   className="flex-1 bg-error py-3 rounded-full items-center justify-center"
-                >
-                  <Text className="text-white font-bold text-[10px] uppercase tracking-wider">Auto Adjust</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                   onPress={() => Alert.alert("Manual Adjust", "Please decrease limits on specific categories below.")}
-                   className="flex-1 bg-surface-container-high py-3 rounded-full items-center justify-center"
-                >
-                  <Text className="text-on-surface font-bold text-[10px] uppercase tracking-wider">Review Categories</Text>
-                </TouchableOpacity>
-              </View>
+              <AtelierCard variant="elevated" padding="md" className="bg-red-50">
+                <View className="flex-row items-center gap-2 mb-2">
+                  <AlertTriangle size={20} color={Colors.error} />
+                  <AtelierTypography variant="h3" className="text-red-700">
+                    Xung đột ngân sách
+                  </AtelierTypography>
+                </View>
+                <AtelierTypography variant="body" className="text-red-600 mb-6">
+                  Tổng ngân sách danh mục ({formatCurrency(totalAllocated)}) vượt quá mục tiêu chi
+                  tiêu tháng ({formatCurrency(planning?.targetSpending || 0)}) tới{' '}
+                  {formatCurrency(mismatchAmount)}.
+                </AtelierTypography>
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    onPress={handleAutoAdjust}
+                    className="flex-1 bg-red-600 py-3.5 rounded-2xl items-center justify-center shadow-lg shadow-red-200"
+                  >
+                    <AtelierTypography variant="label" color="white" className="uppercase">
+                      Tự điều chỉnh
+                    </AtelierTypography>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        'Điều chỉnh thủ công',
+                        'Vui lòng giảm giới hạn ngân sách ở các danh mục bên dưới.',
+                      )
+                    }
+                    className="flex-1 bg-white border border-red-200 py-3.5 rounded-2xl items-center justify-center"
+                  >
+                    <AtelierTypography variant="label" className="text-red-600 uppercase">
+                      Xem xét lại
+                    </AtelierTypography>
+                  </TouchableOpacity>
+                </View>
+              </AtelierCard>
             </MotiView>
           )}
         </AnimatePresence>
@@ -262,46 +305,69 @@ export default function BudgetScreen() {
         <MotiView
           from={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring" }}
+          transition={{ type: 'spring' }}
           className="mb-8"
         >
           <LinearGradient
-            colors={["#005ab4", "#0873df"]}
+            colors={['#1275e2', '#0d5bb8']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="p-8 rounded-[32px] shadow-lg shadow-primary/20"
+            className="p-8 rounded-[40px] shadow-2xl shadow-primary/20"
           >
             {isLoading ? (
               <View>
-                <Skeleton width={140} height={16} radius={8} style={{ backgroundColor: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
-                <Skeleton width={220} height={40} radius={8} style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
+                <SkeletonBox width={140} height={16} radius={8} className="bg-white/20 mb-3" />
+                <SkeletonBox width={220} height={40} radius={8} className="bg-white/20" />
               </View>
             ) : (
               <>
-                <View className="flex-row justify-between items-start mb-4">
+                <View className="flex-row justify-between items-start mb-6">
                   <View className="flex-1">
-                    <Text className="text-white/80 font-medium text-xs mb-1">Monthly Spending Target</Text>
-                    <TouchableOpacity onPress={() => { setTempTarget(planning?.targetSpending?.toString() || ""); setTargetModalVisible(true); }}>
-                      <Text className="text-white font-headline font-extrabold text-4xl mt-1 tracking-tighter">
-                        {planning?.targetSpending ? formatCurrency(planning.targetSpending) : "Set Target"}
-                      </Text>
+                    <AtelierTypography
+                      variant="label"
+                      color="white"
+                      className="opacity-90 mb-2 font-semibold"
+                    >
+                      MỤC TIÊU CHI TIÊU THÁNG
+                    </AtelierTypography>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setTempTarget(planning?.targetSpending?.toString() || '');
+                        setTargetModalVisible(true);
+                      }}
+                    >
+                      <AtelierTypography
+                        variant="h1"
+                        color="white"
+                        className="text-4xl tracking-tighter font-bold"
+                      >
+                        {planning?.targetSpending
+                          ? formatCurrency(planning.targetSpending)
+                          : 'Đặt mục tiêu'}
+                      </AtelierTypography>
                     </TouchableOpacity>
                   </View>
-                  <View className="items-end bg-white/20 px-3 py-1.5 rounded-2xl">
-                    <Text className="text-white/80 font-bold text-[10px] uppercase tracking-wider">Unallocated</Text>
-                    <Text className="text-white font-bold text-md">
+                  <View className="bg-white/25 px-3 py-1 rounded-2xl">
+                    <AtelierTypography
+                      variant="label"
+                      color="white"
+                      className="text-[10px] opacity-90 uppercase font-semibold"
+                    >
+                      CHƯA PHÂN BỔ
+                    </AtelierTypography>
+                    <AtelierTypography variant="h3" color="white" className="font-bold">
                       {formatCurrency(planning?.remainingAmount ?? 0)}
-                    </Text>
+                    </AtelierTypography>
                   </View>
                 </View>
 
-                {/* TARGET SLIDER INSIDE CARD */}
+                {/* Slider Component with tokens */}
                 <View className="mb-6">
-                   <Slider
-                    style={{ width: '100%', height: 32 }}
+                  <Slider
+                    style={{ width: '100%', height: 40 }}
                     minimumValue={5000000}
                     maximumValue={100000000}
-                    step={500000}
+                    step={1000000}
                     value={planning?.targetSpending || 15000000}
                     onSlidingComplete={(val) => {
                       upsertBudget.mutate({ categoryId: null, amount: val, month, year });
@@ -311,30 +377,42 @@ export default function BudgetScreen() {
                     thumbTintColor="#ffffff"
                   />
                   <View className="flex-row justify-between px-1">
-                    <Text className="text-white/50 text-[10px] font-bold">5M</Text>
-                    <Text className="text-white/50 text-[10px] font-bold">100M</Text>
+                    <AtelierTypography variant="caption" color="white" className="opacity-50">
+                      5M
+                    </AtelierTypography>
+                    <AtelierTypography variant="caption" color="white" className="opacity-50">
+                      100M
+                    </AtelierTypography>
                   </View>
                 </View>
 
-                {/* Progress Bar of Target vs Actual Spent */}
-                <View className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                  <MotiView 
-                    from={{ width: "0%" }}
+                {/* Progress Bar */}
+                <View className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
+                  <MotiView
+                    from={{ width: '0%' }}
                     animate={{ width: `${targetSpentPct}%` }}
-                    transition={{ delay: 500, type: "timing", duration: 1000 }}
-                    className="h-full bg-white rounded-full" 
+                    transition={{ delay: 500, type: 'timing', duration: 1000 }}
+                    className="h-full bg-white rounded-full"
                   />
                 </View>
                 <View className="flex-row justify-between mt-4">
                   <View className="flex-row items-center gap-2">
-                    <Sparkles size={12} color="white" />
-                    <Text className="text-white/70 text-[10px] font-bold">
-                      {formatCurrency(totalSpent)} spent out of target
-                    </Text>
+                    <Sparkles size={14} color="white" />
+                    <AtelierTypography
+                      variant="label"
+                      color="white"
+                      className="opacity-90 font-semibold"
+                    >
+                      Đã chi {formatCurrency(totalSpent)}
+                    </AtelierTypography>
                   </View>
-                  <Text className="text-white/70 text-[10px] font-bold">
-                    {targetSpentPct.toFixed(0)}% Utilized
-                  </Text>
+                  <AtelierTypography
+                    variant="label"
+                    color="white"
+                    className="opacity-90 font-semibold"
+                  >
+                    {targetSpentPct.toFixed(0)}% Đạt được
+                  </AtelierTypography>
                 </View>
               </>
             )}
@@ -344,226 +422,305 @@ export default function BudgetScreen() {
         {/* Allocated Budgets Section */}
         <View className="mb-10">
           <View className="flex-row justify-between items-center mb-6">
-            <Text className="font-headline font-bold text-xl text-on-surface">Allocated</Text>
-            <TouchableOpacity 
+            <AtelierTypography variant="h2">Phân bổ</AtelierTypography>
+            <TouchableOpacity
               onPress={() => {
                 if (!planning?.targetSpending) {
-                  Alert.alert("No Target", "Please set a Monthly Spending Target first.");
+                  Alert.alert(
+                    'Chưa có mục tiêu',
+                    'Vui lòng đặt Mục tiêu chi tiêu hàng tháng trước.',
+                  );
                   return;
                 }
                 if (planning.remainingAmount <= 0) {
-                  Alert.alert("Limit Reached", "You have no remaining funds to allocate. Increase your target spending or reduce other budgets.");
+                  Alert.alert(
+                    'Hết hạn mức',
+                    'Bạn không còn ngân sách trống để phân bổ. Hãy tăng mục tiêu chi tiêu hoặc giảm bớt các ngân sách khác.',
+                  );
                   return;
                 }
                 setCategoryModalVisible(true);
               }}
-              className="flex-row items-center gap-2 bg-primary/10 px-4 py-2 rounded-full"
+              className="flex-row items-center gap-2 bg-primary/10 px-4 py-2 rounded-2xl"
             >
-              <Plus size={16} color="#005ab4" />
-              <Text className="text-primary font-bold text-xs text-center">Add Category</Text>
+              <Plus size={16} color={Colors.primary.DEFAULT} />
+              <AtelierTypography variant="label" className="text-primary font-bold">
+                Thêm danh mục
+              </AtelierTypography>
             </TouchableOpacity>
           </View>
 
           <View className="gap-4">
             {isLoading ? (
-              [1, 2, 3].map(i => <Skeleton key={i} width="100%" height={90} radius={24} />)
-            ) : !budgets || budgets.filter(b => b.categoryId != null).length === 0 ? (
-              <View className="bg-white p-10 rounded-[32px] border border-dashed border-outline/30 items-center justify-center">
-                <View className="w-16 h-16 bg-surface-container rounded-full items-center justify-center mb-4">
-                  <Target size={32} color="#9ca3af" />
+              [1, 2, 3].map((i) => (
+                <SkeletonBox key={i} width="100%" height={90} radius={28} className="mb-2" />
+              ))
+            ) : !budgets || budgets.filter((b) => b.categoryId != null).length === 0 ? (
+              <AtelierCard variant="elevated" className="p-10 bg-white items-center justify-center">
+                <View className="w-16 h-16 bg-neutral-50 rounded-full items-center justify-center mb-4">
+                  <Target size={32} color={Colors.neutral[300]} />
                 </View>
-                <Text className="text-on-surface-variant font-bold text-sm text-center mb-2">No category budgets set</Text>
-                <Text className="text-on-surface-variant/60 text-xs text-center">Break down your {formatCurrency(planning?.targetSpending || 0)} into specific goals.</Text>
-              </View>
+                <AtelierTypography variant="h3" className="text-neutral-400 text-center mb-1">
+                  Chưa phân bổ ngân sách
+                </AtelierTypography>
+                <AtelierTypography
+                  variant="body"
+                  className="text-neutral-400/60 text-xs text-center"
+                >
+                  Hãy chia nhỏ {formatCurrency(planning?.targetSpending || 0)} thành các mục tiêu cụ
+                  thể.
+                </AtelierTypography>
+              </AtelierCard>
             ) : (
-              budgets.filter(b => b.categoryId != null).map((item, idx) => {
-                const pct = Math.min(item.percentageUsed, 100);
-                const status = item.thresholdStatus as ThresholdStatus;
-                const barColor = THRESHOLD_BG[status] || "bg-primary";
-                const statusColor = THRESHOLD_COLORS[status] || "#005ab4";
+              budgets
+                .filter((b) => b.categoryId != null)
+                .map((item, idx) => {
+                  const pct = Math.min(item.percentageUsed, 100);
+                  const status = item.thresholdStatus as ThresholdStatus;
+                  const statusColor = THRESHOLD_COLORS[status] || Colors.primary.DEFAULT;
+                  const categoryKey = renderKey(
+                    ID_PREFIX.CATEGORY,
+                    (item.id || item.categoryId)!,
+                    idx,
+                  );
 
-                const categoryKey = renderKey(ID_PREFIX.CATEGORY, (item.id || item.categoryId)!, idx);
-
-                return (
-                  <TouchableOpacity
-                    key={categoryKey}
-                    onPress={() => {
-                      setSelectedCategory(item.categoryId);
-                      setCategoryAmount(item.limitAmount);
-                      setCategoryModalVisible(true);
-                    }}
-                  >
-                    <MotiView
-                      from={{ opacity: 0, translateY: 10 }}
-                      animate={{ opacity: 1, translateY: 0 }}
-                      transition={{ delay: 100 * idx }}
-                      className="bg-white p-5 rounded-[28px] shadow-sm border border-outline/5"
+                  return (
+                    <TouchableOpacity
+                      key={categoryKey}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedCategory(item.categoryId);
+                        setCategoryAmount(item.limitAmount);
+                        setCategoryModalVisible(true);
+                      }}
                     >
-                      <View className="flex-row justify-between items-center mb-3">
-                        <View className="flex-row items-center gap-3">
-                          <View 
-                            className="w-10 h-10 rounded-full items-center justify-center"
-                            style={{ backgroundColor: `${statusColor}15` }}
-                          >
-                             <Target size={20} color={statusColor} />
+                      <AtelierCard padding="md" className="bg-white shadow-atelier-low">
+                        <View className="flex-row justify-between items-center mb-4">
+                          <View className="flex-row items-center gap-4">
+                            <View
+                              className="w-12 h-12 rounded-2xl items-center justify-center"
+                              style={{ backgroundColor: `${statusColor}10` }}
+                            >
+                              <Target size={22} color={statusColor} />
+                            </View>
+                            <View>
+                              <AtelierTypography variant="h3">
+                                {item.categoryName}
+                              </AtelierTypography>
+                              <AtelierTypography
+                                variant="label"
+                                className="text-neutral-400 text-[10px] uppercase"
+                              >
+                                Đã tiêu {formatCurrency(item.currentSpending)}
+                              </AtelierTypography>
+                            </View>
                           </View>
-                          <View>
-                            <Text className="font-headline font-bold text-on-surface text-[15px]">{item.categoryName}</Text>
-                            <Text className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                              {formatCurrency(item.currentSpending)} spent
-                            </Text>
+                          <View className="items-end">
+                            <AtelierTypography variant="h3">
+                              {formatCurrency(item.limitAmount)}
+                            </AtelierTypography>
+                            <AtelierTypography
+                              variant="label"
+                              className="text-neutral-400 text-[10px] uppercase"
+                            >
+                              GIỚI HẠN
+                            </AtelierTypography>
                           </View>
                         </View>
-                        <View className="items-end">
-                          <Text className="font-bold text-on-surface text-sm">{formatCurrency(item.limitAmount)}</Text>
-                          <Text className="text-[10px] font-bold text-on-surface-variant uppercase">LIMIT</Text>
-                        </View>
-                      </View>
-                      
-                      <View className="w-full h-2 bg-surface-container rounded-full overflow-hidden">
-                        <View 
-                          className={`h-full rounded-full ${barColor}`} 
-                          style={{ width: `${pct}%` }}
-                        />
-                      </View>
-                      
-                      {isEditing ? (
-                        <MotiView
-                          from={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="mt-4 pt-4 border-t border-surface-container"
-                        >
-                           <Slider
-                            style={{ width: '100%', height: 32 }}
-                            minimumValue={0}
-                            maximumValue={item.limitAmount + (planning?.remainingAmount || 0)}
-                            step={100000}
-                            value={item.limitAmount}
-                            onSlidingComplete={(val) => {
-                              upsertBudget.mutate({ 
-                                categoryId: item.categoryId, 
-                                amount: val, 
-                                month, 
-                                year 
-                              });
-                            }}
-                            minimumTrackTintColor={statusColor}
-                            maximumTrackTintColor="#f2f3fd"
-                            thumbTintColor={statusColor}
+
+                        <View className="w-full h-2 bg-neutral-50 rounded-full overflow-hidden">
+                          <View
+                            className="h-full rounded-full"
+                            style={{ width: `${pct}%`, backgroundColor: statusColor }}
                           />
-                          <View className="flex-row justify-between px-1">
-                            <Text className="text-[8px] font-bold text-on-surface-variant">0</Text>
-                            <Text className="text-[8px] font-bold text-on-surface-variant">
-                              MAX: {formatCurrency(item.limitAmount + (planning?.remainingAmount || 0))}
-                            </Text>
-                          </View>
-                        </MotiView>
-                      ) : (
-                        <View className="flex-row justify-between mt-2">
-                           <Text className="text-[10px] font-bold text-on-surface-variant">{pct.toFixed(0)}% Used</Text>
-                           {item.remainingAmount < 0 && (
-                             <Text className="text-error text-[10px] font-bold">Over by {formatCurrency(Math.abs(item.remainingAmount))}</Text>
-                           )}
                         </View>
-                      )}
-                    </MotiView>
-                  </TouchableOpacity>
-                );
-              })
+
+                        {isEditing ? (
+                          <MotiView
+                            from={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-4 pt-4 border-t border-neutral-50"
+                          >
+                            <Slider
+                              style={{ width: '100%', height: 40 }}
+                              minimumValue={0}
+                              maximumValue={item.limitAmount + (planning?.remainingAmount || 0)}
+                              step={500000}
+                              value={item.limitAmount}
+                              onSlidingComplete={(val) => {
+                                upsertBudget.mutate({
+                                  categoryId: item.categoryId,
+                                  amount: val,
+                                  month,
+                                  year,
+                                });
+                              }}
+                              minimumTrackTintColor={statusColor}
+                              maximumTrackTintColor="#f0f0f5"
+                              thumbTintColor={statusColor}
+                            />
+                            <View className="flex-row justify-between px-1">
+                              <AtelierTypography variant="caption" className="text-neutral-400">
+                                0
+                              </AtelierTypography>
+                              <AtelierTypography variant="caption" className="text-neutral-400">
+                                MAX:{' '}
+                                {formatCurrency(
+                                  item.limitAmount + (planning?.remainingAmount || 0),
+                                )}
+                              </AtelierTypography>
+                            </View>
+                          </MotiView>
+                        ) : (
+                          <View className="flex-row justify-between mt-3">
+                            <AtelierTypography
+                              variant="label"
+                              className="text-neutral-400 font-bold"
+                            >
+                              {pct.toFixed(0)}% Đã sử dụng
+                            </AtelierTypography>
+                            {item.remainingAmount < 0 && (
+                              <AtelierTypography variant="label" className="text-error font-bold">
+                                Vượt {formatCurrency(Math.abs(item.remainingAmount))}
+                              </AtelierTypography>
+                            )}
+                          </View>
+                        )}
+                      </AtelierCard>
+                    </TouchableOpacity>
+                  );
+                })
             )}
           </View>
         </View>
 
         {/* Tips Section */}
-        <MotiView
-           from={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           className="bg-primary/5 p-6 rounded-[32px] border border-primary/10"
-        >
+        <AtelierCard padding="md" className="bg-primary/5">
           <View className="flex-row items-center gap-3 mb-2">
-            <Info size={18} color="#005ab4" />
-            <Text className="font-headline font-bold text-primary text-sm">Smart Tip</Text>
+            <Info size={18} color={Colors.primary.DEFAULT} />
+            <AtelierTypography variant="h3" className="text-primary text-sm">
+              Mẹo thông minh
+            </AtelierTypography>
           </View>
-          <Text className="text-xs text-on-surface-variant leading-5 font-medium">
-             Your budgets are constrained by your Monthly Target. This helps you ensure you don't over-allocate money you don't have.
-          </Text>
-        </MotiView>
+          <AtelierTypography variant="body" className="text-neutral-600 text-xs">
+            Ngân sách các danh mục bị giới hạn bởi Mục tiêu tổng hàng tháng. Điều này giúp bạn đảm
+            bảo không phân bổ quá số tiền mình có.
+          </AtelierTypography>
+        </AtelierCard>
       </ScrollView>
 
       {/* --- MODALS --- */}
 
       {/* Target Spending Modal */}
       <Modal visible={isTargetModalVisible} transparent animationType="fade">
-        <View className="flex-1 bg-black/60 justify-end">
-          <MotiView 
-            from={{ translateY: 300 }}
+        <View className="flex-1 bg-black/50 justify-end">
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setTargetModalVisible(false)}
+            className="flex-1"
+          />
+          <MotiView
+            from={{ translateY: 400 }}
             animate={{ translateY: 0 }}
             className="bg-white rounded-t-[40px] p-8 pb-12"
           >
             <View className="flex-row justify-between items-center mb-8">
-              <Text className="font-headline font-extrabold text-2xl">Spending Target</Text>
+              <AtelierTypography variant="h2">Mục tiêu chi tiêu</AtelierTypography>
               <TouchableOpacity
                 onPress={() => setTargetModalVisible(false)}
-                className="w-12 h-12 items-center justify-center bg-surface-container rounded-full"
+                className="w-12 h-12 items-center justify-center bg-neutral-50 rounded-2xl"
               >
-                <X size={24} color="#000" />
+                <X size={22} color={Colors.neutral[900]} />
               </TouchableOpacity>
             </View>
-            
-            <Text className="text-on-surface-variant font-medium text-sm mb-4">Set your total spending limit for this month.</Text>
-            
-            <View className="bg-surface-container rounded-[24px] p-6 mb-8">
+
+            <AtelierTypography variant="body" className="text-neutral-500 mb-6 px-1">
+              Tùy chỉnh giới hạn chi tiêu tổng của bạn trong tháng này.
+            </AtelierTypography>
+
+            <View className="bg-neutral-50 rounded-[32px] p-8 mb-8 border border-neutral-100">
               <TextInput
                 value={tempTarget}
                 onChangeText={setTempTarget}
-                placeholder="Enter amount (e.g. 10000000)"
+                placeholder="Ví dụ: 15,000,000"
                 keyboardType="numeric"
-                className="font-headline font-bold text-3xl text-primary text-center"
+                className="font-headline font-bold text-4xl text-primary text-center"
                 autoFocus
+                placeholderTextColor={Colors.neutral[200]}
               />
-              <Text className="text-center text-[10px] font-bold text-on-surface-variant mt-2 uppercase">Amount in VNĐ</Text>
+              <AtelierTypography
+                variant="label"
+                className="text-center text-neutral-400 mt-4 uppercase"
+              >
+                SỐ TIỀN (VNĐ)
+              </AtelierTypography>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleSaveTarget}
-              className="bg-primary py-5 rounded-[24px] items-center"
+              activeOpacity={0.8}
+              className="bg-primary py-5 rounded-[24px] items-center shadow-xl shadow-primary/25"
             >
-              <Text className="text-white font-bold text-lg text-center">Define Target</Text>
+              <AtelierTypography variant="h3" color="white">
+                Xác nhận mục tiêu
+              </AtelierTypography>
             </TouchableOpacity>
           </MotiView>
         </View>
       </Modal>
 
-      {/* Category Budget Modal with Slider */}
+      {/* Category Budget Modal */}
       <Modal visible={isCategoryModalVisible} transparent animationType="fade">
-        <View className="flex-1 bg-black/60 justify-end">
-          <MotiView 
-            from={{ translateY: 400 }}
+        <View className="flex-1 bg-black/50 justify-end">
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => {
+              setCategoryModalVisible(false);
+              setSelectedCategory(null);
+            }}
+            className="flex-1"
+          />
+          <MotiView
+            from={{ translateY: 500 }}
             animate={{ translateY: 0 }}
             className="bg-white rounded-t-[40px] p-8 pb-12"
           >
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="font-headline font-extrabold text-2xl">Allocate Budget</Text>
+            <View className="flex-row justify-between items-center mb-8">
+              <AtelierTypography variant="h2">Phân bổ ngân sách</AtelierTypography>
               <TouchableOpacity
-                onPress={() => { setCategoryModalVisible(false); setSelectedCategory(null); }}
-                className="w-12 h-12 items-center justify-center bg-surface-container rounded-full"
+                onPress={() => {
+                  setCategoryModalVisible(false);
+                  setSelectedCategory(null);
+                }}
+                className="w-12 h-12 items-center justify-center bg-neutral-50 rounded-2xl"
               >
-                <X size={24} color="#000" />
+                <X size={22} color={Colors.neutral[900]} />
               </TouchableOpacity>
             </View>
 
-            {/* Category Selector if New */}
+            {/* Category Selector */}
             {!selectedCategory && (
-              <View className="mb-6">
-                <Text className="font-bold text-xs text-on-surface-variant uppercase mb-3 px-2">Select Category</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-grow-0">
-                  {categories?.map(cat => (
-                    <TouchableOpacity 
+              <View className="mb-8">
+                <AtelierTypography variant="label" className="text-neutral-400 uppercase mb-4 px-1">
+                  CHỌN DANH MỤC
+                </AtelierTypography>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="flex-grow-0"
+                >
+                  {categories?.map((cat) => (
+                    <TouchableOpacity
                       key={cat.id}
                       onPress={() => setSelectedCategory(cat.id)}
-                      className={`mr-3 px-6 py-3 rounded-full border ${selectedCategory === cat.id ? "bg-primary border-primary" : "bg-white border-outline/20"}`}
+                      className={`mr-3 px-6 py-3 rounded-2xl border ${selectedCategory === cat.id ? 'bg-primary border-primary' : 'bg-white border-neutral-100'}`}
                     >
-                      <Text className={`font-bold text-xs ${selectedCategory === cat.id ? "text-white" : "text-on-surface"}`}>{cat.name}</Text>
+                      <AtelierTypography
+                        variant="h3"
+                        color={selectedCategory === cat.id ? 'white' : 'neutral'}
+                      >
+                        {cat.name}
+                      </AtelierTypography>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -572,56 +729,63 @@ export default function BudgetScreen() {
 
             {selectedCategory && (
               <View>
-                <View className="flex-row justify-between items-center mb-2 px-2">
-                   <Text className="font-bold text-sm text-on-surface">Budget Limit</Text>
-                   <Text className="font-headline font-bold text-xl text-primary">{formatCurrency(categoryAmount)}</Text>
+                <View className="flex-row justify-between items-center mb-4 px-1">
+                  <AtelierTypography variant="h3">Hạn mức ngân sách</AtelierTypography>
+                  <AtelierTypography variant="h2" className="text-primary">
+                    {formatCurrency(categoryAmount)}
+                  </AtelierTypography>
                 </View>
 
-                {/* SLIDER COMPONENT */}
+                {/* SLIDER */}
                 <View className="my-8">
                   <Slider
                     style={{ width: '100%', height: 40 }}
                     minimumValue={0}
                     maximumValue={remainingForSlider}
-                    step={100000} // Unit of 100k
+                    step={100000}
                     value={categoryAmount}
                     onValueChange={setCategoryAmount}
-                    minimumTrackTintColor="#005ab4"
-                    maximumTrackTintColor="#e2e8f0"
-                    thumbTintColor="#005ab4"
+                    minimumTrackTintColor={Colors.primary.DEFAULT}
+                    maximumTrackTintColor="#f0f0f5"
+                    thumbTintColor={Colors.primary.DEFAULT}
                   />
                   <View className="flex-row justify-between px-2 mt-2">
-                    <Text className="text-[10px] font-bold text-on-surface-variant">0</Text>
-                    <Text className="text-[10px] font-bold text-on-surface-variant">Max: {formatCurrency(remainingForSlider)}</Text>
+                    <AtelierTypography variant="caption" className="text-neutral-400">
+                      0
+                    </AtelierTypography>
+                    <AtelierTypography variant="caption" className="text-neutral-400">
+                      Tối đa: {formatCurrency(remainingForSlider)}
+                    </AtelierTypography>
                   </View>
                 </View>
 
                 {/* PRESETS */}
-                <View className="flex-row gap-2 mb-8 px-2">
-                   {[0.25, 0.5, 1].map(factor => {
-                     const val = Math.floor(remainingForSlider * factor / 100000) * 100000;
-                     return (
-                       <TouchableOpacity 
-                         key={factor}
-                         onPress={() => setCategoryAmount(val)}
-                         className="flex-1 bg-surface-container py-3 rounded-2xl items-center border border-outline/5"
-                       >
-                         <Text className="text-[10px] font-bold text-primary uppercase">
-                           {factor === 1 ? "Max" : `${factor * 100}%`}
-                         </Text>
-                       </TouchableOpacity>
-                     );
-                   })}
+                <View className="flex-row gap-3 mb-10 px-1">
+                  {[0.25, 0.5, 1].map((factor) => {
+                    const val = Math.floor((remainingForSlider * factor) / 100000) * 100000;
+                    return (
+                      <TouchableOpacity
+                        key={factor}
+                        onPress={() => setCategoryAmount(val)}
+                        className="flex-1 bg-neutral-50 py-4 rounded-2xl items-center border border-neutral-100"
+                      >
+                        <AtelierTypography variant="label" className="text-primary uppercase">
+                          {factor === 1 ? 'Max' : `${factor * 100}%`}
+                        </AtelierTypography>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handleSaveCategoryBudget}
                   disabled={categoryAmount <= 0}
-                  className={`py-5 rounded-[24px] items-center ${categoryAmount <= 0 ? "bg-surface-container" : "bg-primary"}`}
+                  activeOpacity={0.8}
+                  className={`py-5 rounded-[24px] items-center shadow-xl ${categoryAmount <= 0 ? 'bg-neutral-100' : 'bg-primary shadow-primary/25'}`}
                 >
-                  <Text className={`font-bold text-lg ${categoryAmount <= 0 ? "text-on-surface-variant" : "text-white"}`}>
-                    Apply Budget
-                  </Text>
+                  <AtelierTypography variant="h3" color={categoryAmount <= 0 ? 'neutral' : 'white'}>
+                    Áp dụng ngân sách
+                  </AtelierTypography>
                 </TouchableOpacity>
               </View>
             )}
@@ -636,5 +800,5 @@ const styles = StyleSheet.create({
   slider: {
     width: '100%',
     height: 40,
-  }
+  },
 });

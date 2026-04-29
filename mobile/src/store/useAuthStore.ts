@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import * as SecureStore from "expo-secure-store";
+import { create } from 'zustand';
+import * as SecureStore from 'expo-secure-store';
 
 interface AuthState {
   token: string | null;
@@ -11,7 +11,7 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
-const TOKEN_KEY = "auth_token";
+const TOKEN_KEY = 'auth_token';
 
 export const useAuthStore = create<AuthState>()((set) => ({
   token: null,

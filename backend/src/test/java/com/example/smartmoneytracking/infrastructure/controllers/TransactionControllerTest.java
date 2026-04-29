@@ -23,7 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,7 +80,7 @@ class TransactionControllerTest {
                     .walletId("wallet-1")
                     .amount(new BigDecimal("-100"))
                     .type(TransactionType.EXPENSE)
-                    .transactionDate(LocalDateTime.now().minusDays(1))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")
@@ -101,7 +103,7 @@ class TransactionControllerTest {
                     {
                         "walletId": "wallet-1",
                         "type": "EXPENSE",
-                        "transactionDate": "2025-01-01T10:00:00"
+                        "transactionDate": "2025-01-01T10:00:00.000Z"
                     }
                     """;
 
@@ -122,7 +124,7 @@ class TransactionControllerTest {
                     .walletId("")
                     .amount(new BigDecimal("100"))
                     .type(TransactionType.EXPENSE)
-                    .transactionDate(LocalDateTime.now().minusDays(1))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")
@@ -142,7 +144,7 @@ class TransactionControllerTest {
                     .walletId("wallet-1")
                     .amount(new BigDecimal("100"))
                     .type(TransactionType.EXPENSE)
-                    .transactionDate(LocalDateTime.now().plusYears(5))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).plusYears(5).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")
@@ -211,7 +213,7 @@ class TransactionControllerTest {
                     .categoryId("invalid-cat-id")
                     .amount(new BigDecimal("100"))
                     .type(TransactionType.INCOME)
-                    .transactionDate(LocalDateTime.now().minusDays(1))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")
@@ -235,7 +237,7 @@ class TransactionControllerTest {
                     .walletId("non-existent-wallet")
                     .amount(new BigDecimal("100"))
                     .type(TransactionType.INCOME)
-                    .transactionDate(LocalDateTime.now().minusDays(1))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")
@@ -258,7 +260,7 @@ class TransactionControllerTest {
                     .walletId("wallet-1")
                     .amount(new BigDecimal("999999"))
                     .type(TransactionType.EXPENSE)
-                    .transactionDate(LocalDateTime.now().minusDays(1))
+                    .transactionDate(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1).truncatedTo(ChronoUnit.MILLIS))
                     .build();
 
             mockMvc.perform(post("/api/v1/transactions")

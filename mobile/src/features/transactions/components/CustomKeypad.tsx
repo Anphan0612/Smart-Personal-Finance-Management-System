@@ -42,7 +42,11 @@ export const CustomKeypad = ({ onPress, onDelete }: CustomKeypadProps) => {
               <MotiView
                 from={{ opacity: 0, translateY: 10 }}
                 animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: 'timing', duration: 300, delay: (rowIndex * 3 + row.indexOf(button)) * 20 }}
+                transition={{
+                  type: 'timing',
+                  duration: 300,
+                  delay: (rowIndex * 3 + row.indexOf(button)) * 20,
+                }}
                 className="bg-white h-[72px] rounded-[24px] items-center justify-center"
                 style={{
                   shadowColor: '#171c1f',

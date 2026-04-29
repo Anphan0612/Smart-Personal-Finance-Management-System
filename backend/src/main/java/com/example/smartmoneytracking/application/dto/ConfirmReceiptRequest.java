@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class ConfirmReceiptRequest {
@@ -20,7 +20,8 @@ public class ConfirmReceiptRequest {
     @NotNull
     private BigDecimal amount;
     
-    private LocalDateTime transactionDate;
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    private OffsetDateTime transactionDate;
     
     private String description;
 }

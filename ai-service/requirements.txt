@@ -17,3 +17,4 @@ opencv-python-headless
 paddleocr==2.8.1
 paddlepaddle-gpu
 python-dotenv
+accelerate>=0.26.0

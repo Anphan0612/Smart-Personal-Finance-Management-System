@@ -41,7 +41,7 @@ public class UpdateWalletUseCase {
         if (request.getBankName() != null || request.getAccountNumber() != null || request.getBranch() != null) {
             wallet.updateBankDetails(request.getBankName(), request.getAccountNumber(), request.getBranch());
         }
-        // wallet.setUpdatedAt(LocalDateTime.now()); handled by @PreUpdate
+        // wallet.setUpdatedAt(OffsetDateTime.now()); handled by @PreUpdate
 
         Wallet savedWallet = walletRepository.save(wallet);
 
@@ -57,6 +57,7 @@ public class UpdateWalletUseCase {
                 .accountNumber(savedWallet.getAccountNumber())
                 .branch(savedWallet.getBranch())
                 .createdAt(savedWallet.getCreatedAt())
+                .updatedAt(savedWallet.getUpdatedAt())
                 .build();
     }
 }

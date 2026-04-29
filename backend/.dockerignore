@@ -1,0 +1,10 @@
+.git
+.idea
+.vscode
+target/
+*.class
+*.jar
+*.war
+.mvn
+mvnw
+mvnw.cmd

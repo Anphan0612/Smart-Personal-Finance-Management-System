@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
@@ -57,15 +57,15 @@ public class GetBudgetSummaryUseCase {
         ZonedDateTime localStart = resolvedYm.atDay(1).atStartOfDay(zoneId);
         ZonedDateTime localEnd = resolvedYm.atEndOfMonth().atTime(LocalTime.MAX).atZone(zoneId);
 
-        final LocalDateTime startUtc = DateUtils.toUtc(localStart);
-        final LocalDateTime endUtc = DateUtils.toUtc(localEnd);
+        final OffsetDateTime startUtc = DateUtils.toUtc(localStart);
+        final OffsetDateTime endUtc = DateUtils.toUtc(localEnd);
 
         return budgets.stream()
                 .map(budget -> calculateProgress(budget, walletIds, startUtc, endUtc))
                 .collect(Collectors.toList());
     }
 
-    private BudgetResponse calculateProgress(Budget budget, List<String> walletIds, LocalDateTime start, LocalDateTime end) {
+    private BudgetResponse calculateProgress(Budget budget, List<String> walletIds, OffsetDateTime start, OffsetDateTime end) {
         BigDecimal spending;
         String categoryName = "Total Budget";
         com.example.smartmoneytracking.domain.entities.common.MaterialSymbol iconName = com.example.smartmoneytracking.domain.entities.common.MaterialSymbol.LIST;
