@@ -1,7 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Animated } from 'react-native';
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  Animated,
+} from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { Calendar, Store, Tag, Wallet as WalletIcon, Check, ChevronLeft, AlertCircle, Brain, Shield } from 'lucide-react-native';
+import {
+  Calendar,
+  Store,
+  Tag,
+  Wallet as WalletIcon,
+  Check,
+  ChevronLeft,
+  AlertCircle,
+  Brain,
+  Shield,
+  Info,
+} from 'lucide-react-native';
 import apiClient from '../../services/api';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,20 +30,16 @@ import { WalletPicker } from '../transactions/components/WalletPicker';
 import { CategoryPicker } from '../transactions/components/CategoryPicker';
 import * as Haptics from 'expo-haptics';
 import { WalletResponse } from '../../types/api';
+import { AtelierTypography, AtelierCard } from '@/components/ui';
+import { Colors } from '@/constants/tokens';
 
 const MAX_POLLING_RETRIES = 5;
 
 export default function ReceiptReviewForm() {
   const { receiptId: rawReceiptId } = useLocalSearchParams();
   const receiptId = Array.isArray(rawReceiptId) ? rawReceiptId[0] : rawReceiptId;
-  const { 
-    addMessage, 
-    wallets, 
-    categories, 
-    refreshMetadata, 
-    isMetadataLoading,
-    activeWalletId 
-  } = useAppStore();
+  const { addMessage, wallets, categories, refreshMetadata, isMetadataLoading, activeWalletId } =
+    useAppStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pollingRetries, setPollingRetries] = useState(0);
@@ -41,23 +56,23 @@ export default function ReceiptReviewForm() {
     transactionDate: new Date().toISOString(),
     walletId: activeWalletId || '',
     categoryId: '',
-    description: ''
+    description: '',
   });
   const [aiValues, setAiValues] = useState({
     storeName: '',
     amount: '',
     categoryId: '',
-    isMappedFromHistory: false
+    isMappedFromHistory: false,
   });
   const [fieldEdited, setFieldEdited] = useState({
     storeName: false,
     amount: false,
-    categoryId: false
+    categoryId: false,
   });
   const [validationErrors, setValidationErrors] = useState({
     walletId: false,
     categoryId: false,
-    amount: false
+    amount: false,
   });
   const shakeAnimation = useRef(new Animated.Value(0)).current;
 
@@ -65,22 +80,25 @@ export default function ReceiptReviewForm() {
     if (wallets.length === 0 || categories.length === 0) {
       refreshMetadata();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Sync activeWalletId to formData if it changes and formData.walletId is empty
   useEffect(() => {
     if (activeWalletId && !formData.walletId) {
-      setFormData(prev => ({ ...prev, walletId: activeWalletId }));
+      setFormData((prev) => ({ ...prev, walletId: activeWalletId }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWalletId]);
 
-  // Set default category if available
   useEffect(() => {
     if (categories.length > 0 && !formData.categoryId) {
-      // Find 'Shopping' or 'Food' as a good default for receipts
-      const defaultCat = categories.find(c => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop')) || categories[0];
-      setFormData(prev => ({ ...prev, categoryId: defaultCat.id }));
+      const defaultCat =
+        categories.find(
+          (c) => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop'),
+        ) || categories[0];
+      setFormData((prev) => ({ ...prev, categoryId: defaultCat.id }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
 
   const triggerShake = () => {
@@ -88,45 +106,29 @@ export default function ReceiptReviewForm() {
       Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
       Animated.timing(shakeAnimation, { toValue: -10, duration: 50, useNativeDriver: true }),
       Animated.timing(shakeAnimation, { toValue: 10, duration: 50, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true })
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 50, useNativeDriver: true }),
     ]).start();
   };
 
   const handleWalletSelect = useCallback((wallet: WalletResponse) => {
-    setFormData(prev => ({ ...prev, walletId: wallet.id }));
-    setValidationErrors(prev => ({ ...prev, walletId: false }));
+    setFormData((prev) => ({ ...prev, walletId: wallet.id }));
+    setValidationErrors((prev) => ({ ...prev, walletId: false }));
   }, []);
 
-  const handleCategorySelect = useCallback((category: { id: string; name: string; iconName: string }) => {
-    setFormData(prev => ({ ...prev, categoryId: category.id }));
-    setValidationErrors(prev => ({ ...prev, categoryId: false }));
-    if (!fieldEdited.categoryId) {
-      setFieldEdited(prev => ({ ...prev, categoryId: true }));
-    }
-  }, [fieldEdited.categoryId]);
-
-  const pollWithDelay = async () => {
-    if (!isLoadingRef.current) return;
-
-    try {
-      await fetchReceiptData();
-      setPollingRetries(0);
-      setTimeout(pollWithDelay, 3000);
-    } catch (err) {
-      console.log('Polling failure:', err);
-      if (pollingRetries < MAX_POLLING_RETRIES) {
-        setPollingRetries(prev => prev + 1);
-        setTimeout(pollWithDelay, 5000 * (pollingRetries + 1));
-      } else {
-        setLoading(false);
-        isLoadingRef.current = false;
-        Alert.alert('Kết nối không ổn định', 'Không thể kết nối với máy chủ AI. Vui lòng thử lại sau.');
+  const handleCategorySelect = useCallback(
+    (category: { id: string; name: string; iconName: string }) => {
+      setFormData((prev) => ({ ...prev, categoryId: category.id }));
+      setValidationErrors((prev) => ({ ...prev, categoryId: false }));
+      if (!fieldEdited.categoryId) {
+        setFieldEdited((prev) => ({ ...prev, categoryId: true }));
       }
-    }
-  };
+    },
+    [fieldEdited.categoryId],
+  );
 
   useEffect(() => {
     fetchReceiptData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiptId]);
 
   const fetchReceiptData = async () => {
@@ -135,20 +137,20 @@ export default function ReceiptReviewForm() {
       if (response.data.success) {
         const data = response.data.data;
         const formattedAmount = data.amount ? formatVND(data.amount.toString()) : '';
-        
-        setFormData(prev => ({
+
+        setFormData((prev) => ({
           ...prev,
           storeName: data.storeName || '',
           amount: formattedAmount,
           transactionDate: data.transactionDate || new Date().toISOString(),
-          categoryId: data.categoryId || prev.categoryId
+          categoryId: data.categoryId || prev.categoryId,
         }));
 
         setAiValues({
           storeName: data.aiStoreName || data.storeName || '',
           amount: data.aiAmount ? formatVND(data.aiAmount.toString()) : formattedAmount,
           categoryId: data.aiCategoryId || data.categoryId || '',
-          isMappedFromHistory: data.isMappedFromHistory || false
+          isMappedFromHistory: data.isMappedFromHistory || false,
         });
 
         setOcrMeta({
@@ -159,7 +161,7 @@ export default function ReceiptReviewForm() {
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Lỗi", "Không thể tải dữ liệu hóa đơn.");
+      Alert.alert('Lỗi', 'Không thể tải dữ liệu hóa đơn.');
     } finally {
       setLoading(false);
     }
@@ -167,15 +169,13 @@ export default function ReceiptReviewForm() {
 
   const handleConfirm = async () => {
     const rawAmount = parseVND(formData.amount);
-
     const errors = {
       walletId: !formData.walletId,
       categoryId: !formData.categoryId,
-      amount: !rawAmount
+      amount: !rawAmount,
     };
 
     setValidationErrors(errors);
-
     if (errors.walletId || errors.categoryId || errors.amount) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       triggerShake();
@@ -183,8 +183,6 @@ export default function ReceiptReviewForm() {
     }
 
     setSubmitting(true);
-    const confirmUrl = `/receipts/${receiptId}/confirm`;
-
     try {
       const cleanAmount = formData.amount.replace(/[^0-9]/g, '');
       const payload = {
@@ -193,291 +191,295 @@ export default function ReceiptReviewForm() {
         storeName: formData.storeName,
         amount: parseInt(cleanAmount),
         transactionDate: formData.transactionDate,
-        description: formData.description
+        description: formData.description,
       };
 
-      const response = await apiClient.post(confirmUrl, payload);
-
+      const response = await apiClient.post(`/receipts/${receiptId}/confirm`, payload);
       if (response.data.success) {
         addMessage({
-          id: `ocr-success-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          id: `ocr-success-${Date.now()}`,
           role: 'assistant',
-          content: `✅ Đã lưu hóa đơn từ **${formData.storeName || 'cửa hàng'}** thành công!\nSố tiền: **${formatVND(rawAmount)}**.\nGiao dịch đã được ghi nhận vào hệ thống.`,
-          timestamp: Date.now()
+          content: `✅ Đã lưu hóa đơn từ **${formData.storeName || 'cửa hàng'}** thành công!\nSố tiền: **${formatVND(rawAmount)}**.`,
+          timestamp: Date.now(),
         });
-
-        Alert.alert("Thành công", "Giao dịch đã được lưu!");
         router.replace('/(tabs)/transactions');
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Lỗi", "Xác nhận giao dịch thất bại.");
+      Alert.alert('Lỗi', 'Xác nhận giao dịch thất bại.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const getConfidenceColor = (conf: number) => {
-    if (conf >= 0.85) return { bg: 'rgba(34, 197, 94, 0.15)', text: '#4ade80', border: 'rgba(34, 197, 94, 0.3)' };
-    if (conf >= 0.65) return { bg: 'rgba(234, 179, 8, 0.15)', text: '#facc15', border: 'rgba(234, 179, 8, 0.3)' };
-    return { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', border: 'rgba(239, 68, 68, 0.3)' };
-  };
-
-  const getConfidenceLabel = (conf: number) => {
-    if (conf >= 0.85) return 'Cao';
-    if (conf >= 0.65) return 'Trung bình';
-    return 'Thấp';
+    if (conf >= 0.85)
+      return { bg: 'bg-emerald-500/10', text: 'text-emerald-500', border: 'border-emerald-500/20' };
+    if (conf >= 0.65)
+      return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' };
+    return { bg: 'bg-red-500/10', text: 'text-red-500', border: 'border-red-500/20' };
   };
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-950 justify-center items-center">
-        <ActivityIndicator color="#3b82f6" />
-        <Text className="text-slate-400 mt-4">Đang đồng bộ dữ liệu AI...</Text>
+      <View className="flex-1 bg-surface-lowest justify-center items-center">
+        <ActivityIndicator color={Colors.primary.DEFAULT} />
+        <AtelierTypography variant="body" className="mt-4 opacity-60">
+          Đang đồng bộ dữ liệu AI...
+        </AtelierTypography>
       </View>
     );
   }
 
-  const confColors = getConfidenceColor(ocrMeta.confidence);
+  const confStyles = getConfidenceColor(ocrMeta.confidence);
 
   return (
-    <ScrollView className="flex-1 bg-slate-950">
-      <LinearGradient colors={['#0f172a', '#020617']} className="px-6 pt-12 pb-10">
-        <View className="flex-row items-center mb-8">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ChevronLeft size={24} color="#94a3b8" />
-          </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Kiểm tra thông tin</Text>
-        </View>
+    <View className="flex-1 bg-surface-lowest">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <LinearGradient colors={['#f8fafc', '#ffffff']} className="px-6 pt-16 pb-32">
+          <View className="flex-row items-center mb-8">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="mr-4 w-10 h-10 items-center justify-center bg-white border border-neutral-100 rounded-full shadow-sm"
+            >
+              <ChevronLeft size={20} color={Colors.neutral[400]} />
+            </TouchableOpacity>
+            <AtelierTypography variant="h1">Kiểm tra AI</AtelierTypography>
+          </View>
 
-        <MotiView from={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+          <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }}>
+            {/* Confidence & Correction Badges */}
+            <View className="flex-row items-center justify-center gap-3 mb-6">
+              <View
+                className={`${confStyles.bg} ${confStyles.border} border px-4 py-2 rounded-full flex-row items-center`}
+              >
+                <Shield size={14} color={confStyles.text.replace('text-', '')} className="mr-2" />
+                <AtelierTypography variant="label" className={`${confStyles.text} font-bold`}>
+                  ĐỘ TIN CẬY: {(ocrMeta.confidence * 100).toFixed(0)}%
+                </AtelierTypography>
+              </View>
 
-          {/* AI Confidence Badge */}
-          <MotiView
-            from={{ opacity: 0, translateY: -10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ delay: 200 }}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 16,
-              gap: 12,
-            }}
-          >
-            {/* Confidence Pill */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: confColors.bg,
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 20,
-              borderWidth: 1,
-              borderColor: confColors.border,
-            }}>
-              <Shield size={14} color={confColors.text} style={{ marginRight: 6 }} />
-              <Text style={{ color: confColors.text, fontSize: 13, fontWeight: '600' }}>
-                AI Confidence: {(ocrMeta.confidence * 100).toFixed(0)}% — {getConfidenceLabel(ocrMeta.confidence)}
-              </Text>
+              {ocrMeta.isCorrected && (
+                <TouchableOpacity
+                  onPress={() => setShowCorrectionDetail(!showCorrectionDetail)}
+                  className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-full flex-row items-center"
+                >
+                  <Brain size={14} color={Colors.primary.DEFAULT} className="mr-2" />
+                  <AtelierTypography variant="label" color="primary" className="font-bold">
+                    AI ĐÃ TỰ SỬA
+                  </AtelierTypography>
+                </TouchableOpacity>
+              )}
             </View>
 
-            {/* AI Corrected Badge */}
-            {ocrMeta.isCorrected && (
-              <TouchableOpacity
-                onPress={() => setShowCorrectionDetail(!showCorrectionDetail)}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 20,
-                  borderWidth: 1,
-                  borderColor: 'rgba(59, 130, 246, 0.3)',
-                }}
+            {showCorrectionDetail && ocrMeta.correctionReason && (
+              <MotiView
+                from={{ opacity: 0, scaleY: 0.8 }}
+                animate={{ opacity: 1, scaleY: 1 }}
+                className="mb-6"
               >
-                <Brain size={14} color="#60a5fa" style={{ marginRight: 6 }} />
-                <Text style={{ color: '#60a5fa', fontSize: 13, fontWeight: '600' }}>
-                  AI Sửa lỗi
-                </Text>
-              </TouchableOpacity>
+                <AtelierCard variant="elevated" className="bg-primary/5 border border-primary/10">
+                  <View className="flex-row items-center mb-2">
+                    <Info size={14} color={Colors.primary.DEFAULT} className="mr-2" />
+                    <AtelierTypography variant="h3" color="primary">
+                      Chi tiết sửa lỗi
+                    </AtelierTypography>
+                  </View>
+                  <AtelierTypography variant="body" className="opacity-70 leading-5">
+                    {ocrMeta.correctionReason}
+                  </AtelierTypography>
+                </AtelierCard>
+              </MotiView>
             )}
-          </MotiView>
 
-          {/* Correction Detail (collapsible) */}
-          {showCorrectionDetail && ocrMeta.correctionReason ? (
-            <MotiView
-              from={{ opacity: 0, scaleY: 0.8 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              style={{
-                backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                borderWidth: 1,
-                borderColor: 'rgba(59, 130, 246, 0.2)',
-                borderRadius: 16,
-                padding: 16,
-                marginBottom: 16,
-              }}
+            {/* Main Info Card */}
+            <AtelierCard
+              padding="lg"
+              className="bg-white border border-neutral-100 shadow-atelier-low mb-6"
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <Brain size={16} color="#60a5fa" style={{ marginRight: 8 }} />
-                <Text style={{ color: '#93c5fd', fontWeight: '700', fontSize: 14 }}>
-                  Chi tiết sửa lỗi AI
-                </Text>
-              </View>
-              <Text style={{ color: '#94a3b8', fontSize: 13, lineHeight: 20 }}>
-                {ocrMeta.correctionReason}
-              </Text>
-            </MotiView>
-          ) : null}
-
-          {/* Main Info Card */}
-          <View className="bg-slate-900/80 p-6 rounded-3xl border border-slate-800 mb-6">
-            <View className="items-center mb-6">
-              <Text className="text-slate-500 text-sm mb-1 uppercase tracking-widest">Số tiền</Text>
-              <TextInput
-                value={formData.amount}
-                onChangeText={(val) => {
-                  const cleanVal = val.replace(/[^0-9]/g, '');
-                  setFormData({ ...formData, amount: formatVND(parseInt(cleanVal || '0')) });
-                  if (!fieldEdited.amount) setFieldEdited({ ...fieldEdited, amount: true });
-                }}
-                placeholder="0"
-                keyboardType="numeric"
-                className="text-white text-5xl font-bold text-center tracking-tighter"
-                style={{ textShadowColor: 'rgba(59, 130, 246, 0.5)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 10 }}
-              />
-              <View className="flex-row items-center mt-2 gap-2">
-                <View className="py-1 px-4 bg-blue-500/10 rounded-full border border-blue-500/20">
-                  <Text className="text-blue-400 font-bold tracking-widest uppercase text-xs">VNĐ</Text>
+              <View className="items-center mb-8">
+                <AtelierTypography
+                  variant="label"
+                  className="text-neutral-400 uppercase tracking-widest mb-2"
+                >
+                  Số tiền hóa đơn
+                </AtelierTypography>
+                <View className="flex-row items-baseline justify-center">
+                  <TextInput
+                    value={formData.amount}
+                    onChangeText={(val) => {
+                      const cleanVal = val.replace(/[^0-9]/g, '');
+                      setFormData({ ...formData, amount: formatVND(parseInt(cleanVal || '0')) });
+                      if (!fieldEdited.amount) setFieldEdited({ ...fieldEdited, amount: true });
+                    }}
+                    placeholder="0"
+                    keyboardType="numeric"
+                    className="text-5xl font-bold tracking-tighter text-primary"
+                  />
+                  <AtelierTypography variant="h2" className="ml-2 text-primary opacity-50">
+                    đ
+                  </AtelierTypography>
                 </View>
                 {!fieldEdited.amount && (
-                  <MotiView from={{ scale: 0 }} animate={{ scale: 1 }} className="bg-yellow-500/10 p-1 rounded-full border border-yellow-500/20">
-                    <Text className="text-[10px]">✨ AI</Text>
-                  </MotiView>
-                )}
-              </View>
-            </View>
-
-            <View className="space-y-4">
-              <View className="flex-row items-center bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                <Store size={20} color="#3b82f6" className="mr-3" />
-                <TextInput
-                  value={formData.storeName}
-                  onChangeText={(val) => {
-                    setFormData({ ...formData, storeName: val });
-                    if (!fieldEdited.storeName) setFieldEdited({ ...fieldEdited, storeName: true });
-                  }}
-                  placeholder="Tên cửa hàng"
-                  placeholderTextColor="#64748b"
-                  className="flex-1 text-white text-base"
-                />
-                {!fieldEdited.storeName && (
-                  <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-row items-center bg-yellow-500/10 px-2 py-1 rounded-md border border-yellow-500/20">
-                    <Text className="text-yellow-500 text-[10px] font-bold">✨ AI</Text>
+                  <MotiView
+                    from={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="mt-2 bg-warning/10 px-3 py-1 rounded-full border border-warning/20"
+                  >
+                    <AtelierTypography variant="label" className="text-warning font-bold">
+                      ✨ AI TRÍCH XUẤT
+                    </AtelierTypography>
                   </MotiView>
                 )}
               </View>
 
-              <View className="flex-row items-center bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                <Calendar size={20} color="#3b82f6" className="mr-3" />
-                <Text className="text-white text-base">
-                  {new Date(formData.transactionDate).toLocaleDateString('vi-VN')}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Setup Card */}
-          <View className="bg-slate-900/80 p-6 rounded-3xl border border-slate-800 mb-8">
-            <Text className="text-slate-400 font-bold mb-4">Chi tiết giao dịch</Text>
-
-            <View className="space-y-4">
-              {/* Wallet Picker */}
-              <View>
-                {validationErrors.walletId && (
-                  <Text className="text-red-400 text-xs mb-2 px-1">Vui lòng chọn ví</Text>
-                )}
-                <WalletPicker
-                  label="Chọn Ví"
-                  selectedId={formData.walletId}
-                  wallets={wallets}
-                  onSelect={handleWalletSelect}
-                />
-              </View>
-
-              {/* Category Picker */}
-              <View>
-                <View className="flex-row items-center justify-between mb-3 px-1">
-                  <Text className="text-slate-400 font-bold">Danh mục</Text>
-                  {aiValues.isMappedFromHistory && !fieldEdited.categoryId && (
-                    <MotiView from={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                      className="bg-green-500/10 px-2 py-1 rounded-md border border-green-500/20">
-                      <Text className="text-green-500 text-[10px] font-bold">✨ THÓI QUEN</Text>
-                    </MotiView>
+              <View className="space-y-4">
+                <View className="flex-row items-center bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                  <Store size={20} color={Colors.neutral[400]} className="mr-4" />
+                  <TextInput
+                    value={formData.storeName}
+                    onChangeText={(val) => {
+                      setFormData({ ...formData, storeName: val });
+                      if (!fieldEdited.storeName)
+                        setFieldEdited({ ...fieldEdited, storeName: true });
+                    }}
+                    placeholder="Tên cửa hàng"
+                    placeholderTextColor={Colors.neutral[300]}
+                    className="flex-1 text-lg font-bold text-neutral-800"
+                  />
+                  {!fieldEdited.storeName && (
+                    <AtelierTypography variant="label" className="text-warning font-bold ml-2">
+                      AI✨
+                    </AtelierTypography>
                   )}
                 </View>
-                {validationErrors.categoryId && (
-                  <Text className="text-red-400 text-xs mb-2 px-1">Vui lòng chọn danh mục</Text>
-                )}
-                <CategoryPicker
-                  selectedId={formData.categoryId}
-                  categories={categories}
-                  isLoading={isMetadataLoading}
-                  onSelect={handleCategorySelect}
-                />
+
+                <View className="flex-row items-center bg-neutral-50 p-4 rounded-2xl border border-neutral-100">
+                  <Calendar size={20} color={Colors.neutral[400]} className="mr-4" />
+                  <AtelierTypography variant="h3" className="flex-1">
+                    {new Date(formData.transactionDate).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </AtelierTypography>
+                </View>
+              </View>
+            </AtelierCard>
+
+            {/* Transaction Settings */}
+            <View className="space-y-6 mb-8">
+              <View>
+                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">
+                  Tài khoản & Danh mục
+                </AtelierTypography>
+                <AtelierCard
+                  padding="none"
+                  className="bg-white border border-neutral-100 shadow-atelier-low overflow-hidden"
+                >
+                  <View className="p-4 border-b border-neutral-50">
+                    <WalletPicker
+                      label="Nguồn tiền"
+                      selectedId={formData.walletId}
+                      wallets={wallets}
+                      onSelect={handleWalletSelect}
+                    />
+                    {validationErrors.walletId && (
+                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">
+                        Vui lòng chọn ví thanh toán
+                      </AtelierTypography>
+                    )}
+                  </View>
+                  <View className="p-4">
+                    <View className="flex-row items-center justify-between mb-3 px-1">
+                      <AtelierTypography variant="h3">Danh mục</AtelierTypography>
+                      {aiValues.isMappedFromHistory && !fieldEdited.categoryId && (
+                        <MotiView
+                          from={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"
+                        >
+                          <AtelierTypography variant="label" className="text-emerald-500 font-bold">
+                            G gợi ý✨
+                          </AtelierTypography>
+                        </MotiView>
+                      )}
+                    </View>
+                    <CategoryPicker
+                      selectedId={formData.categoryId}
+                      categories={categories}
+                      isLoading={isMetadataLoading}
+                      onSelect={handleCategorySelect}
+                    />
+                    {validationErrors.categoryId && (
+                      <AtelierTypography variant="label" className="text-red-500 mt-2 ml-1">
+                        Vui lòng chọn danh mục chi tiêu
+                      </AtelierTypography>
+                    )}
+                  </View>
+                </AtelierCard>
               </View>
 
-              <TextInput
-                value={formData.description}
-                onChangeText={(val) => setFormData({ ...formData, description: val })}
-                placeholder="Ghi chú thêm..."
-                placeholderTextColor="#64748b"
-                multiline
-                className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 text-white min-h-[100px]"
-              />
+              <View>
+                <AtelierTypography variant="h2" className="text-lg px-1 mb-3">
+                  Ghi chú
+                </AtelierTypography>
+                <TextInput
+                  value={formData.description}
+                  onChangeText={(val) => setFormData({ ...formData, description: val })}
+                  placeholder="Thêm mô tả cho giao dịch này..."
+                  placeholderTextColor={Colors.neutral[300]}
+                  multiline
+                  className="bg-white p-5 rounded-3xl border border-neutral-100 text-neutral-800 min-h-[120px] shadow-atelier-low text-base"
+                  style={{ textAlignVertical: 'top' }}
+                />
+              </View>
             </View>
-          </View>
 
-          {wallets.length === 0 && !isMetadataLoading && (
-            <View className="bg-red-500/10 p-4 rounded-2xl border border-red-500/20 mb-4 flex-row items-center">
-              <AlertCircle size={18} color="#ef4444" className="mr-3" />
-              <Text className="text-red-400 text-xs flex-1">
-                Bạn chưa có ví nào. Vui lòng tạo ví trong phần Cài đặt trước khi lưu giao dịch.
-              </Text>
+            {/* Action Buttons */}
+            <Animated.View
+              className="gap-4"
+              style={{ transform: [{ translateX: shakeAnimation }] }}
+            >
+              <TouchableOpacity
+                onPress={handleConfirm}
+                disabled={submitting || wallets.length === 0 || isMetadataLoading}
+                activeOpacity={0.9}
+                className={`h-16 rounded-[28px] flex-row items-center justify-center shadow-xl ${submitting || wallets.length === 0 || isMetadataLoading ? 'bg-neutral-300' : 'bg-primary shadow-primary/20'}`}
+              >
+                {submitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Check size={20} color="white" className="mr-3" />
+                    <AtelierTypography variant="h2" color="white">
+                      Hoàn tất & Lưu
+                    </AtelierTypography>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => router.replace('/(tabs)/transactions')}
+                disabled={submitting}
+                className="h-14 items-center justify-center"
+              >
+                <AtelierTypography variant="label" className="text-neutral-400 font-bold uppercase">
+                  Hủy bỏ
+                </AtelierTypography>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <View className="mt-10 flex-row items-center justify-center px-6 py-4 bg-warning/5 rounded-3xl border border-warning/10 mb-20">
+              <AlertCircle size={16} color={Colors.warning} className="mr-3" />
+              <AtelierTypography variant="caption" className="text-warning flex-1 leading-4">
+                AI có thể nhận diện chưa chính xác, nhất là với chữ viết tay. Vui lòng kiểm tra lại
+                trước khi lưu.
+              </AtelierTypography>
             </View>
-          )}
-
-          <TouchableOpacity
-            onPress={handleConfirm}
-            disabled={submitting || wallets.length === 0 || isMetadataLoading}
-            className={`h-16 rounded-2xl flex-row items-center justify-center ${submitting || wallets.length === 0 || isMetadataLoading ? 'bg-slate-800' : 'bg-blue-600'}`}
-            style={{ transform: [{ translateX: shakeAnimation }] }}
-          >
-            {submitting ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Check size={20} color="white" className="mr-2" />
-                <Text className="text-white font-bold text-lg">Hoàn Tất & Lưu</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.replace('/(tabs)/transactions')}
-            disabled={submitting}
-            className="mt-4 h-12 items-center justify-center"
-          >
-            <Text className="text-slate-500 font-medium">Hủy bỏ & Quay về</Text>
-          </TouchableOpacity>
-
-          <View className="flex-row items-center justify-center mt-6 py-2 px-4 bg-yellow-500/10 rounded-full border border-yellow-500/20">
-            <AlertCircle size={14} color="#eab308" className="mr-2" />
-            <Text className="text-yellow-500 text-xs">AI có thể nhận diện chưa chính xác, vui lòng kiểm tra lại</Text>
-          </View>
-        </MotiView>
-      </LinearGradient>
-    </ScrollView>
+          </MotiView>
+        </LinearGradient>
+      </ScrollView>
+    </View>
   );
 }

@@ -3,7 +3,7 @@ package com.example.smartmoneytracking.domain.entities.receipt;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -30,7 +30,7 @@ public class Receipt {
     private BigDecimal aiAmount;
 
     @Column(name = "transaction_date")
-    private LocalDateTime transactionDate;
+    private OffsetDateTime transactionDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,20 +53,20 @@ public class Receipt {
     @Column(columnDefinition = "TEXT")
     private String correctionReason;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         if (id == null) id = UUID.randomUUID().toString();
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
         if (status == null) status = ReceiptStatus.PENDING;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 
     public static Receipt create(String userId, String imageUrl) {
@@ -77,7 +77,7 @@ public class Receipt {
         return receipt;
     }
 
-    public void updateOcrResult(String storeName, BigDecimal amount, LocalDateTime date, String rawText,
+    public void updateOcrResult(String storeName, BigDecimal amount, OffsetDateTime date, String rawText,
                                 Double confidence, String categoryId, Boolean isCorrected, String correctionReason) {
         // Store both AI prediction and initial effective value
         this.storeName = storeName;

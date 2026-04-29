@@ -191,13 +191,17 @@ class NERService:
         import os as _os
 
         if not _os.path.exists(model_path):
+            print(f"[NER SERVICE] ⚠️ PhoBERT model not found at {model_path}")
+            print("[NER SERVICE] ℹ️ Falling back to rule-based extraction (regex + keywords)")
+            print("[NER SERVICE] 💡 Run 'python scripts/setup_models.py' to download models")
             NERService._pipeline = None
             return
 
         # Use GPU (0) if available, else CPU (-1)
         device = 0 if torch.cuda.is_available() else -1
         device_label = "gpu" if device == 0 else "cpu"
-        print(f"Device set to use {device_label}")
+        print(f"[NER SERVICE] ✅ Loading PhoBERT weights from {model_path}")
+        print(f"[NER SERVICE] 🖥️ Device set to use {device_label}")
 
         NERService._pipeline = pipeline(
             task="token-classification",
@@ -205,6 +209,7 @@ class NERService:
             aggregation_strategy="simple",
             device=device,
         )
+        print("[NER SERVICE] ✅ PhoBERT NER pipeline initialized successfully")
 
     # ------------------------------------------------------------------
     # Public API
@@ -228,7 +233,31 @@ class NERService:
             ner_results = []
             model_confidence = 0.55
         else:
-            ner_results = self._pipeline(text)  # type: ignore[misc]
+            try:
+                ner_results = self._pipeline(text)  # type: ignore[misc]
+            except RuntimeError as e:
+                if "CUDA error" in str(e):
+                    print(f"[NER SERVICE] ⚠️ CUDA error detected: {str(e)}. Retrying on CPU...")
+                    try:
+                        # Re-initialize pipeline on CPU
+                        self._pipeline = pipeline(
+                            task="token-classification",
+                            model=self.MODEL_PATH,
+                            aggregation_strategy="simple",
+                            device=-1, # CPU
+                        )
+                        ner_results = self._pipeline(text) # type: ignore[misc]
+                        print("[NER SERVICE] ✅ Successfully recovered on CPU.")
+                    except Exception as retry_e:
+                        print(f"[NER SERVICE] ❌ CPU Fallback failed: {str(retry_e)}")
+                        ner_results = []
+                else:
+                    print(f"[NER SERVICE] ❌ NER Inference Error: {str(e)}")
+                    ner_results = []
+            except Exception as e:
+                print(f"[NER SERVICE] ❌ NER Unexpected Error: {str(e)}")
+                ner_results = []
+                
             model_confidence = self._avg_confidence(ner_results)
 
         # 3. Category via model label, fallback to keyword map

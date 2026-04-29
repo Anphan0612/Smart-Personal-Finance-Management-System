@@ -8,4 +8,4 @@ build/
 android/
 ios/
 package-lock.json
-*.md
+

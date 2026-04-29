@@ -1,10 +1,11 @@
 package com.example.smartmoneytracking.domain.entities.transaction;
 
+import com.example.smartmoneytracking.application.service.common.DateUtils;
 import com.example.smartmoneytracking.domain.entities.transaction.valueobject.TransactionType;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +19,7 @@ class TransactionTest {
                 new BigDecimal("100.00"),
                 TransactionType.EXPENSE,
                 "Lunch",
-                LocalDateTime.now());
+                DateUtils.nowUtc());
 
         assertNotNull(tx);
         assertEquals("wallet1", tx.getWalletId());
@@ -36,7 +37,7 @@ class TransactionTest {
                     new BigDecimal("-100.00"),
                     TransactionType.EXPENSE,
                     "Lunch",
-                    LocalDateTime.now());
+                    DateUtils.nowUtc());
         });
 
         assertEquals("Transaction amount must be positive", exception.getMessage());
@@ -50,7 +51,7 @@ class TransactionTest {
                 new BigDecimal("100.00"),
                 TransactionType.EXPENSE,
                 "Lunch",
-                LocalDateTime.now());
+                DateUtils.nowUtc());
 
         tx.updateAmount(new BigDecimal("200.00"));
         assertEquals(new BigDecimal("200.00"), tx.getAmount());

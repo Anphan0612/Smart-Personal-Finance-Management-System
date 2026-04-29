@@ -1,0 +1,48 @@
+{
+  "models": [
+    {
+      "name": "phobert-finance-ner",
+      "description": "Fine-tuned PhoBERT for Vietnamese financial NER",
+      "type": "huggingface",
+      "repo_id": "vinai/phobert-base-v2",
+      "local_path": "ml-models/phobert-finance-ner-final",
+      "files": [
+        "config.json",
+        "pytorch_model.bin",
+        "tokenizer_config.json",
+        "vocab.txt",
+        "special_tokens_map.json"
+      ],
+      "required": false,
+      "fallback": "rule-based extraction"
+    },
+    {
+      "name": "vit5-correction",
+      "description": "ViT5 OCR text correction model",
+      "type": "huggingface",
+      "repo_id": "hoanghaiduong/vit5-correction",
+      "local_path": "models/cache/models--hoanghaiduong--vit5-correction",
+      "cache_dir": "models/cache",
+      "required": false,
+      "fallback": "skip AI correction"
+    },
+    {
+      "name": "paddleocr-vi",
+      "description": "PaddleOCR Vietnamese language models",
+      "type": "paddleocr",
+      "lang": "vi",
+      "local_path": "models/cache/paddleocr",
+      "auto_download": true,
+      "required": true,
+      "fallback": "none"
+    }
+  ],
+  "download_strategy": "lazy",
+  "verify_checksums": false,
+  "notes": [
+    "PhoBERT fine-tuned weights are project-specific and must be trained separately.",
+    "ViT5 and PaddleOCR models will auto-download from Hugging Face on first use.",
+    "Set HF_HOME environment variable to control cache location.",
+    "For air-gapped deployment, pre-download models using setup_models.py script."
+  ]
+}

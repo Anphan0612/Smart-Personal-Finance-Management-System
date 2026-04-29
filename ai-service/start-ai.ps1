@@ -25,6 +25,25 @@ $env:HF_HOME = "$PSScriptRoot\models\cache"
 if (-Not (Test-Path $env:HF_HOME)) { New-Item -ItemType Directory -Path $env:HF_HOME -Force | Out-Null }
 Write-Host "[INFO] AI Cache set to: $env:HF_HOME" -ForegroundColor DarkGray
 
+# 2.2 Auto-download ML Models if missing
+$ML_MODELS_DIR = "$PSScriptRoot\ml-models"
+$SETUP_SCRIPT = "$PSScriptRoot\scripts\setup_models.py"
+
+if (-Not (Test-Path $ML_MODELS_DIR) -or (Get-ChildItem $ML_MODELS_DIR -ErrorAction SilentlyContinue).Count -eq 0) {
+    Write-Host "[INFO] ML models not found. Running setup script..." -ForegroundColor Yellow
+    if (Test-Path $SETUP_SCRIPT) {
+        python "$SETUP_SCRIPT"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARNING] Model setup failed. Service will use fallback methods." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "[WARNING] Setup script not found at $SETUP_SCRIPT" -ForegroundColor Yellow
+        Write-Host "[INFO] Service will use rule-based fallback methods." -ForegroundColor Cyan
+    }
+} else {
+    Write-Host "[INFO] ML models directory exists, skipping download." -ForegroundColor Green
+}
+
 # 3. Check Dependencies
 Write-Host "[INFO] Verifying uvicorn installation..." -ForegroundColor Cyan
 try {

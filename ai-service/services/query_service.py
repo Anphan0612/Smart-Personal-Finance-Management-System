@@ -49,6 +49,10 @@ _QUERY_INDICATORS: list[str] = [
     "mua gi", "mua gì",
     "nhieu hon", "nhiều hơn",
     "it hon", "ít hơn",
+    "kiem tra", "kiểm tra", "check",
+    "xem", "cho xem",
+    "giup", "giúp",
+    "bot", "ai", "atelier",
 ]
 
 # ---------------------------------------------------------------------------

@@ -1,71 +1,71 @@
-# 📑 Smart Personal Finance - Documentation Hub
+# Standard Documentation Set
 
-Chào mừng bạn đến với trung tâm tài liệu của dự án **Smart Personal Finance Management System**. Hệ thống tài liệu được tổ chức theo cấu trúc phân lớp giúp dễ dàng tra cứu từ mức độ sản phẩm đến chi tiết kỹ thuật.
+> Bộ tài liệu nghiệp vụ chuẩn cho dự án **Smart Personal Finance Management System**.
+>
+> Ngôn ngữ áp dụng: mô tả nghiệp vụ bằng tiếng Việt, giữ thuật ngữ kỹ thuật bằng tiếng Anh để đồng bộ với codebase.
 
----
+## Mục tiêu tài liệu
 
-## 📂 Danh mục Tài liệu
+- Chuẩn hóa mô tả **Feature**, **Use Case** và **Workflow** của hệ thống.
+- Tạo khả năng **traceability** từ nghiệp vụ đến API và luồng xử lý kỹ thuật.
+- Dễ đọc trên GitHub/VSCode, dễ bảo trì khi hệ thống mở rộng.
 
-### [🚀 01. Product & Requirements](./01-product/)
+## Bản đồ tài liệu
 
-*Tập trung vào "Cái gì" và "Tại sao" của sản phẩm.*
+| Tài liệu | Vai trò | Đối tượng đọc |
+|---|---|---|
+| [`FEATURES.md`](./FEATURES.md) | Đặc tả tính năng theo module, input/output, constraints, endpoint | Product, BA, Backend, Mobile |
+| [`USE_CASES.md`](./USE_CASES.md) | Kịch bản người dùng, luồng chính/phụ, điều kiện trước/sau | Product, BA, QA, Dev |
+| [`WORKFLOWS.md`](./WORKFLOWS.md) | Mermaid diagrams: ERD, Sequence, State, AI flow | Backend, Mobile, AI, QA |
 
-- [Yêu cầu dự án (Requirements)](./01-product/requirement.md)
-- [Đặc tả Use Cases](./01-product/usecase-specifications.md)
-- [Tổng hợp Use Case](./01-product/usecase-synthesis.md)
-- [Định nghĩa Hoàn thành (Definition of Done)](./01-product/definition-of-done.md)
+## Quy ước chung
 
-### [📐 02. System Design](./02-design/)
+- ID chuẩn:
+  - Feature: `F-xx`
+  - Use case: `UC-xx`
+  - Workflow: `WF-xx`
+- Response contract backend dùng `ApiResponse<T>`.
+- Nhóm endpoint chuẩn trong hệ thống:
+  - Auth: `/api/v1/auth/*`
+  - Business APIs: `/api/v1/*`
+  - AI proxy từ backend: `/api/v1/ai/*`
+- Mermaid là chuẩn sơ đồ chính (GitHub/VSCode friendly).
 
-*Kiến trúc hạ tầng và các luồng xử lý dữ liệu.*
+## Liên kết nhanh theo module
 
-- [Sơ đồ Kiến trúc & Business Flows](./02-design/system-design-diagrams.md)
-- [Thiết kế Cơ sở dữ liệu (Database)](./02-design/database-design.md)
-- [Mô tả chi tiết luồng nghiệp vụ](./02-design/business-flows-diagrams.md)
-- [Tài liệu phản hồi lỗi API](./02-design/api-error-documentation.md)
+### Auth & Session
+- Feature: [`F-01`](./FEATURES.md#f-01)
+- Use case: [`UC-01`](./USE_CASES.md#uc-01)
+- Workflow: [`WF-02`](./WORKFLOWS.md#wf-02)
 
-### [🤖 03. AI & NLP Strategy](./03-ai-nlp/)
+### Wallet & Transaction
+- Feature: [`F-02`](./FEATURES.md#f-02), [`F-03`](./FEATURES.md#f-03)
+- Use case: [`UC-02`](./USE_CASES.md#uc-02), [`UC-03`](./USE_CASES.md#uc-03)
+- Workflow: [`WF-01`](./WORKFLOWS.md#wf-01), [`WF-05`](./WORKFLOWS.md#wf-05)
 
-*Các tài liệu đặc thù về xử lý ngôn ngữ tự nhiên.*
+### AI/NLP/OCR
+- Feature: [`F-07`](./FEATURES.md#f-07), [`F-08`](./FEATURES.md#f-08)
+- Use case: [`UC-04`](./USE_CASES.md#uc-04), [`UC-05`](./USE_CASES.md#uc-05), [`UC-06`](./USE_CASES.md#uc-06)
+- Workflow: [`WF-03`](./WORKFLOWS.md#wf-03), [`WF-04`](./WORKFLOWS.md#wf-04), [`WF-06`](./WORKFLOWS.md#wf-06)
 
-- [Kế hoạch Hybrid AI (Option C)](./03-ai-nlp/PLAN-ai-hybrid-option-c.md)
-- [Chiến lược mô hình NLP tùy chỉnh](./03-ai-nlp/custom-nlp-model-strategy.md)
-- [Bộ dữ liệu Benchmark NLP v1](./03-ai-nlp/nlp-benchmark-dataset-v1.csv)
-- [Giao thức Benchmark](./03-ai-nlp/nlp-benchmark-protocol.md)
-- [Danh mục Ý định (Intent Catalog)](./03-ai-nlp/nlp-query-intent-catalog.md)
+### Budget & Dashboard
+- Feature: [`F-05`](./FEATURES.md#f-05), [`F-06`](./FEATURES.md#f-06)
+- Use case: [`UC-07`](./USE_CASES.md#uc-07), [`UC-08`](./USE_CASES.md#uc-08)
+- Workflow: [`WF-01`](./WORKFLOWS.md#wf-01), [`WF-06`](./WORKFLOWS.md#wf-06)
 
-### [📋 04. Project Management](./04-management/)
+## Traceability Matrix (UC ↔ Feature ↔ Workflow ↔ API)
 
-*Quản lý quy trình Agile và tình trạng dự án.*
+| Use case | Feature | Workflow | API chính |
+|---|---|---|---|
+| [`UC-01`](./USE_CASES.md#uc-01) | [`F-01`](./FEATURES.md#f-01) | [`WF-02`](./WORKFLOWS.md#wf-02) | `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh-token` |
+| [`UC-02`](./USE_CASES.md#uc-02) | [`F-02`](./FEATURES.md#f-02) | [`WF-01`](./WORKFLOWS.md#wf-01) | `POST/GET/PUT/DELETE /api/v1/wallets` |
+| [`UC-03`](./USE_CASES.md#uc-03) | [`F-03`](./FEATURES.md#f-03) | [`WF-01`](./WORKFLOWS.md#wf-01), [`WF-05`](./WORKFLOWS.md#wf-05) | `POST /api/v1/transactions`, `PUT /api/v1/transactions/{id}` |
+| [`UC-04`](./USE_CASES.md#uc-04) | [`F-07`](./FEATURES.md#f-07) | [`WF-06`](./WORKFLOWS.md#wf-06) | `POST /api/v1/ai/query-history` |
+| [`UC-05`](./USE_CASES.md#uc-05) | [`F-07`](./FEATURES.md#f-07), [`F-03`](./FEATURES.md#f-03) | [`WF-06`](./WORKFLOWS.md#wf-06), [`WF-05`](./WORKFLOWS.md#wf-05) | `POST /api/v1/ai/extract-transaction`, `POST /api/v1/transactions` |
+| [`UC-06`](./USE_CASES.md#uc-06) | [`F-08`](./FEATURES.md#f-08) | [`WF-03`](./WORKFLOWS.md#wf-03), [`WF-04`](./WORKFLOWS.md#wf-04) | `POST /api/v1/receipts/upload`, `GET /api/v1/receipts/{id}`, `POST /api/v1/receipts/{id}/confirm` |
+| [`UC-07`](./USE_CASES.md#uc-07) | [`F-05`](./FEATURES.md#f-05) | [`WF-01`](./WORKFLOWS.md#wf-01) | `POST /api/v1/budgets`, `GET /api/v1/budgets`, `GET /api/v1/budgets/planning`, `DELETE /api/v1/budgets/reset` |
+| [`UC-08`](./USE_CASES.md#uc-08) | [`F-06`](./FEATURES.md#f-06), [`F-07`](./FEATURES.md#f-07) | [`WF-06`](./WORKFLOWS.md#wf-06) | `GET /api/v1/dashboard/summary`, `POST /api/v1/ai/generate-insights`, `POST /api/v1/ai/budget-insight` |
 
-- [Product Backlog & Roadmap](./04-management/product-backlog-and-roadmap.md)
-- [Phạm vi & Chuẩn docs](./04-management/documentation-scope.md)
-- [Template tài liệu chuẩn](./04-management/documentation-template.md)
-- [Rollout/rollback labels & milestones](./04-management/labels-milestones-rollout-commands.md)
-- [GitHub CLI Progress Tracking](./04-management/github-cli-progress-tracking.md)
-- [Development Plan](./04-management/development-plan.md)
-- [Hướng dẫn Demo (Runbook)](./04-management/sprint-demo-runbook.md)
+## Tài liệu liên quan
 
-### [🏃 05. Sprints](./05-sprints/)
-
-*Theo dõi tiến độ theo từng giai đoạn thực thi.*
-
-- [Sprint 1: Tracking & Issues](./05-sprints/sprint-1-tracker.md)
-- [Sprint Issues Mapping (Mobile-first)](./05-sprints/sprint-2-issues.md)
-- [Sprint Backlog](./04-management/sprint-backlog.md)
-- [Sprint Capacity Plan](./04-management/sprint-capacity-plan.md)
-- [GitHub Issues Setup - Sprint 1](./05-sprints/github-issues-sprint-1.md)
-- [Home Dashboard v1 Plan (Draft)](./PLAN-home-dashboard.md)
-- [Sprint Docs Standard](./05-sprints/sprint-doc-standard.md)
-- [Phân rã task Mobile](./05-sprints/sprint-2-task-breakdown-mobile.md)
-
----
-
-## 🛠️ Quy tắc Quản lý Tài liệu
-
-1. **Priority Mermaid**: Luôn ưu tiên vẽ sơ đồ bằng Mermaid code để dễ dàng cập nhật và tracking qua Git.
-2. **Single Source of Truth**: Mọi thay đổi về logic nghiệp vụ phải được cập nhận vào `01-product` trước khi code.
-3. **Internal Links**: Khi tạo trang mới, hãy cập nhật liên kết vào `README.md` này.
-
----
-*Dự án được phát triển bởi Team Antigravity.*
+- Project overview: [`../README.md`](../README.md)

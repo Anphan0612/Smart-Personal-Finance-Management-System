@@ -3,6 +3,7 @@ package com.example.smartmoneytracking.domain.entities.wallet;
 import com.example.smartmoneytracking.domain.entities.wallet.valueobject.*;
 import com.example.smartmoneytracking.domain.exception.BusinessException;
 import com.example.smartmoneytracking.domain.exception.ErrorCode;
+import com.example.smartmoneytracking.domain.exception.InsufficientBalanceException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +12,7 @@ import lombok.Setter;
 import lombok.AccessLevel;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -59,10 +60,10 @@ public class Wallet {
     private String branch;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
+    private OffsetDateTime createdAt;
+    
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -70,13 +71,13 @@ public class Wallet {
             id = UUID.randomUUID().toString();
         if (balance == null)
             balance = initialBalance;
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 
     // Business Methods
@@ -106,7 +107,7 @@ public class Wallet {
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
         if (this.balance.compareTo(amount) < 0) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE, "Insufficient balance in wallet: " + this.name);
+            throw new InsufficientBalanceException("Insufficient balance in wallet: " + this.name);
         }
         this.balance = this.balance.subtract(amount);
     }

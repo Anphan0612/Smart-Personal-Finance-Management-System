@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk git *)",
+      "Bash(./mvnw -f backend/pom.xml test -DskipTests=false)",
+      "Bash(./mvnw test *)",
+      "Bash(rtk npm *)",
+      "Bash(rtk ls *)",
+      "Bash(docker compose *)",
+      "Bash(rtk docker *)",
+      "Bash(rtk ps *)",
+      "Bash(rtk read *)",
+      "Bash(gh *)",
+      "Bash(rtk gh *)",
+      "Bash(chmod +x *)",
+      "Bash(python scripts/verify_setup.py)"
+    ]
+  }
+}

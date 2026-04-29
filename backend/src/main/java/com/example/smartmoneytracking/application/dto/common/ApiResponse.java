@@ -35,10 +35,14 @@ public class ApiResponse<T> {
     // ─── Success Factories ───
 
     public static <T> ApiResponse<T> success(T data) {
+        return success(data, "Operation successful");
+    }
+
+    public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
                 .success(true)
                 .code(200)
-                .message("Operation successful")
+                .message(message)
                 .data(data)
                 .timestamp(Instant.now())
                 .build();

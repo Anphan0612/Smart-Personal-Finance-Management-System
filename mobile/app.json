@@ -25,6 +25,7 @@
         "backgroundColor": "#1275e2"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "package": "com.smartfinance.app"
     },
     "web": {
@@ -43,11 +44,19 @@
         }
       ],
       [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "Cho phép ứng dụng sử dụng camera.",
+          "enableMicrophonePermission": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
             "usesCleartextTraffic": true,
-            "ndkVersion": "27.1.12297006"
+            "ndkVersion": "26.1.10909125",
+            "kotlinVersion": "1.9.24"
           }
         }
       ],

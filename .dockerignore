@@ -29,6 +29,20 @@ ai-service/.venv-ocr
 # Runtime artifacts
 uploads
 ai-service/models/cache
+ai-service/logs
+
+# AI Configuration (Local only)
+.agent/
+.cursor/
+.claude/
+
+# Backups & Temporary files
+*_backup.tsx
+*_restored.tsx
+*.bak
+*.tmp
+*.log
+
 # Local env files
 .env
 .env.*
