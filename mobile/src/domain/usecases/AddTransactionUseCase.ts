@@ -41,7 +41,7 @@ export class AddTransactionUseCase {
 }
 
 export class ValidationError extends Error {
-  constructor(public readonly errors: Array<{ field: string; message: string }>) {
+  constructor(public readonly errors: { field: string; message: string }[]) {
     super('Validation failed');
     this.name = 'ValidationError';
   }

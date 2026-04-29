@@ -60,7 +60,7 @@ export class TransactionPresentationMapper {
     return formatDate(date);
   }
 
-  static flattenPages(pages: Array<{ content: Transaction[] }>): Transaction[] {
+  static flattenPages(pages: { content: Transaction[] }[]): Transaction[] {
     if (!pages || pages.length === 0) return [];
     return pages.flatMap((page) => page.content || []);
   }

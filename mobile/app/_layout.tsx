@@ -15,21 +15,20 @@ import {
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { useColorScheme, LogBox, View } from 'react-native';
+import { useColorScheme, LogBox, View , Pressable, Text } from 'react-native';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-
-// Ignore specific warning from third-party libraries
-LogBox.ignoreLogs(['SafeAreaView has been deprecated and will be removed in a future release.']);
 import 'react-native-reanimated';
 import '../global.css';
 import { useAppStore } from '../src/store/useAppStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
-import { Pressable, Text } from 'react-native';
+
+// Ignore specific warning from third-party libraries
+LogBox.ignoreLogs(['SafeAreaView has been deprecated and will be removed in a future release.']);
 
 export function ErrorBoundary(props: any) {
   return (

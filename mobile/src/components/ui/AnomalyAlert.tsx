@@ -5,7 +5,7 @@ import { AlertTriangle, ChevronRight } from 'lucide-react-native';
 import { formatCurrency } from '../../utils/format';
 
 interface AnomalyAlertProps {
-  anomalies: Array<{
+  anomalies: {
     transaction_id: string;
     amount: number;
     category: string;
@@ -13,7 +13,7 @@ interface AnomalyAlertProps {
     message: string;
     mean: number;
     z_score: number;
-  }>;
+  }[];
   onPress?: () => void;
 }
 

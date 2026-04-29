@@ -12,7 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { MotiView, AnimatePresence } from 'moti';
-import { X, Zap, Camera, ArrowUp, ArrowDown, TrendingUp, Target, Coffee } from 'lucide-react-native';
+import { X, Zap, Camera, ArrowUp, ArrowDown, TrendingUp, Target, Coffee , Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { AtelierTypography } from '../../components/ui/AtelierTypography';
 import { useAppStore, ChatMessage } from '../../store/useAppStore';
@@ -27,7 +27,6 @@ import { AtelierTransactionCard } from '../../components/ui/AtelierTransactionCa
 import { useAddTransaction, CreateTransactionRequest } from '../../hooks/useTransactions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { generateId, ID_PREFIX } from '../../utils/id';
-import { Sparkles } from 'lucide-react-native';
 
 // Feature hooks
 import { useAtelierChat, useChatScroll, useProactiveInsights } from './hooks';
