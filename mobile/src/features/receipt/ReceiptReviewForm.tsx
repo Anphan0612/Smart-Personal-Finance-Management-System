@@ -80,12 +80,14 @@ export default function ReceiptReviewForm() {
     if (wallets.length === 0 || categories.length === 0) {
       refreshMetadata();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (activeWalletId && !formData.walletId) {
       setFormData((prev) => ({ ...prev, walletId: activeWalletId }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWalletId]);
 
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function ReceiptReviewForm() {
         ) || categories[0];
       setFormData((prev) => ({ ...prev, categoryId: defaultCat.id }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
 
   const triggerShake = () => {
@@ -125,6 +128,7 @@ export default function ReceiptReviewForm() {
 
   useEffect(() => {
     fetchReceiptData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [receiptId]);
 
   const fetchReceiptData = async () => {

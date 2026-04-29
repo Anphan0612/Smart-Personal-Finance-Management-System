@@ -4,6 +4,8 @@ import * as Haptics from 'expo-haptics';
 import { AtelierTypography } from './AtelierTypography';
 import type { ButtonVariant } from '../../types';
 
+import { LinearGradient } from 'expo-linear-gradient';
+
 interface AtelierButtonProps extends Omit<PressableProps, 'children'> {
   variant?: ButtonVariant;
   label: string;
@@ -41,8 +43,6 @@ const sizeStyles: Record<string, string> = {
   md: 'py-3 px-6',
   lg: 'py-4 px-8',
 };
-
-import { LinearGradient } from 'expo-linear-gradient';
 
 export function AtelierButton({
   variant = 'primary',

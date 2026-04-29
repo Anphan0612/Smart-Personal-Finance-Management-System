@@ -11,12 +11,11 @@ import {
   Check,
   Loader,
 } from 'lucide-react-native';
-import { router } from 'expo-router';
+import { router , useLocalSearchParams } from 'expo-router';
 import apiClient from '../../services/api';
 import { MotiView, AnimatePresence } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { useLocalSearchParams } from 'expo-router';
 import { AtelierTypography, AtelierCard } from '@/components/ui';
 import { Colors } from '@/constants/tokens';
 
