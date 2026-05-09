@@ -1,0 +1,25 @@
+appId: host.exp.exponent
+---
+- runFlow:
+    when:
+      visible:
+        id: android:id/button1
+    commands:
+      - tapOn:
+          id: android:id/button1
+- tapOn:
+    id: fab-action-hub
+- tapOn:
+    id: action-open-ai
+- assertVisible: "Atelier AI"
+- tapOn:
+    id: atelier-ai-input
+- inputText: ${AI_PROMPT}
+- tapOn:
+    id: atelier-ai-send-button
+- extendedWaitUntil:
+    visible:
+      id: atelier-ai-close-button
+    timeout: 20000
+- tapOn:
+    id: atelier-ai-close-button

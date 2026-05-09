@@ -45,27 +45,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: 'Cho phép ứng dụng sử dụng camera để chụp ảnh hóa đơn.',
       },
     ],
-    [
-      'react-native-vision-camera',
-      {
-        cameraPermissionText: 'Cho phép ứng dụng sử dụng camera.',
-        enableMicrophonePermission: true,
-      },
-    ],
-    [
-      'expo-build-properties',
-      {
-        android: {
-          usesCleartextTraffic: true,
-          ndkVersion: '26.1.10909125',
-          kotlinVersion: '2.0.21',
-          minSdkVersion: 24,
-        },
-        ios: {
-          deploymentTarget: '15.1',
-        },
-      },
-    ],
+
+
     '@react-native-community/datetimepicker',
   ],
   experiments: {

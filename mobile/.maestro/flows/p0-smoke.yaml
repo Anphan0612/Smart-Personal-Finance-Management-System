@@ -1,0 +1,16 @@
+appId: host.exp.exponent
+env:
+  LOGIN_EMAIL: "demo"
+  LOGIN_PASSWORD: "123456"
+  TRANSACTION_AMOUNT: "120000"
+  AI_PROMPT: "Tuan nay toi tieu bao nhieu cho an uong?"
+---
+- runFlow: subflows/open-by-link.yaml
+- runFlow: subflows/login.yaml
+- assertVisible:
+    id: tab-home
+- runFlow: subflows/create-transaction.yaml
+- runFlow: subflows/open-ai-chat.yaml
+- tapOn:
+    id: tab-transactions
+- assertVisible: "History"

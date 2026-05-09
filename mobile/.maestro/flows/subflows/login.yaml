@@ -1,0 +1,33 @@
+appId: host.exp.exponent
+---
+- extendedWaitUntil:
+    visible:
+      id: welcome-login-button
+    timeout: 60000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: welcome-login-button
+    commands:
+      - tapOn:
+          id: welcome-login-button
+- runFlow:
+    when:
+      visible:
+        id: login-email-input
+    commands:
+      - tapOn:
+          id: login-email-input
+      - eraseText
+      - inputText: ${LOGIN_EMAIL}
+      - tapOn:
+          id: login-password-input
+      - eraseText
+      - inputText: ${LOGIN_PASSWORD}
+      - tapOn:
+          id: login-submit-button
+- extendedWaitUntil:
+    visible:
+      id: tab-home
+    timeout: 60000
