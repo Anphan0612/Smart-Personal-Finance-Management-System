@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 
 # Stage 1: Builder
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS builder
+FROM python:3.10-slim AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1
@@ -10,11 +10,8 @@ WORKDIR /build
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3-pip \
-    python3.10-venv \
-    python3-dev \
     build-essential \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create virtual environment
@@ -28,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python3.10 -m pip install -r requirements.txt
 
 # Stage 2: Runtime
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS runtime
+FROM python:3.10-slim AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -43,13 +40,11 @@ WORKDIR /app
 
 # Install runtime dependencies ONLY
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3.10-venv \
     libglib2.0-0 \
     libsm6 \
     libxrender1 \
     libxext6 \
-    libgl1-mesa-glx \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -64,12 +59,10 @@ RUN mkdir -p /app/models/cache /app/uploads /app/ml-models && \
 COPY --from=builder /opt/venv /opt/venv
 
 # Copy model setup script and config BEFORE switching user
-# This allows us to download models in a separate layer for better caching
 COPY models_config.json ./
 COPY scripts ./scripts
 
 # Download ML models (this layer will be cached unless models_config.json changes)
-# Run as root to ensure proper permissions, then fix ownership
 RUN python3.10 scripts/setup_models.py || echo "Model download failed, will use fallbacks" && \
     chown -R aiuser:aiuser /app/ml-models /app/models/cache 2>/dev/null || true
 
@@ -77,7 +70,6 @@ RUN python3.10 scripts/setup_models.py || echo "Model download failed, will use 
 USER aiuser
 
 # Copy application source code (ignoring __pycache__ via .dockerignore)
-# Code changes won't invalidate the model download layer above
 COPY --chown=aiuser:aiuser main.py ./
 COPY --chown=aiuser:aiuser models ./models
 COPY --chown=aiuser:aiuser services ./services

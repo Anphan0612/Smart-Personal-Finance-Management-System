@@ -86,6 +86,10 @@ interface AppState {
   setTransactionModalOpen: (open: boolean) => void;
 
   // AI Chat State
+  isAIOpen: boolean;
+  setAIOpen: (open: boolean) => void;
+  pendingAIQuery: string | null;
+  setPendingAIQuery: (query: string | null) => void;
   messages: ChatMessage[];
   addMessage: (message: ChatMessage) => void;
   updateLastMessage: (content: string) => void;
@@ -144,6 +148,10 @@ export const useAppStore = create<AppState>()(
       setTransactionModalOpen: (open) => set({ isTransactionModalOpen: open }),
 
       // AI Chat Defaults
+      isAIOpen: false,
+      setAIOpen: (open) => set({ isAIOpen: open }),
+      pendingAIQuery: null,
+      setPendingAIQuery: (query) => set({ pendingAIQuery: query }),
       messages: [],
       addMessage: (message) =>
         set((state) => {

@@ -195,7 +195,13 @@ export default function HomeScreen() {
             type="weekly"
             current={comparison.currentWeek.totalExpense}
             previous={comparison.lastWeek.totalExpense}
-            onPress={() => setSelectionModalVisible(true)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const store = useAppStore.getState();
+              const autoPrompt = `Hãy phân tích chi tiêu ${formatCurrency(comparison.currentWeek.totalExpense)} của tôi tuần này.`;
+              store.setPendingAIQuery(autoPrompt);
+              store.setAIOpen(true);
+            }}
           />
         )}
 

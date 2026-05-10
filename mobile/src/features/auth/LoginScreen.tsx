@@ -17,20 +17,25 @@ import { poster } from '../../services/api';
 import { AuthenticationResponse } from '../../types/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AtelierTypography, AtelierInput, AtelierButton } from '../../components/ui';
+import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const setTokens = useAppStore((state) => state.setTokens);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
-      return;
-    }
+    setEmailError('');
+    setPasswordError('');
+
+    if (!email) setEmailError('Vui lòng nhập email');
+    if (!password) setPasswordError('Vui lòng nhập mật khẩu');
+    if (!email || !password) return;
 
     try {
       setIsLoading(true);
@@ -50,8 +55,19 @@ export default function LoginScreen() {
       }
     } catch (error: any) {
       console.error('[AUTH ERROR]', error);
+      const status = error.response?.status;
       const message = error.response?.data?.message || 'Thông tin đăng nhập không chính xác.';
-      Alert.alert('Đăng nhập thất bại', message);
+      
+      if (status === 400 || status === 401 || status === 403 || status === 404) {
+        setPasswordError(message);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Lỗi hệ thống',
+          text2: message || 'Mất kết nối với máy chủ',
+          position: 'top'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -117,6 +133,7 @@ export default function LoginScreen() {
               placeholder="name@company.com"
               value={email}
               onChangeText={setEmail}
+              error={emailError}
               keyboardType="email-address"
               autoCapitalize="none"
               testID="login-email-input"
@@ -131,6 +148,7 @@ export default function LoginScreen() {
                 secureTextEntry={!showPassword}
                 value={password}
                 onChangeText={setPassword}
+                error={passwordError}
                 testID="login-password-input"
                 leftIcon={<Lock size={18} color="#74777f" />}
                 rightIcon={

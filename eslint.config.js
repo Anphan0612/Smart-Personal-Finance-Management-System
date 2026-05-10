@@ -2,6 +2,7 @@ const js = require("@eslint/js");
 const ts = require("typescript-eslint");
 const react = require("eslint-plugin-react");
 const reactNative = require("eslint-plugin-react-native");
+const reactHooks = require("eslint-plugin-react-hooks");
 const globals = require("globals");
 
 module.exports = [
@@ -21,6 +22,7 @@ module.exports = [
     plugins: {
       react,
       "react-native": reactNative,
+      "react-hooks": reactHooks,
     },
     languageOptions: {
       parser: ts.parser,

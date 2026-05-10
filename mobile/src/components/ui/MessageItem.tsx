@@ -61,15 +61,16 @@ export const MessageItem = memo(({ message, onEditTransaction, onConfirmTransact
       );
     }
 
-    if (message.data.transactions && Array.isArray(message.data.transactions)) {
+    const msgData: any = message.data;
+    if (msgData?.transactions && Array.isArray(msgData.transactions)) {
       if (message.type === 'QUERY' || message.type === 'SUMMARY') {
         return (
           <View className="bg-white rounded-2xl p-3 border border-outline-variant/10 shadow-sm">
-            {message.data.transactions.map((txn: any, idx: number) => {
+            {msgData.transactions.map((txn: any, idx: number) => {
               const isIncome = txn.type === 'INCOME';
               const displayDate = txn.date || txn.transactionDate;
               return (
-                <View key={idx} className={`flex-row items-center justify-between py-2 ${idx !== message.data.transactions.length - 1 ? 'border-b border-outline-variant/10' : ''}`}>
+                <View key={idx} className={`flex-row items-center justify-between py-2 ${idx !== msgData.transactions.length - 1 ? 'border-b border-outline-variant/10' : ''}`}>
                   <View className="flex-1 flex-row items-center gap-3">
                     <View className={`w-10 h-10 rounded-xl items-center justify-center ${isIncome ? 'bg-green-50' : 'bg-red-50'}`}>
                       <Text className={`font-bold text-[16px] ${isIncome ? 'text-green-600' : 'text-error'}`}>{isIncome ? '+' : '-'}</Text>
@@ -102,7 +103,7 @@ export const MessageItem = memo(({ message, onEditTransaction, onConfirmTransact
 
       return (
         <View className="gap-3">
-          {message.data.transactions.map((txn: any, idx: number) => (
+          {msgData.transactions.map((txn: any, idx: number) => (
             <AtelierAICard key={idx}>
               <AtelierTransactionCard
                 data={txn}

@@ -19,6 +19,10 @@ WORKDIR /app
 
 # Add non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
+
+# Create uploads directory and set ownership
+RUN mkdir -p /app/uploads/receipts && chown -R spring:spring /app
+
 USER spring:spring
 
 # Copy built JAR from builder stage

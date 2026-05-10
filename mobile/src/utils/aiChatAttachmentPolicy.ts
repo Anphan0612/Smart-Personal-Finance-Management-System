@@ -31,7 +31,7 @@ export function shouldRenderAiChatTransactionCards(message: ChatMessage): boolea
     return false;
   }
 
-  const attach = (message.data as { attachTransactionCards?: boolean }).attachTransactionCards;
+  const attach = (message.data as any)?.attachTransactionCards;
   if (attach === false) {
     return false;
   }
@@ -69,7 +69,7 @@ export function shouldShowChatOverviewCard(message: ChatMessage): boolean {
     return false;
   }
 
-  const attach = message.data?.attachTransactionCards;
+  const attach = (message.data as any)?.attachTransactionCards;
   if (attach === false) {
     return true;
   }

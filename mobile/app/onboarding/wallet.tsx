@@ -16,7 +16,7 @@ export default function InitialWalletScreen() {
 
   const handleFinish = async () => {
     if (!walletName.trim()) {
-      alert('Please enter a wallet name');
+      alert('Vui lòng nhập tên ví');
       return;
     }
 
@@ -37,7 +37,7 @@ export default function InitialWalletScreen() {
       router.replace('/(tabs)' as any);
     } catch (error: any) {
       console.error('[ONBOARDING ERROR]', error);
-      const message = error.response?.data?.message || 'Failed to create wallet. Please try again.';
+      const message = error.response?.data?.message || 'Không thể tạo ví. Vui lòng thử lại.';
       alert(message);
     } finally {
       setLoading(false);
@@ -59,25 +59,25 @@ export default function InitialWalletScreen() {
             <View style={styles.iconContainer}>
               <WalletIcon color="#0052CC" size={32} />
             </View>
-            <Text style={styles.title}>First Wallet</Text>
+            <Text style={styles.title}>Ví đầu tiên</Text>
             <Text style={styles.subtitle}>
-              Give your first wallet a name and set its starting balance.
+              Đặt tên cho chiếc ví đầu tiên của bạn và thiết lập số dư ban đầu.
             </Text>
           </MotiView>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Wallet Name</Text>
+              <Text style={styles.label}>Tên ví</Text>
               <TextInput
                 style={styles.input}
                 value={walletName}
                 onChangeText={setWalletName}
-                placeholder="e.g. Cash, Bank Account"
+                placeholder="Ví dụ: Tiền mặt, Ngân hàng"
               />
             </View>
 
             <View style={styles.balanceContainer}>
-              <Text style={styles.label}>Starting Balance</Text>
+              <Text style={styles.label}>Số dư ban đầu</Text>
               <View style={styles.amountWrapper}>
                 <Text style={styles.currencySymbol}>₫</Text>
                 <TextInput
@@ -91,7 +91,7 @@ export default function InitialWalletScreen() {
               <View style={styles.tipContainer}>
                 <Info size={16} color="#6B7280" />
                 <Text style={styles.tipText}>
-                  You can change this anytime later.
+                  Bạn có thể thay đổi thông tin này bất cứ lúc nào.
                 </Text>
               </View>
             </View>
@@ -106,7 +106,7 @@ export default function InitialWalletScreen() {
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text style={styles.finishButtonText}>Complete Setup</Text>
+                <Text style={styles.finishButtonText}>Hoàn tất thiết lập</Text>
               )}
             </Pressable>
           </View>

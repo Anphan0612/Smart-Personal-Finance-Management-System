@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface BudgetRepository {
     Budget save(Budget budget);
+    List<Budget> saveAllBudgets(List<Budget> budgets);
     Optional<Budget> findById(String id);
     Optional<Budget> findByUserIdAndCategoryIdAndMonthAndYear(String userId, String categoryId, int month, int year);
     List<Budget> findByUserIdAndMonthAndYear(String userId, int month, int year);

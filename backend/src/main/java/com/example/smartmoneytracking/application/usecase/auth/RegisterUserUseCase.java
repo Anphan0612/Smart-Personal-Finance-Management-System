@@ -27,6 +27,11 @@ public class RegisterUserUseCase {
             throw new UserAlreadyExistsException("User with email " + email + " already exists");
         }
 
+        // Check if username already exists
+        if (userRepository.existsByUsername(name)) {
+            throw new UserAlreadyExistsException("User with username " + name + " already exists");
+        }
+
         // Encode password
         String encodedPassword = passwordEncoder.encode(rawPassword);
 

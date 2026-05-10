@@ -18,9 +18,9 @@ export default function WelcomeScreen() {
           style={styles.header}
         >
           <Text style={styles.brand}>ATELIER FINANCE</Text>
-          <Text style={styles.headline}>Precision in every{"\n"}financial move.</Text>
+          <Text style={styles.headline}>Chính xác trong từng{"\n"}quyết định tài chính.</Text>
           <Text style={styles.subheadline}>
-            A sophisticated management system for those who value clarity and elegance.
+            Hệ thống quản lý tinh tế dành cho những người trân trọng sự minh bạch và sang trọng.
           </Text>
         </MotiView>
 
@@ -34,8 +34,8 @@ export default function WelcomeScreen() {
             style={styles.primaryButton}
             onPress={() => router.push('/(auth)/register')}
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
-            <ArrowRight color="white" size={20} strokeWidth={2.5} />
+            <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+            <ArrowRight color="#0052CC" size={20} strokeWidth={2.5} />
           </Pressable>
 
           <Pressable 
@@ -44,7 +44,7 @@ export default function WelcomeScreen() {
             testID="welcome-login-button"
           >
             <Text style={styles.secondaryButtonText}>
-              Already have an account? <Text style={styles.loginText}>Sign In</Text>
+              Bạn đã có tài khoản? <Text style={styles.loginText}>Đăng nhập</Text>
             </Text>
           </Pressable>
         </MotiView>

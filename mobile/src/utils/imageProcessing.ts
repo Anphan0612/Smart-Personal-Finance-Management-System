@@ -23,7 +23,7 @@ export interface QualityResult {
 }
 
 const getFileSizeKB = async (uri: string): Promise<number> => {
-  const info = await FileSystem.getInfoAsync(uri, { size: true });
+  const info = await FileSystem.getInfoAsync(uri);
   if (!info.exists || typeof info.size !== 'number') return 0;
   return Math.round(info.size / 1024);
 };
