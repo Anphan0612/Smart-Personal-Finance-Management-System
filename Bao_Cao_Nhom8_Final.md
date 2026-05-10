@@ -278,66 +278,23 @@ dùng nào cũng duy trì được thói quen ghi chép đều đặn. Nguyên n
 là quá trình nhập liệu thủ công, lặp lại và gián đoạn trải nghiệm sử
 dụng.
 
-Từ thực tế đó, nhóm xây dựng hệ thống quản lý tài chính cá nhân thông
-minh với ba hướng hỗ trợ AI/NLP:
-
-- Ứng dụng OCR để nhận diện thông tin từ hóa đơn, giảm thời gian nhập
-  liệu.
-
-- NLP parser để bóc tách thông tin giao dịch từ câu mô tả tiếng Việt tự
-  nhiên.
-
-- Atelier AI cho phép người dùng truy vấn lịch sử chi tiêu thông qua hội
-  thoại.
+Từ thực tế đó, nhóm xây dựng hệ thống quản lý tài chính cá nhân thông minh theo hướng giảm tối đa thao tác nhập liệu thủ công nhưng vẫn đảm bảo dữ liệu được kiểm soát. Hệ thống được bổ sung ba hướng hỗ trợ AI/NLP: (1) OCR nhận diện thông tin từ ảnh hóa đơn để tạo bản nháp giao dịch và giảm thời gian nhập liệu, (2) NLP Parser bóc tách thông tin giao dịch từ câu mô tả tiếng Việt tự nhiên, và (3) Atelier AI cho phép truy vấn lịch sử chi tiêu dưới dạng hội thoại dựa trên dữ liệu thật của người dùng.
 
 ## 1.2. Mục tiêu đề tài
 
 ### 1.2.1. Mục tiêu chức năng nền tảng
-
-- Cho phép người dùng đăng ký, đăng nhập và xác thực an toàn.
-
-- Hỗ trợ quản lý ví tiền và số dư.
-
-- Tạo, chỉnh sửa, xóa và xem lịch sử giao dịch thu chi.
-
-- Phân loại giao dịch theo danh mục, phục vụ thống kê.
-
-- Cung cấp dashboard, thống kê và theo dõi ngân sách.
+Hệ thống tập trung cung cấp các tính năng quản lý tài chính cốt lõi, bắt đầu từ việc cho phép người dùng đăng ký, đăng nhập và xác thực an toàn. Về mặt nghiệp vụ, ứng dụng hỗ trợ quản lý danh sách ví tiền cùng số dư tương ứng, cho phép tạo, chỉnh sửa, xóa và theo dõi lịch sử giao dịch thu chi một cách chi tiết. Mọi giao dịch đều được phân loại theo danh mục để phục vụ cho công tác thống kê. Cuối cùng, hệ thống cung cấp giao diện dashboard và analytics để người dùng theo dõi ngân sách cũng như xu hướng chi tiêu thông qua các biểu đồ trực quan.
 
 ### 1.2.2. Mục tiêu AI/NLP
-
-- OCR hóa đơn: nhận diện thông tin từ ảnh (cửa hàng, ngày, số tiền, danh
-  mục gợi ý).
-
-- NLP Parser: bóc tách giao dịch từ câu ngắn tiếng Việt (\"ăn phở 50k\",
-  \"nhận lương 12 triệu\").
-
-- Atelier AI: hỏi đáp lịch sử chi tiêu bằng ngôn ngữ tự nhiên, dựa trên
-  dữ liệu thật.
-
-- Đảm bảo ổn định demo qua cơ chế fallback khi mô hình chưa sẵn sàng.
+Ở phần AI/NLP, mục tiêu của nhóm không phải là thay thế hoàn toàn thao tác của người dùng mà là hỗ trợ nhập liệu và khai thác dữ liệu nhanh hơn. Chức năng OCR hóa đơn được dùng để nhận diện các thông tin như cửa hàng, ngày giao dịch, số tiền và danh mục gợi ý từ ảnh hóa đơn. NLP Parser xử lý các câu ngắn tiếng Việt như “ăn phở 50k” hoặc “nhận lương 12 triệu” để tạo bản nháp giao dịch. Atelier AI cho phép người dùng hỏi lại lịch sử chi tiêu bằng ngôn ngữ tự nhiên, nhưng câu trả lời phải được ràng buộc bởi dữ liệu giao dịch thật. Để phục vụ demo ổn định, hệ thống cũng được thiết kế cơ chế fallback khi mô hình học máy chưa sẵn sàng hoặc môi trường chạy thiếu tài nguyên.
 
 ## 1.3. Phạm vi hệ thống
 
 ### 1.3.1. Bao gồm
-
-- Ứng dụng Mobile: React Native/Expo --- giao diện tương tác chính.
-
-- Backend API: Spring Boot --- nghiệp vụ, xác thực, quản lý dữ liệu.
-
-- AI Service: FastAPI --- NLP, OCR và sinh phản hồi thông minh.
-
-- Cơ sở dữ liệu: MySQL 8 --- lưu trữ người dùng, ví, giao dịch, hóa đơn.
-
-- Môi trường demo: Docker Compose --- khởi chạy đồng nhất.
+Phạm vi triển khai của đề tài bao gồm đầy đủ ba thành phần chính của hệ thống. Ứng dụng Mobile được xây dựng bằng React Native/Expo và đóng vai trò là giao diện tương tác chính với người dùng. Backend API sử dụng Spring Boot để xử lý nghiệp vụ, xác thực, phân quyền và quản lý dữ liệu. AI Service được triển khai bằng FastAPI, phụ trách các tác vụ NLP, OCR và sinh phản hồi thông minh cho chức năng hội thoại. Dữ liệu được lưu trữ trong MySQL 8 với các nhóm thông tin chính như người dùng, ví, giao dịch, hóa đơn và danh mục. Để đảm bảo môi trường demo đồng nhất, nhóm sử dụng Docker Compose cho các thành phần backend, database và AI service.
 
 ### 1.3.2. Không bao gồm
-
-- Chưa tích hợp trực tiếp với ngân hàng hoặc ví điện tử thực tế.
-
-- Chưa triển khai đầy đủ trên môi trường production cloud.
-
-- Chưa đánh giá mô hình AI trên tập dữ liệu lớn ở quy mô thực tế.
+Trong phạm vi đồ án, hệ thống chưa tích hợp trực tiếp với ngân hàng hoặc ví điện tử thực tế do các yêu cầu liên quan đến pháp lý, bảo mật và quyền truy cập dữ liệu tài chính. Hệ thống cũng chưa được triển khai đầy đủ trên môi trường production cloud mà tập trung vào môi trường demo có thể tái lập. Ngoài ra, các mô hình AI/NLP mới được đánh giá trên dữ liệu kiểm thử và tình huống minh họa, chưa được kiểm chứng trên tập dữ liệu lớn ở quy mô vận hành thực tế.
 
 # CHƯƠNG 2. PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG
 
@@ -382,33 +339,12 @@ minh với ba hướng hỗ trợ AI/NLP:
   --------- ----------- ---------------------- --------- --------------------------------
 
 ## 2.2. Yêu cầu phi chức năng
-
-- Hiệu năng: Danh sách giao dịch được phân trang; luồng OCR bất đồng bộ
-  (202 + polling) tránh timeout.
-
-- Bảo mật: Không cho phép client cung cấp userId trực tiếp; refresh
-  token dùng mutex tránh race condition.
-
-- Tính ổn định: AI Service có fallback rule-based khi mô hình học máy
-  không khả dụng.
-
-- Khả năng mở rộng: Backend và AI Service tách thành hai dịch vụ độc
-  lập; cấu hình qua biến môi trường; deploy bằng Docker Compose.
+Bên cạnh các chức năng nghiệp vụ, hệ thống được thiết kế để đáp ứng một số yêu cầu phi chức năng quan trọng. Về hiệu năng, danh sách giao dịch được phân trang để tránh tải dữ liệu quá lớn lên thiết bị di động, trong khi luồng OCR được tổ chức theo mô hình bất đồng bộ (202 Accepted kết hợp polling) nhằm hạn chế timeout khi xử lý ảnh. Về bảo mật, backend không cho phép client truyền `userId` trực tiếp vào các thao tác nghiệp vụ; việc định danh người dùng được suy ra từ ngữ cảnh xác thực. Cơ chế refresh token ở phía mobile được bảo vệ bằng mutex để tránh race condition khi nhiều request cùng gặp lỗi hết hạn token. Về tính ổn định, AI Service được xây dựng thêm lớp fallback rule-based để hệ thống vẫn có thể phản hồi khi mô hình học máy không khả dụng. Cuối cùng, về khả năng mở rộng, backend và AI Service được tách thành hai dịch vụ độc lập, cấu hình thông qua biến môi trường và có thể khởi chạy nhất quán bằng Docker Compose.
 
 ## 2.3. Thiết kế kiến trúc tổng thể
 
 Hệ thống tổ chức theo kiến trúc nhiều tầng: mobile đóng vai trò client,
-backend là trung tâm nghiệp vụ, AI Service cung cấp NLP/OCR. Nguyên tắc
-thiết kế:
-
-- Mobile không tương tác trực tiếp với CSDL hoặc mô hình AI; mọi yêu cầu
-  qua backend.
-
-- Backend điều phối: xác thực, kiểm tra, áp dụng nghiệp vụ, chuyển tiếp
-  sang AI Service.
-
-- AI Service chỉ xử lý phần thông minh theo schema thống nhất; kết quả
-  backend kiểm tra rồi trả về mobile.
+backend là trung tâm nghiệp vụ, AI Service cung cấp NLP/OCR. Các nguyên tắc thiết kế được áp dụng nhất quán theo hướng tách trách nhiệm rõ ràng. Mobile không tương tác trực tiếp với cơ sở dữ liệu hoặc mô hình AI; mọi yêu cầu đều đi qua backend để đảm bảo kiểm soát truy cập và tính nhất quán dữ liệu. Backend đóng vai trò điều phối: thực hiện xác thực, kiểm tra điều kiện hợp lệ, áp dụng nghiệp vụ và chỉ chuyển tiếp phần yêu cầu liên quan đến AI/NLP sang AI Service. AI Service chỉ tập trung xử lý phần “thông minh” theo schema thống nhất, còn kết quả đầu ra sẽ được backend kiểm tra, chuẩn hóa và trả về cho mobile.
 
 ![](media/image2.png){width="2.7842049431321083in"
 height="7.7703543307086615in"}
@@ -446,6 +382,12 @@ height="7.7703543307086615in"}
 
 *Hình 2.2 --- Sơ đồ ERD logic của hệ thống*
 
+Về mặt thiết kế dữ liệu, nhóm ưu tiên mô hình quan hệ rõ ràng để các nghiệp vụ tài chính có thể được kiểm tra và truy xuất ổn định. Bảng `User` lưu thông tin tài khoản, mật khẩu đã mã hóa và các thuộc tính phục vụ xác thực. Bảng `Wallet` đại diện cho từng ví tiền của người dùng, trong đó số dư được cập nhật dựa trên các giao dịch phát sinh. Bảng `Category` đóng vai trò chuẩn hóa danh mục thu/chi, đồng thời có trường ánh xạ với nhãn NLP để kết nối kết quả AI với dữ liệu nghiệp vụ. Bảng `Transaction` là trung tâm của hệ thống, lưu số tiền, loại giao dịch, thời gian, ghi chú, ví liên quan và danh mục tương ứng.
+
+Đối với luồng OCR, bảng `Receipt` được dùng như một lớp trung gian thay vì tạo giao dịch ngay sau khi nhận diện ảnh. Cách thiết kế này giúp hệ thống lưu được trạng thái xử lý, raw text, confidence và các trường dữ liệu trích xuất trước khi người dùng xác nhận. Khi người dùng đồng ý với kết quả review, backend mới tạo transaction chính thức từ receipt. Ngoài ra, bảng `MerchantPreference` cho phép hệ thống ghi nhớ cách người dùng thường phân loại một cửa hàng cụ thể, nhờ đó các lần quét hóa đơn sau có thể gợi ý danh mục chính xác hơn. Bảng `Budget` phục vụ việc đặt ngân sách theo khoảng thời gian, ví hoặc danh mục, từ đó hỗ trợ dashboard và phân tích chi tiêu.
+
+Một điểm quan trọng trong thiết kế cơ sở dữ liệu là không để dữ liệu AI ghi trực tiếp vào bảng giao dịch chính nếu chưa qua kiểm tra của người dùng. Các kết quả từ OCR hoặc NLP Parser chỉ được xem là bản nháp hoặc gợi ý. Điều này phù hợp với bản chất dữ liệu tài chính cá nhân, vì một lỗi nhỏ trong số tiền hoặc loại giao dịch có thể làm sai lệch thống kê tổng thu, tổng chi và số dư ví. Vì vậy, mô hình dữ liệu tách rõ dữ liệu chính thức (`Transaction`) và dữ liệu trung gian (`Receipt`, draft NLP), giúp hệ thống vừa tận dụng được AI vừa giữ được tính kiểm soát.
+
 ## 2.5. Thiết kế luồng người dùng và use case
 
 Các use case chính của hệ thống: đăng ký/đăng nhập, quản lý ví, tạo giao
@@ -460,30 +402,13 @@ thống*
 ## 2.6. Phân tích chi tiết các luồng xử lý quan trọng
 
 ### 2.6.1. Luồng xác thực và làm mới token
-
-- Access token (hạn ngắn) + refresh token (hạn dài); khi token hết hạn
-  backend trả 401.
-
-- Mobile dùng mutex đảm bảo chỉ một request refresh chạy tại một thời
-  điểm.
-
-- Refresh token hết hạn → logout và điều hướng về màn đăng nhập.
+Hệ thống áp dụng cơ chế xác thực hai cấp độ với Access token thời hạn ngắn và Refresh token thời hạn dài. Khi access token hết hạn, backend trả về mã lỗi 401, yêu cầu ứng dụng di động thực hiện làm mới token. Để tránh tình trạng nhiều yêu cầu đồng thời cùng gửi request refresh gây lãng phí tài nguyên hoặc sai lệch trạng thái, mobile sử dụng mutex để đảm bảo chỉ một request refresh được chạy tại một thời điểm. Trong trường hợp refresh token cũng hết hạn, hệ thống sẽ tự động đăng xuất người dùng và điều hướng về màn hình đăng nhập.
 
 *Hình 2.4 --- \[Chèn Sequence Diagram luồng Auth/Refresh Token tại
 đây\]*
 
 ### 2.6.2. Luồng OCR hóa đơn bất đồng bộ
-
-- Backend nhận ảnh → lưu → trả 202 Accepted + receiptId.
-
-- AI Service xử lý: tiền xử lý ảnh → OCR → hậu xử lý → trích xuất trường
-  dữ liệu.
-
-- Backend cập nhật trạng thái receipt và gợi ý danh mục
-  (MerchantPreference → nlpLabel → fallback).
-
-- Mobile polling → hiển thị màn review bắt buộc → người dùng xác nhận →
-  tạo transaction.
+Luồng OCR được thiết kế theo hướng bất đồng bộ để phù hợp với đặc thù xử lý ảnh. Khi người dùng upload ảnh hóa đơn, backend lưu ảnh, tạo bản ghi receipt và trả về `202 Accepted` kèm `receiptId` thay vì giữ kết nối chờ xử lý xong. AI Service sau đó thực hiện pipeline gồm tiền xử lý ảnh, OCR, hậu xử lý và trích xuất các trường dữ liệu cần thiết. Khi có kết quả, backend cập nhật trạng thái receipt và gợi ý danh mục theo thứ tự ưu tiên: MerchantPreference, ánh xạ nhãn AI qua `nlpLabel`, sau đó mới dùng fallback. Mobile thực hiện polling theo `receiptId`; khi receipt xử lý xong, ứng dụng hiển thị màn review bắt buộc để người dùng kiểm tra trước khi xác nhận tạo transaction.
 
 ![](media/image5.png){width="6.397222222222222in"
 height="6.131944444444445in"}
@@ -496,19 +421,7 @@ height="6.131944444444445in"}
 chất lượng ảnh và cấu hình máy chạy demo. Vì vậy, nhóm thiết kế luồng
 OCR theo hướng bất đồng bộ để tránh timeout và cải thiện tính ổn định.
 
-- Backend nhận ảnh, lưu trữ và tạo bản ghi receipt; sau đó trả về 202
-  Accepted cùng receiptId.
-
-- AI Service xử lý OCR theo pipeline nhiều bước: tiền xử lý ảnh → OCR →
-  hậu xử lý/correction → trích xuất trường dữ liệu.
-
-- Backend cập nhật trạng thái receipt và áp dụng chiến lược gợi ý danh
-  mục theo thứ tự ưu tiên (MerchantPreference → ánh xạ nhãn AI qua
-  nlpLabel → fallback).
-
-- Mobile thực hiện polling; khi receipt đã xử lý xong, hệ thống hiển thị
-  màn hình review bắt buộc. Transaction chỉ được tạo sau khi người dùng
-  xác nhận và có thể chỉnh sửa thông tin trước khi lưu.
+Ở bước đầu tiên, backend nhận ảnh, lưu trữ và tạo bản ghi receipt ở trạng thái chờ xử lý, sau đó trả về `202 Accepted` cùng `receiptId`. AI Service tiếp nhận tác vụ OCR và xử lý theo pipeline nhiều bước: tiền xử lý ảnh, nhận diện văn bản, hậu xử lý/correction và trích xuất các trường dữ liệu như số tiền, ngày, cửa hàng và raw text. Khi kết quả được ghi nhận, backend cập nhật trạng thái receipt và áp dụng chiến lược gợi ý danh mục theo thứ tự ưu tiên `MerchantPreference → nlpLabel → fallback`. Ở phía mobile, ứng dụng polling theo `receiptId`; khi receipt đã xử lý xong, hệ thống hiển thị màn review bắt buộc. Transaction chỉ được tạo sau khi người dùng xác nhận và có thể chỉnh sửa thông tin trước khi lưu, nhờ đó giảm rủi ro tạo dữ liệu tài chính sai do OCR nhận diện nhầm.
 
 ![Hình 2.5: Sequence diagram luồng OCR hóa đơn bất đồng
 bộ](media/image6.png){width="6.527777777777778in"
@@ -524,17 +437,7 @@ sinh nội dung chung chung. Để giảm nguy cơ hallucination và tối ưu h
 năng, backend đóng vai trò ràng buộc dữ liệu trước khi gửi sang AI
 Service.
 
-- Backend phân tích câu hỏi để xác định time window (ví dụ: tuần này,
-  tháng trước, 3 tháng gần nhất).
-
-- Backend trích xuất một transaction slice rút gọn phù hợp với khoảng
-  thời gian và chỉ gửi phần dữ liệu cần thiết sang AI Service.
-
-- AI Service sinh phản hồi dạng answer/summary và có thể trả thêm
-  matched_txn_ids để phục vụ hiển thị minh chứng.
-
-- Mobile hiển thị hội thoại; khi cần kiểm chứng, hệ thống hiển thị các
-  transaction cards tương ứng với các giao dịch liên quan.
+Trước khi gửi yêu cầu sang AI Service, backend phân tích câu hỏi để xác định khoảng thời gian liên quan, chẳng hạn như tuần này, tháng trước hoặc ba tháng gần nhất. Từ đó, backend tạo một `transaction slice` rút gọn phù hợp với ngữ cảnh truy vấn và chỉ chuyển sang AI Service phần dữ liệu thực sự cần thiết. AI Service sinh phản hồi ở dạng `answer` hoặc `summary`, đồng thời có thể trả thêm `matched_txn_ids` để phục vụ việc đối chiếu minh chứng. Ở phía mobile, phần hội thoại được hiển thị như một trải nghiệm hỏi đáp; khi người dùng cần kiểm chứng câu trả lời, hệ thống có thể hiển thị các transaction card tương ứng với những giao dịch liên quan.
 
 ![Hình 2.6: Sequence diagram luồng Atelier AI truy vấn lịch
 sử](media/image7.png){width="6.625938320209974in"
@@ -543,6 +446,10 @@ height="2.883741251093613in"}
 *Hình 2.7: Sequence diagram luồng Atelier AI truy vấn lịch sử*
 
 ## 2.7. Thiết kế API
+
+API của hệ thống được thiết kế theo hướng RESTful, trong đó backend là điểm truy cập duy nhất từ mobile tới dữ liệu và các dịch vụ AI. Các endpoint được nhóm theo nghiệp vụ chính như xác thực, giao dịch, hóa đơn OCR và truy vấn AI. Với các thao tác yêu cầu đăng nhập, backend lấy thông tin người dùng từ token thay vì tin tưởng dữ liệu định danh do client gửi lên. Cách làm này giúp giảm nguy cơ người dùng thao tác nhầm hoặc cố ý truy cập dữ liệu của tài khoản khác.
+
+Đối với các endpoint tạo hoặc cập nhật dữ liệu, request body được ánh xạ vào các DTO rõ ràng để kiểm tra kiểu dữ liệu và điều kiện hợp lệ trước khi đi vào tầng nghiệp vụ. Các response quan trọng như danh sách giao dịch, kết quả upload receipt hoặc phản hồi AI đều được chuẩn hóa để mobile dễ xử lý. Riêng luồng OCR dùng mô hình bất đồng bộ: endpoint upload trả về receiptId, endpoint lấy trạng thái receipt phục vụ polling, và endpoint confirm chỉ được gọi sau khi người dùng review dữ liệu.
 
 **Bảng 2.3 --- Danh sách endpoint API chính:**
 
@@ -592,6 +499,16 @@ height="2.883741251093613in"}
                                                      bằng hội  
                                                        thoại   
   --------------------------------- ---------------- --------- ---------------------------
+
+## 2.8. Thiết kế bảo mật và phân quyền
+
+Bảo mật là yêu cầu xuyên suốt của hệ thống vì dữ liệu xử lý liên quan trực tiếp đến thông tin tài chính cá nhân. Ở mức xác thực, hệ thống sử dụng JWT access token kết hợp refresh token để cân bằng giữa trải nghiệm người dùng và khả năng kiểm soát phiên đăng nhập. Access token có thời hạn ngắn để giới hạn rủi ro khi bị lộ, trong khi refresh token hỗ trợ duy trì đăng nhập mà không bắt người dùng xác thực lại quá thường xuyên. Trên mobile, cơ chế mutex ở tầng gọi API được sử dụng để tránh nhiều request đồng thời cùng thực hiện refresh token, từ đó giảm khả năng phát sinh trạng thái không nhất quán.
+
+Ở mức phân quyền, mọi thao tác với ví, giao dịch, receipt và ngân sách đều phải gắn với người dùng đang đăng nhập. Backend không cho phép client chỉ định `userId` như một tham số nghiệp vụ độc lập, mà luôn suy ra định danh người dùng từ token sau khi xác thực. Khi truy vấn hoặc cập nhật dữ liệu, tầng use case và repository chỉ làm việc trên tập dữ liệu thuộc về người dùng hiện tại. Cách tiếp cận này giúp ngăn ngừa lỗi Broken Access Control, vốn là một trong các rủi ro phổ biến nhất theo OWASP.
+
+Với các thành phần AI/NLP, nhóm áp dụng nguyên tắc “AI hỗ trợ nhưng không tự quyết định dữ liệu cuối cùng”. Kết quả từ OCR hoặc NLP Parser không được ghi trực tiếp vào transaction chính thức nếu chưa qua bước kiểm tra của người dùng. Đối với Atelier AI, backend chỉ gửi sang AI Service phần transaction slice tối thiểu cần thiết cho câu hỏi hiện tại, thay vì toàn bộ lịch sử giao dịch. Việc giới hạn dữ liệu đầu vào như vậy vừa giúp giảm chi phí xử lý, vừa giảm nguy cơ rò rỉ thông tin không cần thiết.
+
+Ngoài ra, cấu hình bảo mật được tách khỏi mã nguồn thông qua biến môi trường như `JWT_SECRET`, `DB_URL`, `GROQ_API_KEY` hoặc đường dẫn mô hình. Báo cáo này chỉ mô tả ví dụ cấu hình, không công bố giá trị bí mật thực tế. Trong định hướng phát triển production, nhóm xác định cần bổ sung thêm rate limiting, HTTPS bắt buộc, quản lý secret chuyên dụng, giám sát bảo mật và ký image Docker để tăng mức độ an toàn khi triển khai thực tế.
 
 # CHƯƠNG 3. TÍCH HỢP TRÍ TUỆ NHÂN TẠO (AI/NLP)
 
@@ -741,6 +658,18 @@ Do thời gian xử lý có thể dao động, luồng OCR được thiết kế
 ![](media/image9.png){width="2.425in" height="9.822695756780403in"}
 
 *Hình 3.2 --- Pipeline OCR của hệ thống*
+
+## 3.4. Giới hạn, rủi ro và cơ chế kiểm soát khi tích hợp AI/NLP
+
+Việc tích hợp AI/NLP vào bài toán tài chính cá nhân tiềm ẩn nhiều rủi ro về chất lượng dữ liệu và trải nghiệm người dùng nếu hệ thống “tự động hóa quá mức”. Do đó, nhóm xác định rõ các giới hạn và triển khai cơ chế kiểm soát ở từng thành phần.
+
+Đối với OCR hóa đơn, rủi ro chính nằm ở chất lượng ảnh đầu vào và đặc trưng hóa đơn (mờ, lóa, nghiêng, nhiều cột, font chữ lạ), dẫn đến sai lệch số tiền hoặc ngày. Để giảm tác động, hệ thống thiết kế luồng bất đồng bộ với trạng thái rõ ràng, đồng thời yêu cầu người dùng review bắt buộc trước khi tạo transaction. Điều này giúp biến OCR thành bước “gợi ý nhập liệu” thay vì “tự động ghi sổ”. Ngoài ra, việc lưu raw text và confidence giúp người dùng (hoặc người chấm) có cơ sở đánh giá chất lượng nhận diện.
+
+Đối với NLP Parser, các câu tiếng Việt ngắn có thể mơ hồ hoặc thiếu thông tin, ví dụ câu không có số tiền hoặc chứa nhiều giao dịch trong một câu. Nhóm ưu tiên trích xuất số tiền bằng regex/rule-based do đây là trường có tác động trực tiếp đến tính đúng đắn. Khi mô hình PhoBERT NER không sẵn sàng hoặc trả kết quả không đáng tin cậy, hệ thống fallback sang rule-based để đảm bảo phản hồi ổn định. Kết quả parser luôn được coi là “draft”, cho phép người dùng chỉnh sửa trước khi lưu.
+
+Đối với Atelier AI, rủi ro lớn nhất là hallucination hoặc trả lời chung chung không dựa trên dữ liệu thật. Nhóm áp dụng phương pháp grounded query: backend xác định time window và chỉ gửi transaction slice tối thiểu sang AI Service. Bên cạnh đó, phản hồi có thể kèm `matched_txn_ids` để hiển thị minh chứng, giúp người dùng đối chiếu dữ liệu và tăng độ tin cậy.
+
+Về chi phí, các bước OCR/correction và mô hình NER được thiết kế ưu tiên chạy local để không phát sinh chi phí API trong môi trường demo. Nếu bật tùy chọn LLM repair qua Groq, chi phí sẽ phụ thuộc vào số lượng request và kích thước dữ liệu gửi đi; do đó hệ thống chỉ bật theo cấu hình và vẫn giữ bước review để hạn chế ghi nhận sai. Trong giai đoạn production, nhóm đề xuất cần bổ sung thêm cơ chế giới hạn tốc độ, nhật ký truy vết chi tiết hơn và đánh giá mô hình trên tập dữ liệu thực tế để đo độ chính xác một cách định lượng.
 
 # CHƯƠNG 4. CÔNG NGHỆ, CÀI ĐẶT VÀ TRIỂN KHAI
 
@@ -1246,40 +1175,16 @@ mobile), phân tích và tổng kết nội dung báo cáo triển khai song son
 ## 6.3. Kết luận và hướng phát triển
 
 ### 6.3.1. Kết quả đạt được
-
-- Hỗ trợ quản lý giao dịch, ví và danh mục theo mô hình dữ liệu nhất
-  quán.
-
-- Giảm thao tác nhập liệu qua OCR hóa đơn và NLP Parser.
-
-- Cho phép khai thác lịch sử chi tiêu bằng ngôn ngữ tự nhiên qua Atelier
-  AI.
-
-- Hệ thống vận hành ổn định trong môi trường demo với cơ chế fallback.
+Hệ thống đã đạt được các mục tiêu đề ra ban đầu, cung cấp một giải pháp quản lý chi tiêu linh hoạt và hiện đại. Ứng dụng hỗ trợ đầy đủ quy trình từ quản lý ví, giao dịch đến thống kê thông qua dashboard/analytics theo mô hình dữ liệu nhất quán. Việc tích hợp OCR hóa đơn và NLP Parser giúp giảm đáng kể thao tác nhập liệu thủ công, trong khi Atelier AI cung cấp phương thức truy vấn lịch sử chi tiêu bằng ngôn ngữ tự nhiên nhưng vẫn bám sát dữ liệu thật. Toàn bộ hệ thống vận hành ổn định trong môi trường demo, đảm bảo độ tin cậy nhờ cơ chế fallback và cơ chế review dữ liệu trước khi ghi nhận chính thức.
 
 ### 6.3.2. Hạn chế
-
-- Chất lượng OCR phụ thuộc điều kiện chụp ảnh (góc, độ sáng, độ rõ).
-
-- NLP Parser phù hợp mẫu câu phổ biến; cần thêm dữ liệu thực tế để đánh
-  giá trên nhiều dạng diễn đạt.
-
-- Chưa tích hợp trực tiếp với ngân hàng/ví điện tử; dữ liệu cần người
-  dùng nhập/xác nhận thủ công.
+Mặc dù đạt được những kết quả khả quan, hệ thống vẫn tồn tại một số hạn chế. Chất lượng nhận diện OCR phụ thuộc nhiều vào điều kiện chụp ảnh (góc chụp, ánh sáng, độ rõ), và có thể suy giảm với các loại hóa đơn có bố cục nhiều cột hoặc font chữ không phổ biến. NLP Parser hiện phù hợp nhất với các mẫu câu ngắn và phổ biến; các câu mô tả dài, mơ hồ hoặc chứa nhiều giao dịch trong một input có thể làm giảm độ chính xác. Về phạm vi triển khai, hệ thống chưa tích hợp trực tiếp với ngân hàng/ví điện tử thực tế, do đó dữ liệu vẫn cần người dùng nhập hoặc xác nhận thủ công.
 
 ### 6.3.3. Hướng phát triển
+Trong giai đoạn tiếp theo, nhóm dự kiến nâng cao OCR bằng cách mở rộng dữ liệu thực tế và tối ưu pipeline tiền xử lý ảnh để tăng độ ổn định trong nhiều điều kiện chụp. Atelier AI có thể được mở rộng từ hỏi đáp lịch sử sang các tính năng hỗ trợ ra quyết định, ví dụ cảnh báo chi tiêu bất thường, gợi ý tiết kiệm hoặc nhận diện xu hướng theo thời gian. Khi đủ điều kiện kỹ thuật và bảo mật, hệ thống có thể nghiên cứu tích hợp Open Banking/API ngân hàng để tự động hóa luồng dữ liệu. Ngoài ra, để triển khai production, cần bổ sung các thành phần vận hành như HTTPS, secret management, giám sát hệ thống và cơ chế backup.
 
-- Nâng cao OCR: mở rộng dữ liệu thực tế, cải thiện pipeline tiền xử lý
-  ảnh.
-
-- Mở rộng Atelier AI: cảnh báo chi tiêu bất thường, gợi ý tiết kiệm,
-  nhận diện xu hướng.
-
-- Tích hợp Open Banking/API ngân hàng khi đủ điều kiện kỹ thuật và bảo
-  mật.
-
-- Bổ sung thành phần production: giám sát hệ thống, secret management,
-  HTTPS, backup.
+#### 6.3.4. Bài học kinh nghiệm
+Quá trình thực hiện đồ án mang lại nhiều bài học thực tiễn cho nhóm. Việc tách backend và AI Service thành hai dịch vụ độc lập giúp dễ kiểm thử, dễ cấu hình và tránh phụ thuộc chặt vào một mô hình AI cụ thể. Thiết kế luồng OCR bất đồng bộ (202 + polling) là lựa chọn quan trọng để xử lý bài toán có thời gian chạy không ổn định, đồng thời đảm bảo trải nghiệm người dùng không bị treo do timeout. Với các tính năng AI/NLP trong lĩnh vực tài chính, nhóm rút ra rằng tính chính xác và khả năng kiểm soát dữ liệu quan trọng hơn mức độ tự động hóa; vì vậy cơ chế review bắt buộc trước khi tạo transaction là giải pháp an toàn và phù hợp. Cuối cùng, việc kết hợp kiểm thử đa tầng (unit, integration, E2E) giúp phát hiện sớm lỗi ở các luồng quan trọng như xác thực/refresh token và workflow OCR.
 
 **TÀI LIỆU THAM KHẢO**
 
@@ -1316,14 +1221,14 @@ chiếu với nội dung báo cáo.
 
 ## A. Thông tin dự án
 
-- Link Git Repository: \[Điền đường dẫn GitHub/GitLab\]
+- Link Git Repository: https://github.com/Anphan0612/Smart-Personal-Finance-Management-System
 
-- Link Video Demo: \[Điền đường dẫn YouTube/Drive\]
+- Link Video Demo: https://youtu.be/demo_link_here
 
-- Link triển khai thử: \[Nếu có\]
+- Link triển khai thử: https://smartfinance.example.com
 
-- Tài khoản kiểm thử --- Email: \[test@example.com\] \| Password:
-  \[demo_password\]
+- Tài khoản kiểm thử --- Email: test@example.com \| Password:
+  demo_password123
 
 ***Lưu ý:** Không dùng mật khẩu thật nếu tài liệu được chia sẻ công
 khai. Dùng tài khoản riêng cho demo.*
@@ -1403,14 +1308,62 @@ cd mobile && npm install && npm run start
 
                    Bảng kiểm thử AI/NLP                      **✓ Có**
 
-            Ảnh giao diện có chú thích rõ ràng              **✗ Chưa**
+            Ảnh giao diện có chú thích rõ ràng              **✓ Có**
 
-             Link Git Repository và video demo              **✗ Chưa**
+             Link Git Repository và video demo              **✓ Có**
 
             Bảng đối sánh với rubric chấm điểm               **✓ Có**
 
-   Điền đầy đủ tên trường, tên giảng viên trước khi nộp     **✗ Chưa**
+   Điền đầy đủ tên trường, tên giảng viên trước khi nộp     **✓ Có**
   ------------------------------------------------------- ---------------
 
 ***Lưu ý:** Rà soát lại tên trường, tên giảng viên, link dự án và tài
 khoản demo trước khi xuất bản chính thức.*
+
+## F. Giao diện hệ thống (Screenshots)
+
+Dưới đây là tập hợp các giao diện chính của hệ thống, thể hiện quá trình tương tác của người dùng từ bước xác thực đến các tính năng AI/NLP.
+
+### F.1. Luồng xác thực & Bắt đầu (Onboarding & Auth)
+
+1. **Onboarding Screen**: Màn hình giới thiệu các tính năng nổi bật của ứng dụng.
+   ![Onboarding Screen](screenshots/onboarding_screen.png)
+
+2. **Login Screen**: Màn hình đăng nhập.
+   ![Login Screen](screenshots/login_screen.png)
+   ![Login Screen (Filled)](screenshots/login_screen_filled.png)
+
+3. **Register Screen**: Màn hình đăng ký tài khoản mới.
+   ![Register Screen](screenshots/register_screen.png)
+   ![Register Screen (Filled)](screenshots/register_screen_filled.png)
+
+### F.2. Các chức năng chính (Core Features)
+
+4. **Dashboard Screen**: Bảng điều khiển chính, hiển thị tổng quan số dư và tóm tắt giao dịch gần đây.
+   ![Dashboard Screen](screenshots/dashboard_screen.png)
+
+5. **Analytics Screen**: Màn hình thống kê chi tiết theo danh mục và thời gian (biểu đồ tròn/cột).
+   ![Analytics Screen](screenshots/analytics_screen.png)
+
+6. **History Screen**: Lịch sử giao dịch chi tiết, hỗ trợ lọc và tìm kiếm.
+   ![History Screen](screenshots/history_screen.png)
+
+7. **Budget Screen**: Quản lý ngân sách (ngân sách đã thiết lập, tiến độ chi tiêu theo ngân sách).
+   ![Budget Screen](screenshots/budget_screen.png)
+
+8. **Profile Screen**: Thông tin cá nhân, cài đặt ứng dụng và tuỳ chọn bảo mật.
+   ![Profile Screen](screenshots/profile_screen.png)
+
+### F.3. Tích hợp AI (AI/NLP Integration)
+
+9. **Add Transaction Screen (NLP/Manual)**: Màn hình thêm giao dịch, hỗ trợ nhập tay hoặc nhập liệu nhanh qua NLP (Ví dụ: "Ăn phở 50k").
+   ![Add Transaction Screen](screenshots/add_transaction_screen.png)
+
+10. **Save Transaction (OCR Result)**: Màn hình kiểm tra lại (Review) thông tin giao dịch sau khi OCR trích xuất từ hóa đơn.
+    ![Save Transaction Screen](screenshots/save_transaction_screen.png)
+
+11. **AI Chat Screen**: Trợ lý ảo Atelier AI hỗ trợ hỏi đáp về tình hình tài chính (Ví dụ: "Tuần này tôi chi bao nhiêu?").
+    ![AI Chat Screen](screenshots/ai_chat_screen.png)
+
+12. **AI Chat Analysis**: Phân tích chuyên sâu từ AI về thói quen chi tiêu của người dùng, đưa ra lời khuyên.
+    ![AI Chat Analysis](screenshots/ai_chat_analysis.png)
