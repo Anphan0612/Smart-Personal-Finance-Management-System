@@ -65,7 +65,9 @@ export default function HomeScreen() {
   const totalBudgetSpent =
     budgets?.reduce((s: number, b: BudgetResponse) => s + b.currentSpending, 0) ?? 0;
   const budgetPct =
-    totalBudgetLimit > 0 ? Math.min((totalBudgetSpent / totalBudgetLimit) * 100, 100) : 0;
+    totalBudgetLimit > 0
+      ? Math.min(((dashboard?.summary?.expenses || 0) / totalBudgetLimit) * 100, 100)
+      : 0;
   const hasBudgets = !!budgets?.length;
 
   const spendingBarColor =
@@ -224,7 +226,7 @@ export default function HomeScreen() {
                 variant="label"
                 className={`text-xs font-bold ${budgetPct >= 80 ? 'text-error' : budgetPct >= 50 ? 'text-warning' : 'text-primary'}`}
               >
-                Đã dùng {budgetPct.toFixed(0)}%
+                Đã dùng {budgetPct > 0 && budgetPct < 1 ? '< 1' : budgetPct.toFixed(0)}%
               </AtelierTypography>
             ) : (
               <AtelierTypography variant="label" className="text-xs text-primary font-bold">

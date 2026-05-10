@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { View, ScrollView, Dimensions, RefreshControl } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, ScrollView, Dimensions, RefreshControl, TouchableOpacity } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { MotiView } from 'moti';
 import { TrendingDown, Sparkles, ChevronRight } from 'lucide-react-native';
 import { LineChart, PieChart, BarChart } from 'react-native-gifted-charts';
@@ -13,19 +14,22 @@ import { Colors } from '@/constants/tokens';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const TIME_RANGES = [
+  { label: 'Tuần này', value: 'current_week' },
+  { label: 'Tháng này', value: 'current_month' },
+  { label: '3 tháng', value: '3_months' },
+  { label: 'Năm nay', value: 'current_year' },
+];
+
 export default function AnalyticsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
-  const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard(activeWalletId || '');
-
-  // Transform Trends for Line Chart (Expenses)
-  const lineData = useMemo(() => {
-    if (!dashboard?.monthlyTrend) return [];
-    return dashboard.monthlyTrend.map((t: MonthlyTrend) => ({
-      value: Number(t.expenses),
-      label: t.month.substring(0, 3),
-    }));
-  }, [dashboard]);
+  const [selectedRange, setSelectedRange] = useState('current_month');
+  
+  const { data: dashboard, isLoading, refetch, isRefetching } = useDashboard(
+    activeWalletId || '',
+    selectedRange
+  );
 
   // Transform Category Breakdown for Pie Chart
   const pieData = useMemo(() => {
@@ -54,35 +58,61 @@ export default function AnalyticsScreen() {
     }));
   }, [dashboard]);
 
-  // Transform Trends for Bar Chart (Income vs Expense)
+  // Transform Trends for Line Chart (Expenses)
+  const lineData = useMemo(() => {
+    if (!dashboard?.monthlyTrend) return [];
+    return dashboard.monthlyTrend.map((t: MonthlyTrend, index: number) => {
+      let label = t.month;
+      const isManyPoints = dashboard.monthlyTrend.length > 15;
+      
+      if (selectedRange === 'current_month' && label.includes('/')) {
+        // dd/MM -> dd
+        const day = label.split('/')[0];
+        // Only show label for 1st, 5th, 10th... day if many points
+        label = (!isManyPoints || index % 5 === 0 || index === dashboard.monthlyTrend.length - 1) ? day : '';
+      } else if ((selectedRange === '3_months' || selectedRange === 'current_year') && label.includes('/')) {
+        // MM/yyyy -> T.MM
+        label = `T${label.split('/')[0]}`;
+      }
+      
+      return {
+        value: Number(t.expenses),
+        label: label,
+        dataPointText: Number(t.expenses) > 0 ? formatCurrency(Number(t.expenses)) : '',
+      };
+    });
+  }, [dashboard?.monthlyTrend, selectedRange]);
+
+  // Transform for Bar Chart (Income vs Expenses)
   const barData = useMemo(() => {
     if (!dashboard?.monthlyTrend) return [];
-    const data: any[] = [];
-    dashboard.monthlyTrend.forEach((t: MonthlyTrend) => {
-      data.push({
+    const bars: any[] = [];
+    dashboard.monthlyTrend.forEach((t: MonthlyTrend, index: number) => {
+      let label = t.month;
+      const isManyPoints = dashboard.monthlyTrend.length > 15;
+
+      if (selectedRange === 'current_month' && label.includes('/')) {
+        label = (!isManyPoints || index % 5 === 0 || index === dashboard.monthlyTrend.length - 1) ? label.split('/')[0] : '';
+      } else if ((selectedRange === '3_months' || selectedRange === 'current_year') && label.includes('/')) {
+        label = `T${label.split('/')[0]}`;
+      }
+
+      bars.push({
         value: Number(t.income),
-        label: t.month.substring(0, 3),
-        spacing: 4,
-        frontColor: Colors.primary.DEFAULT,
+        label: label,
+        spacing: 2,
+        labelWidth: 30,
+        frontColor: Colors.success,
       });
-      data.push({
+      bars.push({
         value: Number(t.expenses),
-        frontColor: Colors.secondary.DEFAULT,
+        frontColor: Colors.error,
       });
     });
-    return data;
-  }, [dashboard]);
+    return bars;
+  }, [dashboard?.monthlyTrend, selectedRange]);
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-surface-lowest p-6" style={{ paddingTop: insets.top + 72 }}>
-        <SkeletonBox width={150} height={16} radius={4} className="mb-2" />
-        <SkeletonBox width={200} height={40} radius={8} className="mb-10" />
-        <SkeletonBox width="100%" height={300} radius={32} className="mb-6" />
-        <SkeletonBox width="100%" height={240} radius={32} />
-      </View>
-    );
-  }
+  // Skeleton UI is now handled inline to keep header visible
 
   return (
     <View className="flex-1 bg-surface-lowest">
@@ -107,7 +137,7 @@ export default function AnalyticsScreen() {
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
-          className="mb-8"
+          className="mb-6"
         >
           <AtelierTypography variant="label" className="text-neutral-400 mb-1">
             HIỆU SUẤT TÀI CHÍNH
@@ -117,7 +147,57 @@ export default function AnalyticsScreen() {
           </AtelierTypography>
         </MotiView>
 
-        {/* Spending Trends Chart */}
+        {/* Time Range Selector */}
+        <MotiView
+          from={{ opacity: 0, translateY: 10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', delay: 100 }}
+          className="mb-8"
+        >
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {TIME_RANGES.map((range) => {
+              const isSelected = selectedRange === range.value;
+              return (
+                <TouchableOpacity
+                  key={range.value}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    if (!isSelected) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedRange(range.value);
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full border ${
+                    isSelected
+                      ? 'bg-primary border-primary'
+                      : 'bg-white border-neutral-200'
+                  }`}
+                >
+                  <AtelierTypography
+                    variant="body"
+                    className={isSelected ? 'text-white font-semibold' : 'text-neutral-600'}
+                  >
+                    {range.label}
+                  </AtelierTypography>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </MotiView>
+
+        {isLoading ? (
+          <View className="mt-2">
+            <SkeletonBox width="100%" height={240} radius={32} className="mb-6" />
+            <SkeletonBox width="100%" height={200} radius={32} className="mb-6" />
+            <SkeletonBox width="100%" height={200} radius={32} />
+          </View>
+        ) : (
+          <>
+            {/* Spending Trends Chart */}
         <MotiView
           from={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -127,9 +207,6 @@ export default function AnalyticsScreen() {
             <View className="flex-row justify-between items-start mb-8">
               <View>
                 <AtelierTypography variant="h3">Xu hướng chi tiêu</AtelierTypography>
-                <AtelierTypography variant="caption" className="text-neutral-400">
-                  Dòng tiền hàng tháng
-                </AtelierTypography>
               </View>
               <View className="items-end">
                 <AtelierTypography variant="h2" className="text-primary">
@@ -150,7 +227,7 @@ export default function AnalyticsScreen() {
                   data={lineData}
                   width={SCREEN_WIDTH - 100}
                   height={180}
-                  spacing={45}
+                  spacing={lineData.length > 1 ? Math.max((SCREEN_WIDTH - 100) / (lineData.length - 1), 35) : 45}
                   initialSpacing={10}
                   color={Colors.primary.DEFAULT}
                   thickness={3}
@@ -258,13 +335,13 @@ export default function AnalyticsScreen() {
               <AtelierTypography variant="h3">Dòng tiền</AtelierTypography>
               <View className="flex-row gap-3">
                 <View className="flex-row items-center gap-1.5">
-                  <View className="w-2 h-2 rounded-full bg-primary" />
+                  <View className="w-2 h-2 rounded-full" style={{ backgroundColor: Colors.success }} />
                   <AtelierTypography variant="label" className="text-[10px] text-neutral-400">
                     THU
                   </AtelierTypography>
                 </View>
                 <View className="flex-row items-center gap-1.5">
-                  <View className="w-2 h-2 rounded-full bg-secondary" />
+                  <View className="w-2 h-2 rounded-full" style={{ backgroundColor: Colors.error }} />
                   <AtelierTypography variant="label" className="text-[10px] text-neutral-400">
                     CHI
                   </AtelierTypography>
@@ -276,7 +353,7 @@ export default function AnalyticsScreen() {
               {barData.length > 0 ? (
                 <BarChart
                   data={barData}
-                  barWidth={18}
+                  barWidth={(dashboard?.monthlyTrend?.length ?? 0) > 15 ? 12 : 18}
                   noOfSections={3}
                   barBorderRadius={6}
                   yAxisThickness={0}
@@ -284,7 +361,7 @@ export default function AnalyticsScreen() {
                   hideRules
                   height={150}
                   width={SCREEN_WIDTH - 100}
-                  spacing={20}
+                  spacing={(dashboard?.monthlyTrend?.length ?? 0) > 15 ? 12 : 20}
                   xAxisLabelTextStyle={{
                     fontSize: 10,
                     color: Colors.neutral[400],
@@ -302,6 +379,8 @@ export default function AnalyticsScreen() {
             </View>
           </AtelierCard>
         </MotiView>
+          </>
+        )}
       </ScrollView>
     </View>
   );

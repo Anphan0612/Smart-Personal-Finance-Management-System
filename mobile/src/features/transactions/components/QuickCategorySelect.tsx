@@ -32,8 +32,8 @@ export const QuickCategorySelect = ({
     onSelect(category);
   };
 
-  // Show top categories for quick access
-  const quickCategories = categories.slice(0, 10);
+  // Show all categories for access
+  const quickCategories = categories;
 
   if (isLoading) {
     return (
@@ -148,29 +148,6 @@ export const QuickCategorySelect = ({
             </TouchableOpacity>
           );
         })}
-
-        {/* Add New Category Button */}
-        <TouchableOpacity
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onAddPress?.();
-          }}
-          activeOpacity={0.8}
-          style={{ width: '25%', alignItems: 'center' }}
-        >
-          <View className="w-14 h-14 rounded-[20px] bg-primary/5 border border-dashed border-primary/30 items-center justify-center shadow-sm">
-            <AtelierTypography variant="h2" className="text-primary text-2xl">
-              +
-            </AtelierTypography>
-          </View>
-          <AtelierTypography
-            variant="label"
-            className="text-[9px] mt-2 text-center tracking-normal font-manrope-bold text-primary"
-            numberOfLines={1}
-          >
-            THÊM MỚI
-          </AtelierTypography>
-        </TouchableOpacity>
       </View>
     </View>
   );

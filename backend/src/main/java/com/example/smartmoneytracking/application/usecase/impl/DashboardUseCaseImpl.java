@@ -96,13 +96,19 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
         // 2. Calculate Trend
         long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(localStart, localEnd);
         boolean isDaily = daysBetween <= 31;
+        boolean isCurrentWeek = "current_week".equals(timeRange);
         
         DateTimeFormatter formatter = isDaily ? DateTimeFormatter.ofPattern("dd/MM") : DateTimeFormatter.ofPattern("MM/yyyy");
         Map<String, MonthlyTrendDTO> trendMap = new LinkedHashMap<>();
         
         ZonedDateTime tempDate = localStart;
         while (!tempDate.isAfter(localEnd)) {
-            String key = tempDate.format(formatter);
+            String key;
+            if (isCurrentWeek) {
+                key = getDayOfWeekLabel(tempDate);
+            } else {
+                key = tempDate.format(formatter);
+            }
             trendMap.putIfAbsent(key, new MonthlyTrendDTO(key, BigDecimal.ZERO, BigDecimal.ZERO));
             tempDate = isDaily ? tempDate.plusDays(1) : tempDate.plusMonths(1);
         }
@@ -112,7 +118,13 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
             OffsetDateTime localDate = t.getTransactionDate()
                     .withOffsetSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()).getRules().getOffset(t.getTransactionDate().toInstant()));
             
-            String label = localDate.format(formatter);
+            String label;
+            if (isCurrentWeek) {
+                label = getDayOfWeekLabel(localDate.toZonedDateTime());
+            } else {
+                label = localDate.format(formatter);
+            }
+            
             MonthlyTrendDTO trend = trendMap.getOrDefault(label, new MonthlyTrendDTO(label, BigDecimal.ZERO, BigDecimal.ZERO));
             if (t.isIncome()) {
                 trend.setIncome(trend.getIncome().add(t.getAmount()));
@@ -178,6 +190,20 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
         }
         // Default to current_month
         return now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+    }
+
+    private String getDayOfWeekLabel(ZonedDateTime date) {
+        int day = date.getDayOfWeek().getValue();
+        switch (day) {
+            case 1: return "T2";
+            case 2: return "T3";
+            case 3: return "T4";
+            case 4: return "T5";
+            case 5: return "T6";
+            case 6: return "T7";
+            case 7: return "CN";
+            default: return "";
+        }
     }
 
     private String getColorForCategory(String categoryId) {
