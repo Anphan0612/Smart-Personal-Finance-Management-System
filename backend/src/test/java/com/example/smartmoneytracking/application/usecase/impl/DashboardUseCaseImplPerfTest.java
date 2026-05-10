@@ -48,11 +48,11 @@ public class DashboardUseCaseImplPerfTest {
             when(transactionMapper.toResponseList(any())).thenReturn(Collections.emptyList());
 
             // Warmup JVM (JIT compiler)
-            useCase.getDashboardSummary("w1", "current_month", "u1");
+            useCase.getDashboardSummary("w1", "current_month", "u1", null, null);
 
             // Measure actual time
             long startTime = System.nanoTime();
-            useCase.getDashboardSummary("w1", "current_month", "u1");
+            useCase.getDashboardSummary("w1", "current_month", "u1", null, null);
             long endTime = System.nanoTime();
 
             double durationMs = (endTime - startTime) / 1_000_000.0;

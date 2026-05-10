@@ -35,18 +35,34 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
     private final TransactionMapper transactionMapper;
 
     @Override
-    public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange, String userId) {
+    public DashboardResponseDTO getDashboardSummary(String walletId, String timeRange, String startDateStr, String endDateStr, String userId) {
         // Verify ownership first
         Wallet wallet = walletRepository.findByIdAndUserId(walletId, userId)
                 .orElseThrow(() -> new RuntimeException("Wallet not found or unauthorized"));
 
         ZonedDateTime localNow = DateUtils.nowInUserTz();
-        ZonedDateTime localStart = calculateStartDate(timeRange, localNow);
+        ZonedDateTime localStart;
+        ZonedDateTime localEnd = localNow;
+
+        if (startDateStr != null && !startDateStr.isEmpty()) {
+            localStart = ZonedDateTime.parse(startDateStr).withZoneSameInstant(localNow.getZone());
+            if (endDateStr != null && !endDateStr.isEmpty()) {
+                localEnd = ZonedDateTime.parse(endDateStr).withZoneSameInstant(localNow.getZone());
+            }
+        } else {
+            localStart = calculateStartDate(timeRange, localNow);
+            if ("current_week".equals(timeRange) || "current_month".equals(timeRange) || "current_year".equals(timeRange)) {
+                // If it's a "current_*" preset, we still want to query up to now
+                localEnd = localNow;
+            } else if ("last_month".equals(timeRange)) {
+                localEnd = localStart.plusMonths(1).minusSeconds(1);
+            }
+        }
         
-        OffsetDateTime nowUtc = DateUtils.toUtc(localNow);
         OffsetDateTime startUtc = DateUtils.toUtc(localStart);
+        OffsetDateTime endUtc = DateUtils.toUtc(localEnd);
  
-        List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startUtc, nowUtc);
+        List<Transaction> transactions = transactionRepository.findByWalletIdAndTransactionDateBetween(walletId, startUtc, endUtc);
  
         // 1. Calculate Summary
         BigDecimal income = transactions.stream()
@@ -77,29 +93,33 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
                 .savingsRate(savingsRate)
                 .build();
 
-        // 2. Calculate Monthly Trend
-        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("MMM");
+        // 2. Calculate Trend
+        long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(localStart, localEnd);
+        boolean isDaily = daysBetween <= 31;
+        
+        DateTimeFormatter formatter = isDaily ? DateTimeFormatter.ofPattern("dd/MM") : DateTimeFormatter.ofPattern("MM/yyyy");
         Map<String, MonthlyTrendDTO> trendMap = new LinkedHashMap<>();
         
         ZonedDateTime tempDate = localStart;
-        while (!tempDate.isAfter(localNow)) {
-            trendMap.put(tempDate.format(monthFormatter), new MonthlyTrendDTO(tempDate.format(monthFormatter), BigDecimal.ZERO, BigDecimal.ZERO));
-            tempDate = tempDate.plusMonths(1);
+        while (!tempDate.isAfter(localEnd)) {
+            String key = tempDate.format(formatter);
+            trendMap.putIfAbsent(key, new MonthlyTrendDTO(key, BigDecimal.ZERO, BigDecimal.ZERO));
+            tempDate = isDaily ? tempDate.plusDays(1) : tempDate.plusMonths(1);
         }
 
         for (Transaction t : transactions) {
-            // Convert UTC storage to user local time for correct grouping by month
+            // Convert UTC storage to user local time for correct grouping
             OffsetDateTime localDate = t.getTransactionDate()
                     .withOffsetSameInstant(java.time.ZoneId.of(com.example.smartmoneytracking.application.service.common.TimezoneContextHolder.getTimezone()).getRules().getOffset(t.getTransactionDate().toInstant()));
             
-            String month = localDate.format(monthFormatter);
-            MonthlyTrendDTO trend = trendMap.getOrDefault(month, new MonthlyTrendDTO(month, BigDecimal.ZERO, BigDecimal.ZERO));
+            String label = localDate.format(formatter);
+            MonthlyTrendDTO trend = trendMap.getOrDefault(label, new MonthlyTrendDTO(label, BigDecimal.ZERO, BigDecimal.ZERO));
             if (t.isIncome()) {
                 trend.setIncome(trend.getIncome().add(t.getAmount()));
             } else {
                 trend.setExpenses(trend.getExpenses().add(t.getAmount()));
             }
-            trendMap.put(month, trend);
+            trendMap.put(label, trend);
         }
 
         // 3. Category Breakdown (Optimized Batch Fetching)
@@ -146,9 +166,17 @@ public class DashboardUseCaseImpl implements com.example.smartmoneytracking.appl
     }
 
     private ZonedDateTime calculateStartDate(String timeRange, ZonedDateTime now) {
-        if ("3_months".equals(timeRange)) {
+        if ("current_week".equals(timeRange)) {
+            int dayOfWeek = now.getDayOfWeek().getValue();
+            return now.minusDays(dayOfWeek - 1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        } else if ("last_month".equals(timeRange)) {
+            return now.minusMonths(1).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        } else if ("3_months".equals(timeRange)) {
             return now.minusMonths(3).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        } else if ("current_year".equals(timeRange)) {
+            return now.withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
         }
+        // Default to current_month
         return now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
     }
 

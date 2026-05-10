@@ -280,6 +280,8 @@ async def query_history(request: QueryHistoryRequest):
 
     intent = classify_intent(request.text)
 
+    print(f"[AI SERVICE] Query: text='{request.text}', intent={intent}, txn_count={len(request.transactions)}")
+
     if intent == "COMMAND":
         return QueryHistoryResponse(intent="COMMAND", filters={}, answer="")
 
@@ -288,6 +290,8 @@ async def query_history(request: QueryHistoryRequest):
 
     # Filter the provided transactions based on extracted filters
     filtered = _apply_filters(request.transactions, filters)
+
+    print(f"[AI SERVICE] Filters: {filters}, matched={len(filtered)}/{len(request.transactions)}")
 
     # Build summary statistics
     summary = _build_summary(filtered, filters)
@@ -523,16 +527,31 @@ def _generate_query_answer(
         return _fallback_query_answer(summary, filters)
 
 
+# Vietnamese-friendly labels for time periods
+_PERIOD_LABELS_VI: dict[str, str] = {
+    "today": "hôm nay",
+    "yesterday": "hôm qua",
+    "this_week": "tuần này",
+    "last_7_days": "tuần qua",
+    "last_week": "tuần trước",
+    "this_month": "tháng này",
+    "last_month": "tháng trước",
+    "last_3_months": "3 tháng qua",
+    "last_30_days": "30 ngày qua",
+}
+
+
 def _fallback_query_answer(summary: dict[str, Any], filters: dict[str, Any]) -> str:
     """Rule-based fallback when LLM is unavailable."""
     total_expense = summary.get("total_expense", 0)
     total_income = summary.get("total_income", 0)
     count = summary.get("transaction_count", 0)
-    period = filters.get("time_period", "khoảng thời gian này")
+    raw_period = filters.get("time_period", "khoảng thời gian này")
+    period = _PERIOD_LABELS_VI.get(raw_period, raw_period)
     category = filters.get("category")
 
     if count == 0:
-        return f"Không tìm thấy giao dịch nào trong {period}."
+        return f"Trong {period}, không có giao dịch nào được ghi nhận. Tổng chi tiêu và tổng thu nhập đều là 0.0. Không có danh mục chi tiêu hàng đầu nào được xác định do không có giao dịch."
 
     cat_text = f" cho danh mục {category}" if category else ""
     return (

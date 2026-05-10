@@ -1,5 +1,34 @@
 # syntax=docker/dockerfile:1.4
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+
+# Stage 1: Builder
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3-pip \
+    python3.10-venv \
+    python3-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python3.10 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python dependencies using BuildKit pip cache
+COPY requirements.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3.10 -m pip install --upgrade pip setuptools wheel && \
+    python3.10 -m pip install -r requirements.txt
+
+# Stage 2: Runtime
+FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04 AS runtime
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -7,35 +36,32 @@ ENV DEBIAN_FRONTEND=noninteractive \
     FLAGS_use_onednn=0 \
     FLAGS_use_mkldnn=0 \
     KMP_DUPLICATE_LIB_OK=TRUE \
-    OMP_NUM_THREADS=1
+    OMP_NUM_THREADS=1 \
+    PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Install system dependencies
+# Install runtime dependencies ONLY
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
-    python3-pip \
-    python3-dev \
-    build-essential \
+    python3.10-venv \
     libglib2.0-0 \
     libsm6 \
     libxrender1 \
     libxext6 \
     libgl1-mesa-glx \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Add non-root user for security
 RUN useradd -m -r aiuser
 
 # Create necessary directories and set ownership before switching user
-RUN mkdir -p /app/models/cache /app/uploads && \
+RUN mkdir -p /app/models/cache /app/uploads /app/ml-models && \
     chown -R aiuser:aiuser /app
 
-# Install Python dependencies using BuildKit pip cache
-COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3.10 -m pip install --upgrade pip setuptools wheel && \
-    python3.10 -m pip install -r requirements.txt
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
 
 # Copy model setup script and config BEFORE switching user
 # This allows us to download models in a separate layer for better caching

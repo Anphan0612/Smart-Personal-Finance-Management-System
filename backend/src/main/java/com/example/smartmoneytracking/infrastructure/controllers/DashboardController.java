@@ -22,10 +22,12 @@ public class DashboardController {
     @GetMapping("/summary")
     public ResponseEntity<ApiResponse<DashboardResponseDTO>> getDashboardSummary(
             @RequestParam String walletId,
-            @RequestParam(defaultValue = "current_month") String timeRange) {
+            @RequestParam(defaultValue = "current_month") String timeRange,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
 
         String userId = securityUtils.getCurrentUserId();
-        DashboardResponseDTO response = dashboardUseCase.getDashboardSummary(walletId, timeRange, userId);
+        DashboardResponseDTO response = dashboardUseCase.getDashboardSummary(walletId, timeRange, startDate, endDate, userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

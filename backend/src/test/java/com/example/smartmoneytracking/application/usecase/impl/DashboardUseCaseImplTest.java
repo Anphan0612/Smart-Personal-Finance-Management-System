@@ -63,7 +63,7 @@ class DashboardUseCaseImplTest {
         when(walletRepository.findByIdAndUserId(walletId, userId))
                 .thenReturn(Optional.of(wallet));
 
-        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month", userId);
+        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month", userId, null, null);
 
         assertThat(result.getSummary().getIncome()).isEqualByComparingTo("1000");
         assertThat(result.getSummary().getExpenses()).isEqualByComparingTo("200");
