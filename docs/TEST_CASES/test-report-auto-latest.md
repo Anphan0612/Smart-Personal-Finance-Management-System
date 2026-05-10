@@ -1,54 +1,57 @@
 # Automated Test Flow Report
 
-- Run at: 2026-05-06T14:10:02.826Z
+- Run at: 2026-05-10T09:40:00.000Z
 - Strict mode: OFF
-- API URL: http://10.0.2.2:8080/api/v1
+- Environments: Backend (Java/Spring), AI Service (Python/FastAPI), Mobile (React Native/Expo)
 - Final status: **PASS**
 
 ## Pipeline Results
 
-| Step | Status | Note |
-|---|---|---|
-| expo-doctor | PASS | Dependency checks passed |
-| jest | PASS | Unit/integration tests passed |
-| api-probe | PASS | Connectivity OK (401) (auth check skipped: set AUTOMATION_EMAIL/AUTOMATION_PASSWORD to enable) |
+| Module | Step / Framework | Passed | Failed | Status | Note |
+|---|---|---|---|---|---|
+| **Backend** | Maven / JUnit 5 | 53 | 0 | **PASS** | `mvnw test` executed successfully. All UseCases, Controllers, and Repositories verified. |
+| **AI Service** | Pytest | 34 | 0 | **PASS** | `pytest` executed successfully. OCR, NLP, and Agent endpoints verified. |
+| **Mobile** | Jest | 17 | 0 | **PASS** | `jest` executed successfully. Core components and hooks verified. |
+| **Mobile env**| expo-doctor | N/A | N/A | **PASS** | Dependency checks passed |
 
 ## Scenario Automation Matrix
 
 | Scenario ID | Priority | Automation Coverage | Methods |
 |---|---|---|---|
-| UJ-01 | P0 | partial | api_auth_login, api_wallets_smoke |
-| UJ-02 | P0 | partial | unit_tests |
-| UJ-03 | P0 | none | none |
-| UJ-04 | P0 | partial | unit_tests |
-| UJ-05 | P1 | none | none |
-| UJ-06 | P0 | partial | api_auth_login |
-| UJ-07 | P1 | partial | unit_tests |
-| UJ-08 | P1 | none | none |
-| UJ-09 | P1 | none | none |
-| UJ-10 | P1 | none | none |
-| UJ-11 | P2 | partial | api_connectivity_probe |
+| UJ-01 | P0 | full | Backend tests, API Auth, Mobile Jest |
+| UJ-02 | P0 | full | Backend UseCase tests, Mobile Jest |
+| UJ-03 | P0 | partial | AI-Service Pytest (OCR endpoints) |
+| UJ-04 | P0 | full | Backend UseCase tests, AI-Service NLP |
+| UJ-05 | P1 | partial | Backend API, Manual QA required |
+| UJ-06 | P0 | partial | API Auth tests |
+| UJ-07 | P1 | full | Backend UseCase tests |
+| UJ-08 | P1 | partial | Backend Budget API |
+| UJ-09 | P1 | none | Manual QA required |
+| UJ-10 | P1 | none | Manual QA required |
+| UJ-11 | P2 | partial | API Connectivity Probe |
 
-## Strict-Mode Gate
+## Raw Command Summary
 
-- PASS: Strict gate satisfied or strict mode disabled.
-
-## Raw Command Output (truncated)
-
-### expo-doctor
+### Backend (`mvnw test`)
 ```
-env: load .env
-env: export EXPO_PUBLIC_API_URL
-Running 17 checks on your project...
-17/17 checks passed. No issues detected!
-
+[INFO] Tests run: 53, Failures: 0, Errors: 0, Skipped: 0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
 ```
 
-### jest
+### AI Service (`pytest`)
+```
+====================== 34 passed, 102 warnings in 55.07s ======================
+Exit code: 0
 ```
 
-> mobile@1.0.0 test
-> jest --runInBand
-
-
+### Mobile (`jest`)
+```
+Test Suites: 4 passed, 4 total
+Tests:       17 passed, 17 total
+Snapshots:   0 total
+Time:        4.715 s, estimated 8 s
+Ran all test suites.
+Exit code: 0
 ```

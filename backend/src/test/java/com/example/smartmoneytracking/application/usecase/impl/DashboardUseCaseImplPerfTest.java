@@ -22,7 +22,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 public class DashboardUseCaseImplPerfTest {
 
@@ -40,19 +40,19 @@ public class DashboardUseCaseImplPerfTest {
         
         for (int count : transactionCounts) {
             List<Transaction> dummyData = generateTransactions(count);
-            when(repository.findByWalletIdAndTransactionDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class)))
+            lenient().when(repository.findByWalletIdAndTransactionDateBetween(anyString(), any(OffsetDateTime.class), any(OffsetDateTime.class)))
                     .thenReturn(dummyData);
-            when(walletRepository.findByIdAndUserId(anyString(), anyString()))
+            lenient().when(walletRepository.findByIdAndUserId(anyString(), anyString()))
                     .thenReturn(Optional.of(Wallet.create("u1", "Main", new Currency("VND", "đ"), WalletType.CASH, new BigDecimal("1000000"))));
-            when(categoryRepository.findAllById(any())).thenReturn(Collections.emptyList());
-            when(transactionMapper.toResponseList(any())).thenReturn(Collections.emptyList());
+            lenient().when(categoryRepository.findAllById(any())).thenReturn(Collections.emptyList());
+            lenient().when(transactionMapper.toResponseList(any())).thenReturn(Collections.emptyList());
 
             // Warmup JVM (JIT compiler)
-            useCase.getDashboardSummary("w1", "current_month", "u1", null, null);
+            useCase.getDashboardSummary("w1", "current_month", null, null, "u1");
 
             // Measure actual time
             long startTime = System.nanoTime();
-            useCase.getDashboardSummary("w1", "current_month", "u1", null, null);
+            useCase.getDashboardSummary("w1", "current_month", null, null, "u1");
             long endTime = System.nanoTime();
 
             double durationMs = (endTime - startTime) / 1_000_000.0;
