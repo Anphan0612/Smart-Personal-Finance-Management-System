@@ -1,7 +1,7 @@
 -- ==========================================
 -- SMART PERSONAL FINANCE MANAGEMENT
 -- Demo seed data for 10/05/2026 product demo
--- Database: PostgreSQL
+-- Database: MySQL
 -- ==========================================
 -- Mục tiêu:
 -- 1) Tạo account demo dùng được ngay
