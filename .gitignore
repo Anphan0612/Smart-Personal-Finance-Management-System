@@ -73,3 +73,9 @@ docs/REPORTS
 extracted_media
 # Optional local model store (large)
 ml-models/
+
+# ==========================================
+# Drafts and Demo Data
+# ==========================================
+PLAN-*.md
+*.sql

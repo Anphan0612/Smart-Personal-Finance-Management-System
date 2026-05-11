@@ -23,6 +23,7 @@
   "scripts": {
     "setup": "npm install && npm run sync-env",
     "sync-env": "powershell ./infrastructure/scripts/sync-env.ps1",
+    "postinstall": "cd mobile && npm install",
     "dev": "node scripts/dev-setup.js",
     "dev:docker": "docker compose up -d",
     "dev:tunnel": "docker compose --profile tunnel up -d",

@@ -74,7 +74,6 @@ services:
     volumes:
       - ai_model_cache:/app/models/cache
       - ai_uploads:/app/uploads
-      - ./ml-models:/app/ml-models:ro
     networks:
       - smart-network
     healthcheck:
