@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-04-27
+## [Unreleased] - 2026-05-11
+
+### Added
+- **AI / MLOps**: 
+  - Hosted PhoBERT NER weights on Hugging Face (`Anphan612/phobert-finance-ner`).
+  - Implemented dynamic auto-download for AI models on first Docker startup.
+  - Added robust exception handling and rule-based fallback if model download fails.
+- **Developer Experience (DX)**:
+  - Added `postinstall` script to root `package.json` to auto-install mobile dependencies.
+
+### Changed
+- **Packaging**: 
+  - Excluded local `ml-models` directory from ZIP packaging script (`package_submission.ps1`).
+  - Drastically reduced final submission ZIP size from 9MB+ to <1MB.
+  - Re-wrote `README.md` with complete Mermaid architecture diagram and Vietnamese documentation.
+- **Docker Compose**:
+  - Removed local model directory mount points.
+
+---
+
+## [Release] - 2026-04-27
 
 ### Added
 
