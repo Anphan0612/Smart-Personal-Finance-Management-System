@@ -1,17 +1,18 @@
-import React, { useState, useMemo } from 'react';
-import { View, FlatList, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useState, useMemo, useRef } from 'react';
+import { View, FlatList, TextInput, Alert, RefreshControl } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 import { MotiView } from 'moti';
-import { Search, ArrowDownLeft, ArrowUpRight } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 import { useAppStore } from '@/store/useAppStore';
-import { useTransactions } from '@/hooks/useTransactions';
-import { formatCurrency, formatTime } from '@/utils/format';
+import { useTransactions, useDeleteTransaction } from '@/hooks/useTransactions';
+import { TransactionListItem } from './components/TransactionListItem';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TransactionDetailSheet from './components/TransactionDetailSheet';
 import {
   AtelierTypography,
   AtelierCard,
   SkeletonBox,
-  AtelierTransactionCard,
 } from '@/components/ui';
 import { Colors } from '@/constants/tokens';
 import { TransactionPresentationMapper } from './presentation/TransactionPresentationMapper';
@@ -55,8 +56,18 @@ export default function TransactionsScreen() {
   const insets = useSafeAreaInsets();
   const { activeWalletId } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionResponse | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isSheetVisible, setIsSheetVisible] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const openRowRef = useRef<Swipeable | null>(null);
+  const deleteMutation = useDeleteTransaction();
+
+  const handleSwipeOpen = (ref: Swipeable) => {
+    if (openRowRef.current && openRowRef.current !== ref) {
+      openRowRef.current.close();
+    }
+    openRowRef.current = ref;
+  };
 
   const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
     useTransactions(activeWalletId || '');
@@ -67,12 +78,60 @@ export default function TransactionsScreen() {
   }, [data]);
 
   const handleTransactionPress = (transaction: Transaction) => {
-    setSelectedTransaction(toTransactionResponse(transaction));
+    setSelectedTransaction(transaction);
+    setIsEditMode(false);
     setIsSheetVisible(true);
+  };
+
+  const handleEdit = (transaction: Transaction) => {
+    if (openRowRef.current) {
+      openRowRef.current.close();
+    }
+    setSelectedTransaction(transaction);
+    setIsEditMode(true);
+    setIsSheetVisible(true);
+  };
+
+  const handleDelete = (transaction: Transaction | TransactionResponse) => {
+    if (openRowRef.current) {
+      openRowRef.current.close();
+    }
+    Alert.alert(
+      'Xóa giao dịch',
+      'Bạn có chắc chắn muốn xóa giao dịch này không? Hành động này không thể hoàn tác.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMutation.mutateAsync(transaction.id);
+              if (isSheetVisible) {
+                handleCloseSheet();
+              }
+              Toast.show({
+                type: 'success',
+                text1: 'Đã xóa giao dịch',
+                text2: 'Giao dịch đã được loại bỏ khỏi hệ thống.',
+              });
+            } catch (error) {
+              Toast.show({
+                type: 'error',
+                text1: 'Lỗi khi xóa',
+                text2: 'Không thể xóa giao dịch. Vui lòng thử lại sau.',
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleCloseSheet = () => {
     setIsSheetVisible(false);
+    setSelectedTransaction(null);
+    setIsEditMode(false);
   };
 
   const groupedTransactions = useMemo(() => {
@@ -119,6 +178,7 @@ export default function TransactionsScreen() {
     </MotiView>
   );
 
+
   const renderItem = ({
     item,
     index,
@@ -138,51 +198,14 @@ export default function TransactionsScreen() {
       </AtelierTypography>
       <View className="gap-3">
         {item.items.map((transaction: Transaction) => (
-          <TouchableOpacity
+          <TransactionListItem
             key={transaction.id}
-            activeOpacity={0.7}
+            transaction={transaction}
             onPress={() => handleTransactionPress(transaction)}
-          >
-            <AtelierCard elevation="lowest" padding="sm" className="bg-white">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1 flex-row items-center gap-4 mr-3">
-                  <View
-                    className={`w-12 h-12 rounded-2xl items-center justify-center ${
-                      transaction.isIncome() ? 'bg-green-50' : 'bg-red-50'
-                    }`}
-                  >
-                    {transaction.isIncome() ? (
-                      <ArrowDownLeft size={20} color={Colors.secondary.DEFAULT} />
-                    ) : (
-                      <ArrowUpRight size={20} color={Colors.error} />
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <AtelierTypography variant="h3" className="text-[15px]" numberOfLines={1}>
-                      {transaction.description || transaction.categoryName}
-                    </AtelierTypography>
-                    <AtelierTypography variant="label" className="text-neutral-400 text-[10px]">
-                      {transaction.categoryName || 'Chung'}
-                    </AtelierTypography>
-                  </View>
-                </View>
-                <View className="items-end">
-                  <AtelierTypography
-                    variant="h3"
-                    className={`text-[16px] ${
-                      transaction.isIncome() ? 'text-green-600' : 'text-error'
-                    }`}
-                  >
-                    {transaction.isIncome() ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
-                  </AtelierTypography>
-                  <AtelierTypography variant="caption" className="text-neutral-400">
-                    {formatTime(transaction.transactionDate.toISOString())}
-                  </AtelierTypography>
-                </View>
-              </View>
-            </AtelierCard>
-          </TouchableOpacity>
+            onEdit={() => handleEdit(transaction)}
+            onDelete={() => handleDelete(transaction)}
+            onSwipeableWillOpen={(ref) => handleSwipeOpen(ref)}
+          />
         ))}
       </View>
     </MotiView>
@@ -246,9 +269,11 @@ export default function TransactionsScreen() {
       />
 
       <TransactionDetailSheet
-        transaction={selectedTransaction}
+        transaction={selectedTransaction ? toTransactionResponse(selectedTransaction) : null}
         isVisible={isSheetVisible}
         onClose={handleCloseSheet}
+        initialEditMode={isEditMode}
+        onDelete={handleDelete}
       />
     </View>
   );

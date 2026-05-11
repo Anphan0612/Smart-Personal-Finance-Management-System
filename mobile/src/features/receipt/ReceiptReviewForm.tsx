@@ -22,6 +22,7 @@ import {
   Info,
 } from 'lucide-react-native';
 import apiClient from '../../services/api';
+import { refreshMetadata } from '../../services/metadataService';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore } from '../../store/useAppStore';
@@ -38,7 +39,7 @@ const MAX_POLLING_RETRIES = 5;
 export default function ReceiptReviewForm() {
   const { receiptId: rawReceiptId } = useLocalSearchParams();
   const receiptId = Array.isArray(rawReceiptId) ? rawReceiptId[0] : rawReceiptId;
-  const { addMessage, wallets, categories, refreshMetadata, isMetadataLoading, activeWalletId } =
+  const { addMessage, wallets, categories, isMetadataLoading, activeWalletId } =
     useAppStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -83,23 +84,25 @@ export default function ReceiptReviewForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const filteredCategories = React.useMemo(() => {
+    return categories.filter((c) => c.type === 'EXPENSE');
+  }, [categories]);
+
   useEffect(() => {
     if (activeWalletId && !formData.walletId) {
       setFormData((prev) => ({ ...prev, walletId: activeWalletId }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWalletId]);
+  }, [activeWalletId, formData.walletId]);
 
   useEffect(() => {
-    if (categories.length > 0 && !formData.categoryId) {
+    if (filteredCategories.length > 0 && !formData.categoryId) {
       const defaultCat =
-        categories.find(
+        filteredCategories.find(
           (c) => c.name.toLowerCase().includes('ăn') || c.name.toLowerCase().includes('shop'),
-        ) || categories[0];
+        ) || filteredCategories[0];
       setFormData((prev) => ({ ...prev, categoryId: defaultCat.id }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categories]);
+  }, [filteredCategories, formData.categoryId]);
 
   const triggerShake = () => {
     Animated.sequence([
@@ -407,7 +410,7 @@ export default function ReceiptReviewForm() {
                     </View>
                     <CategoryPicker
                       selectedId={formData.categoryId}
-                      categories={categories}
+                      categories={filteredCategories}
                       isLoading={isMetadataLoading}
                       onSelect={handleCategorySelect}
                     />

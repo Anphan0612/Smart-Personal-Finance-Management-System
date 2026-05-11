@@ -41,6 +41,8 @@ services:
       NLP_SERVICE_URL: http://ai-service:${AI_PORT}
     ports:
       - '8080:8080'
+    volumes:
+      - ai_uploads:/app/uploads
     networks:
       - smart-network
     healthcheck:
@@ -72,7 +74,6 @@ services:
     volumes:
       - ai_model_cache:/app/models/cache
       - ai_uploads:/app/uploads
-      - ./ml-models:/app/ml-models:ro
     networks:
       - smart-network
     healthcheck:
@@ -88,11 +89,8 @@ services:
       retries: 5
     deploy:
       resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+        limits:
+          memory: 2G
 
 networks:
   smart-network:

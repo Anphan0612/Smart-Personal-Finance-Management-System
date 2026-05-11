@@ -47,7 +47,7 @@ interface AtelierAIProps {
 
 export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
   const router = useRouter();
-  const { messages, addMessage, activeWalletId } = useAppStore();
+  const { messages, addMessage, activeWalletId, pendingAIQuery, setPendingAIQuery } = useAppStore();
   const addTransactionMutation = useAddTransaction();
   
   const [input, setInput] = useState('');
@@ -107,15 +107,30 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
     }
   }, [isOpen, activeWalletId, messages.length, addMessage]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isProcessing) return;
+  useEffect(() => {
+    if (isOpen && pendingAIQuery) {
+      const query = pendingAIQuery;
+      setPendingAIQuery(null);
+      
+      const lastMsg = messages[messages.length - 1];
+      if (!lastMsg || lastMsg.content !== query) {
+        setInput(query);
+        setTimeout(() => {
+           handleSendWithInput(query);
+        }, 300);
+      }
+    }
+  }, [isOpen, pendingAIQuery]);
+
+  const handleSendWithInput = async (msgText: string) => {
+    if (!msgText.trim() || isProcessing) return;
 
     if (!activeWalletId) {
       Alert.alert('Thông báo', 'Vui lòng chọn ví để bắt đầu trò chuyện với Atelier AI');
       return;
     }
 
-    const userMessage = input.trim();
+    const userMessage = msgText.trim();
     setInput('');
     setInputHeight(40);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -178,6 +193,8 @@ export const AtelierAI = ({ isOpen, onClose }: AtelierAIProps) => {
       scrollToBottom();
     }
   };
+
+  const handleSend = () => handleSendWithInput(input);
 
   const handleSuggestionPress = (suggestion: string) => {
     setInput(suggestion);

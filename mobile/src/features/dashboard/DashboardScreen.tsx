@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TrendingUp, Wallet, ChevronDown, Plus } from 'lucide-react-native';
+import { TrendingUp, Wallet, ChevronDown } from 'lucide-react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { useWallets } from '../../hooks/useWallets';
 import { useDashboard } from '../../hooks/useDashboard';
@@ -16,7 +16,6 @@ import {
   AtelierInsightCard,
   BudgetAlertModal,
   AtelierCard,
-  AtelierTransactionCard,
   SkeletonBox,
 } from '../../components/ui';
 import { WalletModal } from '../wallets/WalletModal';
@@ -62,10 +61,10 @@ export default function HomeScreen() {
   // Dashboard budget summary stats
   const totalBudgetLimit =
     budgets?.reduce((s: number, b: BudgetResponse) => s + b.limitAmount, 0) ?? 0;
-  const totalBudgetSpent =
-    budgets?.reduce((s: number, b: BudgetResponse) => s + b.currentSpending, 0) ?? 0;
   const budgetPct =
-    totalBudgetLimit > 0 ? Math.min((totalBudgetSpent / totalBudgetLimit) * 100, 100) : 0;
+    totalBudgetLimit > 0
+      ? Math.min(((dashboard?.summary?.expenses || 0) / totalBudgetLimit) * 100, 100)
+      : 0;
   const hasBudgets = !!budgets?.length;
 
   const spendingBarColor =
@@ -195,7 +194,13 @@ export default function HomeScreen() {
             type="weekly"
             current={comparison.currentWeek.totalExpense}
             previous={comparison.lastWeek.totalExpense}
-            onPress={() => setSelectionModalVisible(true)}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              const store = useAppStore.getState();
+              const autoPrompt = `Hãy phân tích chi tiêu ${formatCurrency(comparison.currentWeek.totalExpense)} của tôi tuần này.`;
+              store.setPendingAIQuery(autoPrompt);
+              store.setAIOpen(true);
+            }}
           />
         )}
 
@@ -218,7 +223,7 @@ export default function HomeScreen() {
                 variant="label"
                 className={`text-xs font-bold ${budgetPct >= 80 ? 'text-error' : budgetPct >= 50 ? 'text-warning' : 'text-primary'}`}
               >
-                Đã dùng {budgetPct.toFixed(0)}%
+                Đã dùng {budgetPct > 0 && budgetPct < 1 ? '< 1' : budgetPct.toFixed(0)}%
               </AtelierTypography>
             ) : (
               <AtelierTypography variant="label" className="text-xs text-primary font-bold">

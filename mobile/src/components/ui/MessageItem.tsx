@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { View, Text } from 'react-native';
 import { Zap, Sparkles } from 'lucide-react-native';
 import { ChatMessage } from '../../store/useAppStore';
+import { formatCurrency } from '../../utils/format';
 import { AtelierAICard } from './AtelierAICard';
 import { AtelierInsightChart } from './AtelierInsightChart';
 import { AtelierSpendingSummary } from './AtelierSpendingSummary';
@@ -60,10 +61,49 @@ export const MessageItem = memo(({ message, onEditTransaction, onConfirmTransact
       );
     }
 
-    if (message.data.transactions && Array.isArray(message.data.transactions)) {
+    const msgData: any = message.data;
+    if (msgData?.transactions && Array.isArray(msgData.transactions)) {
+      if (message.type === 'QUERY' || message.type === 'SUMMARY') {
+        return (
+          <View className="bg-white rounded-2xl p-3 border border-outline-variant/10 shadow-sm">
+            {msgData.transactions.map((txn: any, idx: number) => {
+              const isIncome = txn.type === 'INCOME';
+              const displayDate = txn.date || txn.transactionDate;
+              return (
+                <View key={idx} className={`flex-row items-center justify-between py-2 ${idx !== msgData.transactions.length - 1 ? 'border-b border-outline-variant/10' : ''}`}>
+                  <View className="flex-1 flex-row items-center gap-3">
+                    <View className={`w-10 h-10 rounded-xl items-center justify-center ${isIncome ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <Text className={`font-bold text-[16px] ${isIncome ? 'text-green-600' : 'text-error'}`}>{isIncome ? '+' : '-'}</Text>
+                    </View>
+                    <View className="flex-1 pr-2">
+                      <Text className="text-[14px] font-bold text-surface-on" numberOfLines={1}>
+                        {txn.description || txn.note || txn.categoryName || txn.category || 'Giao dịch'}
+                      </Text>
+                      <Text className="text-[11px] text-surface-on-variant mt-0.5">
+                        {txn.categoryName || txn.category || 'Khác'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View className="items-end shrink-0">
+                    <Text className={`text-[14px] font-bold ${isIncome ? 'text-green-600' : 'text-surface-on'}`}>
+                      {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
+                    </Text>
+                    {displayDate && (
+                      <Text className="text-[10px] text-outline opacity-60 mt-0.5">
+                        {new Date(displayDate).toLocaleDateString('vi-VN')}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        );
+      }
+
       return (
         <View className="gap-3">
-          {message.data.transactions.map((txn: any, idx: number) => (
+          {msgData.transactions.map((txn: any, idx: number) => (
             <AtelierAICard key={idx}>
               <AtelierTransactionCard
                 data={txn}

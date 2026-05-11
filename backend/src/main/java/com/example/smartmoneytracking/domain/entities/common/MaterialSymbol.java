@@ -26,5 +26,15 @@ public enum MaterialSymbol {
     HOME_REPAIR,         // Household
     RESTAURANT_MENU,     // Food & Dining
     CARD_GIFTCARD,       // Gift
-    MORE_HORIZ           // Other Income/Expense
+    MORE_HORIZ;
+
+    @com.fasterxml.jackson.annotation.JsonCreator
+    public static MaterialSymbol fromString(String value) {
+        if (value == null) return LIST;
+        try {
+            return MaterialSymbol.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return LIST;
+        }
+    }
 }

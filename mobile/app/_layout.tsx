@@ -27,6 +27,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 
+import Toast from 'react-native-toast-message';
+
 // Ignore specific warning from third-party libraries
 LogBox.ignoreLogs(['SafeAreaView has been deprecated and will be removed in a future release.']);
 
@@ -111,7 +113,7 @@ export default function RootLayout() {
   }, []);
 
   // Đặt true để gỡ chặn route (bypass login) trong quá trình phát triển UI
-  const DEBUG_BYPASS_AUTH = false;
+  // const DEBUG_BYPASS_AUTH = false;
 
   // Khởi tạo QueryClient với các cấu hình an toàn cho Finance
   const [queryClient] = useState(
@@ -199,6 +201,7 @@ export default function RootLayout() {
           </BottomSheetModalProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
+      <Toast />
     </GestureHandlerRootView>
   );
 }

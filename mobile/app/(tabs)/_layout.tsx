@@ -14,9 +14,8 @@ import { AtelierTokens } from '../../src/constants/AtelierTokens';
 import { ManualTransactionModal } from '../../src/features/transactions/ManualTransactionModal';
 
 export default function TabLayout() {
-  const [isAIOpen, setIsAIOpen] = useState(false);
   const [isActionHubOpen, setIsActionHubOpen] = useState(false);
-  const { user, isTransactionModalOpen, setTransactionModalOpen } = useAppStore();
+  const { user, isTransactionModalOpen, setTransactionModalOpen, isAIOpen, setAIOpen } = useAppStore();
   const insets = useSafeAreaInsets();
 
   // Dynamic values
@@ -122,12 +121,12 @@ export default function TabLayout() {
           setIsActionHubOpen(false);
           setTransactionModalOpen(true);
         }}
-        onAskAI={() => setIsAIOpen(true)}
+        onAskAI={() => setAIOpen(true)}
         tabBarHeight={tabBarHeight}
       />
 
       {/* 5. Global AI Assistant Drawer */}
-      <AtelierAI isOpen={isAIOpen} onClose={() => setIsAIOpen(false)} />
+      <AtelierAI isOpen={isAIOpen} onClose={() => setAIOpen(false)} />
 
       {/* 6. Global Manual Transaction Modal */}
       <ManualTransactionModal

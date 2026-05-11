@@ -34,9 +34,9 @@ export default function CurrencySelectionScreen() {
           <View style={styles.iconContainer}>
             <Globe color="#0052CC" size={32} />
           </View>
-          <Text style={styles.title}>Primary Currency</Text>
+          <Text style={styles.title}>Tiền tệ chính</Text>
           <Text style={styles.subtitle}>
-            Select the currency you use most. This will be the base for your overall balance.
+            Chọn loại tiền tệ bạn sử dụng thường xuyên nhất. Đây sẽ là đơn vị cơ sở cho tổng số dư của bạn.
           </Text>
         </MotiView>
 
@@ -71,7 +71,7 @@ export default function CurrencySelectionScreen() {
             style={styles.nextButton}
             onPress={handleNext}
           >
-            <Text style={styles.nextButtonText}>Confirm & Continue</Text>
+            <Text style={styles.nextButtonText}>Xác nhận & Tiếp tục</Text>
           </Pressable>
         </View>
       </View>

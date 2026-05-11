@@ -1,0 +1,4 @@
+appId: host.exp.exponent
+---
+- launchApp
+- openLink: ${APP_URL}

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-// import apiClient from "../services/api"; // Removed to break require cycle
+// import { apiClient } from '../services/api'; // Removed to break require cycle
 import { WalletResponse } from '../types/api';
 import { Category } from '../hooks/useCategories';
 
@@ -86,6 +86,10 @@ interface AppState {
   setTransactionModalOpen: (open: boolean) => void;
 
   // AI Chat State
+  isAIOpen: boolean;
+  setAIOpen: (open: boolean) => void;
+  pendingAIQuery: string | null;
+  setPendingAIQuery: (query: string | null) => void;
   messages: ChatMessage[];
   addMessage: (message: ChatMessage) => void;
   updateLastMessage: (content: string) => void;
@@ -144,6 +148,10 @@ export const useAppStore = create<AppState>()(
       setTransactionModalOpen: (open) => set({ isTransactionModalOpen: open }),
 
       // AI Chat Defaults
+      isAIOpen: false,
+      setAIOpen: (open) => set({ isAIOpen: open }),
+      pendingAIQuery: null,
+      setPendingAIQuery: (query) => set({ pendingAIQuery: query }),
       messages: [],
       addMessage: (message) =>
         set((state) => {
@@ -231,7 +239,7 @@ export const useAppStore = create<AppState>()(
               new Map(messages.map((m: any) => [m.id, m])).values(),
             );
             return { ...persistedState, messages: uniqueMessages };
-          } catch (e) {
+          } catch {
             return persistedState;
           }
         }

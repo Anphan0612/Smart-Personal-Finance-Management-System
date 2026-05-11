@@ -18,6 +18,7 @@ import {
   Wrench,
   UtensilsCrossed,
   Package,
+  List,
 } from 'lucide-react-native';
 
 export const ICON_MAP: Record<string, any> = {
@@ -48,6 +49,7 @@ export const ICON_MAP: Record<string, any> = {
   HOME_REPAIR: Wrench,
   RESTAURANT_MENU: UtensilsCrossed,
   MORE_HORIZ: Package,
+  LIST: List,
 };
 
 export const getIconFromName = (iconName: string) => {

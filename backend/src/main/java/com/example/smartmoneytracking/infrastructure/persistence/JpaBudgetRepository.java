@@ -15,4 +15,9 @@ public interface JpaBudgetRepository extends JpaRepository<Budget, String>, Budg
     Optional<Budget> findByUserIdAndMonthAndYearAndCategoryIdIsNull(String userId, int month, int year);
     List<Budget> findByUserIdAndMonthAndYearAndCategoryIdIsNotNull(String userId, int month, int year);
     void deleteByUserIdAndMonthAndYear(String userId, int month, int year);
+
+    @Override
+    default List<Budget> saveAllBudgets(List<Budget> budgets) {
+        return saveAll(budgets);
+    }
 }

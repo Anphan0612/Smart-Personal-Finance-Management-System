@@ -24,6 +24,7 @@ from utils.text_normalizer import normalize_for_rules
 _QUERY_INDICATORS: list[str] = [
     "bao nhieu", "bao nhiêu",
     "tong", "tổng",
+    "tong ket", "tổng kết",
     "da chi", "đã chi", "da tieu", "đã tiêu",
     "thong ke", "thống kê",
     "liet ke", "liệt kê",
@@ -62,6 +63,7 @@ _TIME_PATTERNS: dict[str, list[str]] = {
     "today": ["hom nay", "hôm nay", "ngay hom nay", "ngày hôm nay"],
     "yesterday": ["hom qua", "hôm qua"],
     "this_week": ["tuan nay", "tuần này", "tuan nay", "7 ngay qua", "7 ngày qua"],
+    "last_7_days": ["tuan qua", "tuần qua"],
     "last_week": ["tuan truoc", "tuần trước", "tuan rui", "tuần rồi"],
     "this_month": ["thang nay", "tháng này"],
     "last_month": ["thang truoc", "tháng trước", "thang rui", "tháng rồi"],
@@ -122,10 +124,14 @@ def extract_filters(text: str) -> dict[str, Any]:
 
     # --- Time period ---
     time_period = _extract_time_period(norm)
+    category_text = norm
     if time_period:
         filters["time_period"] = time_period["label"]
         filters["date_start"] = time_period["start"]
         filters["date_end"] = time_period["end"]
+        if "matched_text" in time_period:
+            # Strip the matched time phrase out so it doesn't false positive on categories (e.g., "tuan qua" -> "qua" -> GIFT)
+            category_text = category_text.replace(time_period["matched_text"], " ")
     else:
         # Default: last 30 days
         today = date.today()
@@ -134,7 +140,7 @@ def extract_filters(text: str) -> dict[str, Any]:
         filters["date_end"] = today.isoformat()
 
     # --- Category ---
-    category = _extract_category(norm)
+    category = _extract_category(category_text)
     if category:
         filters["category"] = category
 
@@ -163,6 +169,7 @@ def _extract_time_period(norm_text: str) -> Optional[dict[str, str]]:
                 "label": f"month_{month_num}",
                 "start": start.isoformat(),
                 "end": end.isoformat(),
+                "matched_text": month_match.group(0)
             }
 
     # Check predefined patterns
@@ -170,7 +177,9 @@ def _extract_time_period(norm_text: str) -> Optional[dict[str, str]]:
         for kw in keywords:
             kw_norm = normalize_for_rules(kw).lower()
             if re.search(r'\b' + re.escape(kw_norm) + r'\b', norm_text):
-                return _resolve_time_range(label, today)
+                res = _resolve_time_range(label, today)
+                res["matched_text"] = kw_norm
+                return res
 
     return None
 
@@ -181,6 +190,7 @@ def _resolve_time_range(label: str, today: date) -> dict[str, str]:
         "today": (today, today),
         "yesterday": (today - timedelta(days=1), today - timedelta(days=1)),
         "this_week": (today - timedelta(days=today.weekday()), today),
+        "last_7_days": (today - timedelta(days=6), today),
         "last_week": (
             today - timedelta(days=today.weekday() + 7),
             today - timedelta(days=today.weekday() + 1),

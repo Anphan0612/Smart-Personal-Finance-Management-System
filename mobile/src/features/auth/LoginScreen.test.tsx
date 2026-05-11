@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert } from 'react-native';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor, screen } from '@testing-library/react-native';
 import LoginScreen from './LoginScreen';
 
 jest.mock('../../../assets/images/icon.png', () => 'icon-mock');
@@ -38,12 +38,15 @@ describe('LoginScreen', () => {
     jest.spyOn(Alert, 'alert').mockImplementation(jest.fn());
   });
 
-  it('shows validation alert when email/password are empty', async () => {
-    const { getByTestId } = render(<LoginScreen />);
+  it('shows validation error messages when email/password are empty', async () => {
+    render(<LoginScreen />);
 
-    fireEvent.press(getByTestId('login-submit-button'));
+    fireEvent.press(screen.getByTestId('login-submit-button'));
 
-    expect(Alert.alert).toHaveBeenCalledWith('Lỗi', 'Vui lòng nhập đầy đủ email và mật khẩu');
+    await waitFor(() => {
+      expect(screen.getByText('Vui lòng nhập email')).toBeTruthy();
+      expect(screen.getByText('Vui lòng nhập mật khẩu')).toBeTruthy();
+    });
     expect(mockPoster).not.toHaveBeenCalled();
   });
 
@@ -55,11 +58,11 @@ describe('LoginScreen', () => {
       email: 'test@example.com',
     });
 
-    const { getByTestId } = render(<LoginScreen />);
+    render(<LoginScreen />);
 
-    fireEvent.changeText(getByTestId('login-email-input'), 'test@example.com');
-    fireEvent.changeText(getByTestId('login-password-input'), 'test123456');
-    fireEvent.press(getByTestId('login-submit-button'));
+    fireEvent.changeText(screen.getByTestId('login-email-input'), 'test@example.com');
+    fireEvent.changeText(screen.getByTestId('login-password-input'), 'test123456');
+    fireEvent.press(screen.getByTestId('login-submit-button'));
 
     await waitFor(() => {
       expect(mockPoster).toHaveBeenCalledWith('/auth/login', {
@@ -74,20 +77,22 @@ describe('LoginScreen', () => {
   it('shows error alert on failed login', async () => {
     mockPoster.mockRejectedValueOnce({
       response: {
+        status: 401,
         data: {
           message: 'Thông tin đăng nhập không hợp lệ',
         },
       },
     });
 
-    const { getByTestId } = render(<LoginScreen />);
+    render(<LoginScreen />);
 
-    fireEvent.changeText(getByTestId('login-email-input'), 'bad@example.com');
-    fireEvent.changeText(getByTestId('login-password-input'), 'wrong');
-    fireEvent.press(getByTestId('login-submit-button'));
+    fireEvent.changeText(screen.getByTestId('login-email-input'), 'bad@example.com');
+    fireEvent.changeText(screen.getByTestId('login-password-input'), 'wrong');
+    fireEvent.press(screen.getByTestId('login-submit-button'));
 
     await waitFor(() => {
-      expect(Alert.alert).toHaveBeenCalledWith('Đăng nhập thất bại', 'Thông tin đăng nhập không hợp lệ');
-    });
+      // Use regex to be more flexible with potential whitespace/newline issues
+      expect(screen.getByText(/Thông tin đăng nhập không hợp lệ/)).toBeTruthy();
+    }, { timeout: 2000 });
   });
 });

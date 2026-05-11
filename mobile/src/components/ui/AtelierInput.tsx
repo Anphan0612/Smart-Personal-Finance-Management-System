@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 import { AtelierTypography } from './AtelierTypography';
-
+import { AnimatePresence, View as MotiView } from 'moti';
 interface AtelierInputProps extends TextInputProps {
   label?: string;
   error?: string;
@@ -63,11 +63,21 @@ export function AtelierInput({
           {...props}
         />
       </View>
-      {error && (
-        <AtelierTypography variant="caption" className="text-red-500 ml-1">
-          {error}
-        </AtelierTypography>
-      )}
+      <AnimatePresence>
+        {error ? (
+          <MotiView
+            from={{ opacity: 0, translateY: -4, height: 0 }}
+            animate={{ opacity: 1, translateY: 0, height: 20 }}
+            exit={{ opacity: 0, translateY: -4, height: 0 }}
+            transition={{ type: 'timing', duration: 200 }}
+            className="ml-1 justify-center overflow-hidden"
+          >
+            <AtelierTypography variant="caption" className="text-red-500">
+              {error}
+            </AtelierTypography>
+          </MotiView>
+        ) : null}
+      </AnimatePresence>
     </View>
   );
 }

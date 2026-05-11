@@ -168,48 +168,40 @@ class NERService:
     """
 
     _pipeline: Optional[TokenClassificationPipeline] = None
-    # Resolve model path relative to this file's directory
-    MODEL_PATH = str(
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-            "ml-models",
-            "phobert-finance-ner-final",
-        )
-    )
+    # Use the Hugging Face repository directly. 
+    # Docker/Transformers will cache it automatically.
+    MODEL_PATH = "Anphan612/phobert-finance-ner"
 
     def __init__(self) -> None:
         # Load model weights lazily/defensively:
-        # - If the model folder isn't present, we still allow endpoint to work
+        # - If the model isn't available locally or remotely, we still allow endpoint to work
         #   using regex money_parser + keyword mapping (rule-based fallback).
         if NERService._pipeline is not None:
             return
 
         model_path = os.getenv("PHOBERT_MODEL_PATH", self.MODEL_PATH)
 
-        # HuggingFace will throw if model directory doesn't exist.
-        # In MVP clones, model assets may be excluded from git due to size.
-        import os as _os
-
-        if not _os.path.exists(model_path):
-            print(f"[NER SERVICE] ⚠️ PhoBERT model not found at {model_path}")
-            print("[NER SERVICE] ℹ️ Falling back to rule-based extraction (regex + keywords)")
-            print("[NER SERVICE] 💡 Run 'python scripts/setup_models.py' to download models")
-            NERService._pipeline = None
-            return
-
         # Use GPU (0) if available, else CPU (-1)
         device = 0 if torch.cuda.is_available() else -1
         device_label = "gpu" if device == 0 else "cpu"
-        print(f"[NER SERVICE] ✅ Loading PhoBERT weights from {model_path}")
-        print(f"[NER SERVICE] 🖥️ Device set to use {device_label}")
+        print(f"[NER SERVICE] OK: Attempting to load PhoBERT weights from {model_path}")
+        print(f"[NER SERVICE] INFO: Device set to use {device_label}")
 
-        NERService._pipeline = pipeline(
-            task="token-classification",
-            model=model_path,
-            aggregation_strategy="simple",
-            device=device,
-        )
-        print("[NER SERVICE] ✅ PhoBERT NER pipeline initialized successfully")
+        try:
+            NERService._pipeline = pipeline(
+                task="token-classification",
+                model=model_path,
+                aggregation_strategy="simple",
+                device=device,
+            )
+            print("[NER SERVICE] OK: PhoBERT NER pipeline initialized successfully")
+        except Exception as e:
+            print(f"[NER SERVICE] WARNING: Could not load PhoBERT model from {model_path}")
+            print(f"[NER SERVICE] ERROR details: {str(e)}")
+            print("[NER SERVICE] INFO: Falling back to rule-based extraction (regex + keywords)")
+            print("[NER SERVICE] INFO: Make sure you have an internet connection to download from Hugging Face.")
+            NERService._pipeline = None
+            return
 
     # ------------------------------------------------------------------
     # Public API
@@ -237,7 +229,7 @@ class NERService:
                 ner_results = self._pipeline(text)  # type: ignore[misc]
             except RuntimeError as e:
                 if "CUDA error" in str(e):
-                    print(f"[NER SERVICE] ⚠️ CUDA error detected: {str(e)}. Retrying on CPU...")
+                    print(f"[NER SERVICE] WARNING: CUDA error detected: {str(e)}. Retrying on CPU...")
                     try:
                         # Re-initialize pipeline on CPU
                         self._pipeline = pipeline(
@@ -247,15 +239,15 @@ class NERService:
                             device=-1, # CPU
                         )
                         ner_results = self._pipeline(text) # type: ignore[misc]
-                        print("[NER SERVICE] ✅ Successfully recovered on CPU.")
+                        print("[NER SERVICE] OK: Successfully recovered on CPU.")
                     except Exception as retry_e:
-                        print(f"[NER SERVICE] ❌ CPU Fallback failed: {str(retry_e)}")
+                        print(f"[NER SERVICE] ERROR: CPU Fallback failed: {str(retry_e)}")
                         ner_results = []
                 else:
-                    print(f"[NER SERVICE] ❌ NER Inference Error: {str(e)}")
+                    print(f"[NER SERVICE] ERROR: NER Inference Error: {str(e)}")
                     ner_results = []
             except Exception as e:
-                print(f"[NER SERVICE] ❌ NER Unexpected Error: {str(e)}")
+                print(f"[NER SERVICE] ERROR: NER Unexpected Error: {str(e)}")
                 ner_results = []
                 
             model_confidence = self._avg_confidence(ner_results)

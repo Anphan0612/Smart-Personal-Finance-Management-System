@@ -26,7 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardUseCaseImplTest {
@@ -56,14 +56,14 @@ class DashboardUseCaseImplTest {
         Transaction income = Transaction.create(walletId, "cat-1", new BigDecimal("1000"), TransactionType.INCOME, "Job", now);
         Transaction expense = Transaction.create(walletId, "cat-2", new BigDecimal("200"), TransactionType.EXPENSE, "Food", now);
         
-        when(transactionRepository.findByWalletIdAndTransactionDateBetween(eq(walletId), any(), any()))
+        lenient().when(transactionRepository.findByWalletIdAndTransactionDateBetween(eq(walletId), any(), any()))
                 .thenReturn(List.of(income, expense));
         
         Wallet wallet = Wallet.create(userId, "Main wallet", new Currency("VND", "đ"), WalletType.CASH, new BigDecimal("5000"));
-        when(walletRepository.findByIdAndUserId(walletId, userId))
+        lenient().when(walletRepository.findByIdAndUserId(walletId, userId))
                 .thenReturn(Optional.of(wallet));
 
-        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month", userId);
+        DashboardResponseDTO result = dashboardUseCase.getDashboardSummary(walletId, "current_month", null, null, userId);
 
         assertThat(result.getSummary().getIncome()).isEqualByComparingTo("1000");
         assertThat(result.getSummary().getExpenses()).isEqualByComparingTo("200");

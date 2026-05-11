@@ -4,15 +4,9 @@
       "name": "phobert-finance-ner",
       "description": "Fine-tuned PhoBERT for Vietnamese financial NER",
       "type": "huggingface",
-      "repo_id": "vinai/phobert-base-v2",
-      "local_path": "ml-models/phobert-finance-ner-final",
-      "files": [
-        "config.json",
-        "pytorch_model.bin",
-        "tokenizer_config.json",
-        "vocab.txt",
-        "special_tokens_map.json"
-      ],
+      "repo_id": "Anphan612/phobert-finance-ner",
+      "local_path": "models/cache/models--Anphan612--phobert-finance-ner",
+      "cache_dir": "models/cache",
       "required": false,
       "fallback": "rule-based extraction"
     },

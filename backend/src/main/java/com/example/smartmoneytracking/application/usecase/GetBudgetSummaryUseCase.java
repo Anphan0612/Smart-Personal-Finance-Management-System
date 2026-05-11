@@ -33,9 +33,27 @@ public class GetBudgetSummaryUseCase {
     private final WalletRepository walletRepository;
     private final CategoryRepository categoryRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<BudgetResponse> execute(String userId, int month, int year) {
         List<Budget> budgets = budgetRepository.findByUserIdAndMonthAndYear(userId, month, year);
+
+        // --- LAZY CLONE LOGIC (Monthly Snapshots) ---
+        if (budgets.isEmpty()) {
+            int prevMonth = month == 1 ? 12 : month - 1;
+            int prevYear = month == 1 ? year - 1 : year;
+            List<Budget> prevBudgets = budgetRepository.findByUserIdAndMonthAndYear(userId, prevMonth, prevYear);
+            
+            if (!prevBudgets.isEmpty()) {
+                List<Budget> clonedBudgets = prevBudgets.stream().map(b -> {
+                    return Budget.create(userId, b.getCategoryId(), b.getAmount(), month, year);
+                }).collect(Collectors.toList());
+                
+                budgetRepository.saveAllBudgets(clonedBudgets);
+                budgets = clonedBudgets;
+            }
+        }
+        // --------------------------------------------
+
         List<String> walletIds = walletRepository.findByUserId(userId).stream()
                 .map(Wallet::getId)
                 .collect(Collectors.toList());

@@ -4,15 +4,14 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetView,
   BottomSheetScrollView,
+  BottomSheetTextInput,
 } from '@gorhom/bottom-sheet';
 import {
   X,
@@ -42,9 +41,17 @@ interface Props {
   transaction: TransactionResponse | null;
   isVisible: boolean;
   onClose: () => void;
+  initialEditMode?: boolean;
+  onDelete?: (transaction: TransactionResponse) => void;
 }
 
-export default function TransactionDetailSheet({ transaction, isVisible, onClose }: Props) {
+export default function TransactionDetailSheet({ 
+  transaction, 
+  isVisible, 
+  onClose,
+  initialEditMode = false,
+  onDelete
+}: Props) {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['60%', '90%'], []);
   const { token } = useAppStore();
@@ -59,6 +66,7 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
     amount: '',
     description: '',
     categoryId: '',
+    type: 'EXPENSE' as 'EXPENSE' | 'INCOME',
   });
 
   useEffect(() => {
@@ -67,18 +75,19 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
         amount: transaction.amount.toString(),
         description: transaction.description || '',
         categoryId: transaction.categoryId,
+        type: transaction.type as 'EXPENSE' | 'INCOME',
       });
-      setIsEditing(false);
+      setIsEditing(initialEditMode);
     }
-  }, [transaction]);
+  }, [transaction, initialEditMode]);
 
   useEffect(() => {
     if (isVisible) {
-      bottomSheetRef.current?.snapToIndex(0);
+      bottomSheetRef.current?.snapToIndex(initialEditMode ? 1 : 0);
     } else {
       bottomSheetRef.current?.close();
     }
-  }, [isVisible]);
+  }, [isVisible, initialEditMode]);
 
   const handleSheetChange = useCallback(
     (index: number) => {
@@ -104,6 +113,10 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
 
   const handleSave = async () => {
     if (!transaction) return;
+    if (!editForm.categoryId) {
+      alert('Vui lòng chọn hạng mục');
+      return;
+    }
 
     try {
       await updateMutation.mutateAsync({
@@ -112,6 +125,7 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
           amount: parseFloat(editForm.amount),
           description: editForm.description,
           categoryId: editForm.categoryId,
+          type: editForm.type,
         },
       });
       setIsEditing(false);
@@ -127,6 +141,7 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
         amount: transaction?.amount.toString() || '',
         description: transaction?.description || '',
         categoryId: transaction?.categoryId || '',
+        type: transaction?.type as 'EXPENSE' | 'INCOME' || 'EXPENSE',
       });
     }
     setIsEditing(!isEditing);
@@ -143,15 +158,15 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
         enablePanDownToClose
         backdropComponent={renderBackdrop}
         onChange={handleSheetChange}
-        backgroundStyle={{ backgroundColor: '#f9f9ff' }}
         handleIndicatorStyle={{ backgroundColor: '#717785' }}
-        keyboardBehavior="fillParent"
+        keyboardBehavior="extend"
+        backgroundStyle={{ backgroundColor: editForm.type === 'INCOME' ? '#f0fff4' : '#fff5f5' }}
       >
-        <BottomSheetView className="flex-1 px-6 pb-10">
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-6">
-            <Text className="font-headline font-extrabold text-xl text-on-surface">
-              {isEditing ? 'Edit activity.' : 'Receipt check.'}
+        {/* Fixed Header */}
+        <View style={{ paddingHorizontal: 24, paddingVertical: 8 }}>
+          <View className="flex-row items-center justify-between mt-2 mb-4">
+            <Text className={`font-headline font-extrabold text-xl ${editForm.type === 'INCOME' ? 'text-green-800' : 'text-on-surface'}`}>
+              {isEditing ? 'Chỉnh sửa.' : 'Chi tiết.'}
             </Text>
             <View className="flex-row gap-2">
               <TouchableOpacity
@@ -164,6 +179,18 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
                   <Edit3 size={18} color="#005ab4" />
                 )}
               </TouchableOpacity>
+              {!isEditing && (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (transaction && onDelete) {
+                      onDelete(transaction);
+                    }
+                  }}
+                  className="w-10 h-10 rounded-full bg-error/10 items-center justify-center"
+                >
+                  <Trash2 size={18} color="#ba1a1a" />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 onPress={() => bottomSheetRef.current?.close()}
                 className="w-10 h-10 rounded-full bg-surface-container items-center justify-center"
@@ -172,34 +199,72 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
               </TouchableOpacity>
             </View>
           </View>
+        </View>
 
-          <BottomSheetScrollView showsVerticalScrollIndicator={false}>
+        <BottomSheetScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        >
             {/* Amount & Main Info Section */}
             <View className="bg-white rounded-[24px] p-6 mb-6 shadow-sm border border-outline/5">
               <View className="items-center mb-6">
                 <View
                   className={`w-14 h-14 rounded-full items-center justify-center mb-4 ${
-                    transaction.type === 'INCOME' ? 'bg-secondary/10' : 'bg-error/10'
+                    editForm.type === 'INCOME' ? 'bg-secondary/10' : 'bg-error/10'
                   }`}
                 >
                   <DollarSign
                     size={24}
-                    color={transaction.type === 'INCOME' ? '#00C853' : '#FF5252'}
+                    color={editForm.type === 'INCOME' ? '#00C853' : '#FF5252'}
                   />
                 </View>
 
+                {isEditing && (
+                  <View className="flex-row bg-surface-container p-1 rounded-full mb-6 w-full max-w-[240px]">
+                    <TouchableOpacity
+                      onPress={() => {
+                        const isChanging = editForm.type !== 'EXPENSE';
+                        setEditForm({ 
+                          ...editForm, 
+                          type: 'EXPENSE',
+                          categoryId: isChanging ? '' : editForm.categoryId 
+                        });
+                      }}
+                      className={`flex-1 py-2 px-4 rounded-full items-center justify-center ${editForm.type === 'EXPENSE' ? 'bg-[#FF4B4B]' : ''}`}
+                    >
+                      <Text className={`text-xs font-bold ${editForm.type === 'EXPENSE' ? 'text-white' : 'text-neutral-500'}`}>
+                        Chi tiêu
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const isChanging = editForm.type !== 'INCOME';
+                        setEditForm({ 
+                          ...editForm, 
+                          type: 'INCOME',
+                          categoryId: isChanging ? '' : editForm.categoryId 
+                        });
+                      }}
+                      className={`flex-1 py-2 px-4 rounded-full items-center justify-center ${editForm.type === 'INCOME' ? 'bg-green-600' : ''}`}
+                    >
+                      <Text className={`text-xs font-bold ${editForm.type === 'INCOME' ? 'text-white' : 'text-neutral-500'}`}>
+                        Thu nhập
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
                 {isEditing ? (
                   <View className="w-full flex-row items-center justify-center border-b border-outline/20 pb-2">
-                    <Text className="font-headline font-bold text-2xl text-on-surface mr-1">
-                      {transaction.type === 'INCOME' ? '+' : '-'}
+                    <Text className={`font-headline font-bold text-2xl mr-1 ${editForm.type === 'INCOME' ? 'text-green-600' : 'text-error'}`}>
+                      {editForm.type === 'INCOME' ? '+' : '-'}
                     </Text>
-                    <TextInput
+                    <BottomSheetTextInput
                       className="font-headline font-bold text-3xl text-on-surface text-center"
                       value={editForm.amount}
                       onChangeText={(text) => setEditForm({ ...editForm, amount: text })}
                       keyboardType="numeric"
                       placeholder="0.00"
-                      autoFocus
                     />
                   </View>
                 ) : (
@@ -229,7 +294,7 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
                       Description
                     </Text>
                     {isEditing ? (
-                      <TextInput
+                      <BottomSheetTextInput
                         className="font-medium text-[15px] text-on-surface border-b border-outline/10 py-1"
                         value={editForm.description}
                         onChangeText={(text) => setEditForm({ ...editForm, description: text })}
@@ -256,26 +321,31 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
                       <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
+                        disallowInterruption={true}
                         className="mt-2"
                       >
                         <View className="flex-row gap-2">
-                          {categories?.map((cat) => (
-                            <TouchableOpacity
-                              key={cat.id}
-                              onPress={() => setEditForm({ ...editForm, categoryId: cat.id })}
-                              className={`px-4 py-2 rounded-full border ${
-                                editForm.categoryId === cat.id
-                                  ? 'bg-primary border-primary'
-                                  : 'bg-white border-outline/20'
-                              }`}
-                            >
-                              <Text
-                                className={`text-xs font-bold ${editForm.categoryId === cat.id ? 'text-white' : 'text-on-surface'}`}
+                          {categories
+                            ?.filter((cat) => cat.type === editForm.type)
+                            ?.map((cat) => (
+                              <TouchableOpacity
+                                key={cat.id}
+                                onPress={() => setEditForm({ ...editForm, categoryId: cat.id })}
+                                className={`px-4 py-2 rounded-full border ${
+                                  editForm.categoryId === cat.id
+                                    ? 'bg-primary border-primary'
+                                    : 'bg-white border-outline/20'
+                                }`}
                               >
-                                {cat.name}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
+                                <Text
+                                  className={`text-xs font-bold ${
+                                    editForm.categoryId === cat.id ? 'text-white' : 'text-on-surface'
+                                  }`}
+                                >
+                                  {cat.name}
+                                </Text>
+                              </TouchableOpacity>
+                            ))}
                         </View>
                       </ScrollView>
                     ) : (
@@ -347,13 +417,12 @@ export default function TransactionDetailSheet({ transaction, isVisible, onClose
                 ) : (
                   <>
                     <Save size={20} color="#ffffff" className="mr-2" />
-                    <Text className="text-white font-bold text-lg">Save changes</Text>
+                    <Text className="text-white font-bold text-lg">Lưu thay đổi</Text>
                   </>
                 )}
               </TouchableOpacity>
             )}
           </BottomSheetScrollView>
-        </BottomSheetView>
       </BottomSheet>
 
       {/* Full Screen Image Viewer */}
