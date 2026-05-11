@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
-import { TrendingUp, Wallet, ChevronDown, Plus } from 'lucide-react-native';
+import { TrendingUp, Wallet, ChevronDown } from 'lucide-react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { useWallets } from '../../hooks/useWallets';
 import { useDashboard } from '../../hooks/useDashboard';
@@ -16,7 +16,6 @@ import {
   AtelierInsightCard,
   BudgetAlertModal,
   AtelierCard,
-  AtelierTransactionCard,
   SkeletonBox,
 } from '../../components/ui';
 import { WalletModal } from '../wallets/WalletModal';
@@ -62,8 +61,6 @@ export default function HomeScreen() {
   // Dashboard budget summary stats
   const totalBudgetLimit =
     budgets?.reduce((s: number, b: BudgetResponse) => s + b.limitAmount, 0) ?? 0;
-  const totalBudgetSpent =
-    budgets?.reduce((s: number, b: BudgetResponse) => s + b.currentSpending, 0) ?? 0;
   const budgetPct =
     totalBudgetLimit > 0
       ? Math.min(((dashboard?.summary?.expenses || 0) / totalBudgetLimit) * 100, 100)

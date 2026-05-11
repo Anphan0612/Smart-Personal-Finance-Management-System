@@ -1,11 +1,9 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
 import { ApiResponse } from '@/types/api';
 import { useAppStore } from '@/store/useAppStore';
 import * as Localization from 'expo-localization';
 
-const TOKEN_KEY = 'auth_token';
 
 // Tự động phân giải IP của máy chủ Expo đang chạy.
 // debuggerHost sẽ trả về ví dụ: "192.168.1.5:8081" khi chạy development

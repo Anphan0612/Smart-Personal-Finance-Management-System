@@ -54,7 +54,6 @@ export default function LoginScreen() {
         router.replace('/(tabs)');
       }
     } catch (error: any) {
-      console.error('[AUTH ERROR]', error);
       const status = error.response?.status;
       const message = error.response?.data?.message || 'Thông tin đăng nhập không chính xác.';
       

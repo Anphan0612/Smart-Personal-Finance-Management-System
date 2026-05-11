@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
-// import apiClient from "../services/api"; // Removed to break require cycle
+// import { apiClient } from '../services/api'; // Removed to break require cycle
 import { WalletResponse } from '../types/api';
 import { Category } from '../hooks/useCategories';
 
@@ -239,7 +239,7 @@ export const useAppStore = create<AppState>()(
               new Map(messages.map((m: any) => [m.id, m])).values(),
             );
             return { ...persistedState, messages: uniqueMessages };
-          } catch (e) {
+          } catch {
             return persistedState;
           }
         }

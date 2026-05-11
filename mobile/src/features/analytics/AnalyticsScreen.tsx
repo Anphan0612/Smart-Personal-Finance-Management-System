@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, ScrollView, Dimensions, RefreshControl, TouchableOpacity } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MotiView } from 'moti';
-import { TrendingDown, Sparkles, ChevronRight } from 'lucide-react-native';
+import { TrendingDown, Sparkles } from 'lucide-react-native';
 import { LineChart, PieChart, BarChart } from 'react-native-gifted-charts';
 import { useAppStore } from '../../store/useAppStore';
 import { useDashboard } from '../../hooks/useDashboard';
